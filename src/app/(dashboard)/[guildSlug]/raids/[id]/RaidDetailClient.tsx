@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 type SignupStatus = "ACCEPTED" | "TENTATIVE" | "DECLINED";
-interface Character { id: string; name: string; class: string; role: string; itemLevel: number | null; }
+interface Character { id: string; name: string; class: string; spec: string | null; role: string; itemLevel: number | null; }
 interface Signup { id: string; status: SignupStatus; note: string | null; character: Character; }
 interface RaidEvent { id: string; title: string; raidZone: string; scheduledAt: string | Date; maxAttendees: number; minItemLevel: number | null; status: string; description: string | null; _count: { signups: number }; }
 
@@ -29,6 +29,76 @@ const STATUS_COLORS: Record<SignupStatus, string> = {
   DECLINED: "bg-red-900/30 border-red-800 text-red-400",
 };
 const STATUS_ICON: Record<SignupStatus, string> = { ACCEPTED: "✓", TENTATIVE: "?", DECLINED: "✗" };
+
+const BLOODLUST_SPECS = new Set(["enhancement", "elemental", "restoration", "beast mastery", "marksmanship", "survival", "arcane", "fire", "frost mage", "unholy", "frost dk"]);
+const BLOODLUST_CLASSES = new Set(["shaman", "hunter", "mage"]);
+const BREZ_SPECS = new Set(["balance", "feral", "guardian", "restoration druid", "unholy", "blood", "frost dk"]);
+const BREZ_CLASSES = new Set(["druid", "death knight", "warlock"]);
+const RAID_BUFF_MAP: Record<string, string[]> = {
+  "Power Word: Fortitude": ["priest"],
+  "Battle Shout": ["warrior"],
+  "Arcane Intellect": ["mage"],
+  "Mark of the Wild": ["druid"],
+  "Blessing of Kings": ["paladin"],
+  "Mystic Touch": ["monk"],
+  "Chaos Brand": ["demon hunter"],
+  "Skyfury": ["shaman"],
+};
+
+function CompositionPanel({ signups }: { signups: Signup[] }) {
+  const accepted = signups.filter(s => s.status === "ACCEPTED");
+  if (accepted.length === 0) return null;
+  const tanks = accepted.filter(s => s.character.role === "TANK").length;
+  const healers = accepted.filter(s => s.character.role === "HEALER").length;
+  const dps = accepted.filter(s => s.character.role === "DPS").length;
+  const classes = accepted.map(s => s.character.class.toLowerCase());
+  const specs = accepted.map(s => (s.character.spec ?? "").toLowerCase());
+  const hasBloodlust = classes.some(c => BLOODLUST_CLASSES.has(c));
+  const hasBrez = classes.some(c => BREZ_CLASSES.has(c));
+  const missingBuffs = Object.entries(RAID_BUFF_MAP)
+    .filter(([, providerClasses]) => !providerClasses.some(c => classes.includes(c)))
+    .map(([buff]) => buff);
+  void specs;
+
+  const RoleBar = ({ count, total, label, color }: { count: number; total: number; label: string; color: string }) => (
+    <div className="flex items-center gap-3">
+      <span className="text-xs w-14 text-right" style={{ color: "var(--wow-text-faint)" }}>{label}</span>
+      <div className="flex-1 rounded-full overflow-hidden" style={{ height: "6px", background: "rgba(255,255,255,0.08)" }}>
+        <div className="h-full rounded-full transition-all" style={{ width: `${total ? (count / total) * 100 : 0}%`, background: color }} />
+      </div>
+      <span className="text-xs font-mono tabular-nums" style={{ color, width: "2rem" }}>{count}</span>
+    </div>
+  );
+
+  return (
+    <div style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)", borderRadius: "0.5rem", padding: "1rem 1.25rem", marginBottom: "1.5rem" }}>
+      <h2 style={{ color: "var(--wow-gold)", fontWeight: 600, fontSize: "0.8125rem", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>Composition ({accepted.length})</h2>
+      <div className="space-y-2 mb-3">
+        <RoleBar count={tanks} total={accepted.length} label="Tanks" color="#3FC7EB" />
+        <RoleBar count={healers} total={accepted.length} label="Healers" color="#1eff00" />
+        <RoleBar count={dps} total={accepted.length} label="DPS" color="#FF8C00" />
+      </div>
+      <div className="flex flex-wrap gap-2 pt-2" style={{ borderTop: "1px solid rgba(200,169,106,0.1)" }}>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium`}
+          style={hasBloodlust ? { background: "rgba(255,80,80,0.12)", border: "1px solid rgba(255,80,80,0.3)", color: "#ff6060" }
+            : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "var(--wow-text-faint)" }}>
+          {hasBloodlust ? "✓" : "✗"} Bloodlust
+        </span>
+        <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+          style={hasBrez ? { background: "rgba(100,180,100,0.12)", border: "1px solid rgba(100,180,100,0.3)", color: "#60c060" }
+            : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "var(--wow-text-faint)" }}>
+          {hasBrez ? "✓" : "✗"} Battle Rez
+        </span>
+        {missingBuffs.length > 0 && missingBuffs.map(b => (
+          <span key={b} className="text-xs px-2 py-0.5 rounded-full font-medium"
+            style={{ background: "rgba(200,64,64,0.08)", border: "1px solid rgba(200,64,64,0.25)", color: "#c07070" }}>
+            ✗ {b}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function RaidDetailClient({ event, signups: initial, guildSlug, isOfficer, userCharacters, userId }: {
   event: RaidEvent; signups: Signup[]; guildSlug: string; isOfficer: boolean; userCharacters: Character[]; userId: string;
@@ -133,6 +203,9 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
           </div>
         </div>
       )}
+
+      {/* Composition Analyser (officers only, accepted signups exist) */}
+      {isOfficer && <CompositionPanel signups={signups} />}
 
       {/* Signup list */}
       <div className="flex items-center justify-between mb-3">

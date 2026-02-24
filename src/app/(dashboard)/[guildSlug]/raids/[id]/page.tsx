@@ -23,7 +23,7 @@ export default async function RaidDetailPage({ params }: Props) {
     }),
     prisma.signup.findMany({
       where: { raidEventId: id },
-      include: { character: { select: { id: true, name: true, class: true, role: true, itemLevel: true } } },
+      include: { character: { select: { id: true, name: true, class: true, spec: true, role: true, itemLevel: true } } },
       orderBy: { createdAt: "asc" },
     }),
     prisma.character.findMany({
