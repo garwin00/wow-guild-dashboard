@@ -73,7 +73,7 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
   }
 
   return (
-    <div className="rounded-lg overflow-hidden transition-all relative group" style={{
+    <div className="rounded-lg transition-all relative group" style={{
       background: "var(--wow-surface)",
       border: isMain ? `2px solid ${color}60` : "1px solid rgba(var(--wow-primary-rgb),0.15)",
       boxShadow: isMain ? `0 0 20px ${color}20` : "none",
@@ -88,33 +88,14 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
           style={{ background: "rgba(0,0,0,0.6)", color: "#e06060" }}>✕</button>
       </div>
 
-      {/* Portrait header */}
-      {char.avatarUrl ? (
-        <div className="relative h-16 overflow-hidden" style={{ zIndex: 0 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={avatarToInset(char.avatarUrl)}
-            alt=""
-            className="w-full h-full object-cover object-top"
-            style={{ filter: "brightness(0.75)" }}
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-          />
-          <div className="absolute inset-0" style={{
-            background: `linear-gradient(to bottom, transparent 30%, var(--wow-surface) 100%)`,
-          }} />
-        </div>
-      ) : (
-        <div className="h-8" style={{ background: `${color}18` }} />
-      )}
-
-      {/* Avatar + name row */}
-      <div className="flex items-center gap-2 px-3 pb-3" style={{ marginTop: char.avatarUrl ? "-1.25rem" : "0.5rem" }}>
+      {/* Avatar + name row — plain, no banner on small cards */}
+      <div className="flex items-center gap-3 p-4 pr-14">
         {char.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={char.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover shrink-0 relative z-10"
-            style={{ boxShadow: `0 0 0 2px ${color}60, 0 0 0 3px var(--wow-surface)` }} />
+          <img src={char.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover shrink-0"
+            style={{ boxShadow: `0 0 0 2px ${color}60` }} />
         ) : (
-          <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
+          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
             style={{ background: `${color}20`, color }}>
             {char.name[0].toUpperCase()}
           </div>
@@ -133,7 +114,7 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
 
       {/* Edit inline form */}
       {editing && (
-        <div className="mx-3 mb-3 space-y-2 p-2 rounded" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+        <div className="mx-4 mb-4 space-y-2 p-2 rounded" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
           <div className="flex gap-2">
             <div className="flex-1">
               <p className="text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Role</p>
@@ -168,7 +149,7 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
         </div>
       )}
 
-      <div className="flex items-center justify-between text-xs px-3 pb-3">
+      <div className="flex items-center justify-between text-xs px-4 pb-4">
         <span style={{ color: "var(--wow-text-faint)" }}>{char.realm}</span>
         <div className="flex items-center gap-2">
           {char.itemLevel && <span style={{ color: "var(--wow-text)" }}>{char.itemLevel} iLvl</span>}
