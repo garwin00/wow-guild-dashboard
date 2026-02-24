@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface LogReport { id: string; wclCode: string; title: string; zone: string | null; startTime: string | Date; fightCount: number; _count: { parses: number }; }
 interface Guild { id: string; name: string; wclGuildId: string | null; }
@@ -9,7 +10,8 @@ interface Guild { id: string; name: string; wclGuildId: string | null; }
 export default function LogsClient({ reports: initial, guild, guildSlug, isOfficer }: {
   reports: LogReport[]; guild: Guild; guildSlug: string; isOfficer: boolean;
 }) {
-  const [reports] = useState(initial);
+  const router = useRouter();
+  const [reports, setReports] = useState(initial);
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -19,7 +21,13 @@ export default function LogsClient({ reports: initial, guild, guildSlug, isOffic
       const res = await fetch(`/api/logs/sync?guildSlug=${guildSlug}`, { method: "POST" });
       const text = await res.text();
       const data = text ? JSON.parse(text) : {};
-      setMessage(res.ok ? `Synced ${data.count} reports.` : `Error: ${data.error ?? "Sync failed"}`);
+      if (res.ok) {
+        setMessage(`✓ Synced ${data.count} reports`);
+        // Refresh server component data so the table updates
+        router.refresh();
+      } else {
+        setMessage(`Error: ${data.error ?? "Sync failed"}`);
+      }
     } catch (err) {
       setMessage(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
     }
@@ -60,24 +68,31 @@ export default function LogsClient({ reports: initial, guild, guildSlug, isOffic
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-800 text-left text-xs text-gray-500 uppercase tracking-wide">
-                <th className="px-4 py-3">Report</th>
+                <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Zone</th>
                 <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Fights</th>
-                <th className="px-4 py-3">Parses</th>
+                <th className="px-4 py-3 text-center">Fights</th>
+                <th className="px-4 py-3 text-center">Parses</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {reports.map((r) => (
                 <tr key={r.id} className="border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors">
                   <td className="px-4 py-3">
-                    <a href={`https://www.warcraftlogs.com/reports/${r.wclCode}`} target="_blank" rel="noopener noreferrer"
-                      className="text-purple-400 hover:text-purple-300 text-sm">{r.title}</a>
+                    <p className="text-white text-sm font-medium">{r.title}</p>
+                    <p className="text-gray-600 text-xs font-mono">{r.wclCode}</p>
                   </td>
-                  <td className="px-4 py-3 text-gray-300 text-sm">{r.zone ?? "Unknown"}</td>
-                  <td className="px-4 py-3 text-gray-400 text-sm">{new Date(r.startTime).toLocaleDateString("en-GB")}</td>
-                  <td className="px-4 py-3 text-gray-400 text-sm">{r.fightCount}</td>
-                  <td className="px-4 py-3 text-gray-400 text-sm">{r._count.parses}</td>
+                  <td className="px-4 py-3 text-gray-300 text-sm">{r.zone ?? <span className="text-gray-600 italic">Unknown</span>}</td>
+                  <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">
+                    {new Date(r.startTime).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  </td>
+                  <td className="px-4 py-3 text-gray-400 text-sm text-center">{r.fightCount}</td>
+                  <td className="px-4 py-3 text-gray-400 text-sm text-center">{r._count.parses}</td>
+                  <td className="px-4 py-3 text-right">
+                    <a href={`https://www.warcraftlogs.com/reports/${r.wclCode}`} target="_blank" rel="noopener noreferrer"
+                      className="text-purple-400 hover:text-purple-300 text-xs">View on WCL ↗</a>
+                  </td>
                 </tr>
               ))}
             </tbody>
