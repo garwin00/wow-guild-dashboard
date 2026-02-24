@@ -9,37 +9,37 @@ interface Character {
   guildRank: number | null;
 }
 
-const CLASS_COLORS: Record<string, string> = {
-  "death knight": "text-red-400",
-  "demon hunter": "text-purple-400",
-  "druid": "text-orange-400",
-  "evoker": "text-teal-400",
-  "hunter": "text-green-400",
-  "mage": "text-blue-300",
-  "monk": "text-emerald-400",
-  "paladin": "text-yellow-300",
-  "priest": "text-gray-100",
-  "rogue": "text-yellow-500",
-  "shaman": "text-blue-500",
-  "warlock": "text-violet-400",
-  "warrior": "text-orange-600",
+// Official Blizzard WoW class colours
+const CLASS_COLOR_HEX: Record<string, string> = {
+  "death knight": "#C41E3A",
+  "demon hunter": "#A330C9",
+  "druid":        "#FF7C0A",
+  "evoker":       "#33937F",
+  "hunter":       "#AAD372",
+  "mage":         "#3FC7EB",
+  "monk":         "#00FF98",
+  "paladin":      "#F48CBA",
+  "priest":       "#FFFFFF",
+  "rogue":        "#FFF468",
+  "shaman":       "#0070DD",
+  "warlock":      "#8788EE",
+  "warrior":      "#C69B3A",
 };
 
-const CLASS_BG: Record<string, string> = {
-  "death knight": "bg-red-950",
-  "demon hunter": "bg-purple-950",
-  "druid": "bg-orange-950",
-  "evoker": "bg-teal-950",
-  "hunter": "bg-green-950",
-  "mage": "bg-blue-950",
-  "monk": "bg-emerald-950",
-  "paladin": "bg-yellow-950",
-  "priest": "bg-gray-900",
-  "rogue": "bg-yellow-950",
-  "shaman": "bg-blue-950",
-  "warlock": "bg-violet-950",
-  "warrior": "bg-orange-950",
-};
+function classColor(cls: string): string {
+  return CLASS_COLOR_HEX[cls.toLowerCase()] ?? "#9ca3af";
+}
+
+// 15% opacity version of the class colour for avatar backgrounds
+function classColorBg(cls: string): string {
+  const hex = CLASS_COLOR_HEX[cls.toLowerCase()];
+  if (!hex) return "rgba(156,163,175,0.15)";
+  // Convert #RRGGBB → rgba
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},0.15)`;
+}
 
 const ROLE_ICON: Record<CharRole, string> = { TANK: "🛡️", HEALER: "💚", DPS: "⚔️" };
 const ROLE_LABEL: Record<CharRole, string> = { TANK: "Tanks", HEALER: "Healers", DPS: "DPS" };
@@ -184,7 +184,10 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={char.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover ring-1 ring-gray-700" />
                       ) : (
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${CLASS_BG[char.class.toLowerCase()] ?? "bg-gray-800"} ${CLASS_COLORS[char.class.toLowerCase()] ?? "text-gray-300"}`}>
+                        <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                        style={{ backgroundColor: classColorBg(char.class), color: classColor(char.class) }}
+                      >
                           {char.name[0].toUpperCase()}
                         </div>
                       )}
@@ -195,7 +198,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-sm font-medium ${CLASS_COLORS[char.class.toLowerCase()] ?? "text-gray-300"}`}>
+                    <span className="text-sm font-medium" style={{ color: classColor(char.class) }}>
                       {char.spec ? `${char.spec} ` : ""}{char.class && char.class !== "Unknown" ? char.class : <span className="text-gray-600 italic">Unknown</span>}
                     </span>
                   </td>
