@@ -7,18 +7,24 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const account = await prisma.account.findFirst({
-    where: { userId: session.user.id, provider: "battlenet" },
-  });
+  const region = process.env.BLIZZARD_REGION ?? "eu";
 
-  if (!account?.access_token) {
+  const jwtToken = (session as { bnetAccessToken?: string }).bnetAccessToken;
+  let accessToken: string | undefined = jwtToken;
+
+  if (!accessToken) {
+    const account = await prisma.account.findFirst({
+      where: { userId: session.user.id, provider: "battlenet" },
+    });
+    accessToken = account?.access_token ?? undefined;
+  }
+
+  if (!accessToken) {
     return NextResponse.json({ error: "No Battle.net token found" }, { status: 400 });
   }
 
-  const region = process.env.BLIZZARD_REGION ?? "eu";
-
   try {
-    const profile = await getUserWowProfile(region, account.access_token);
+    const profile = await getUserWowProfile(region, accessToken);
     const allChars: { name: string; realmSlug: string; level: number }[] = [];
 
     for (const wowAccount of profile?.wow_accounts ?? []) {
@@ -40,7 +46,7 @@ export async function GET() {
     // Fetch individual profiles in parallel
     const profiles = await Promise.allSettled(
       topChars.map((c) =>
-        getCharacterProfile(region, c.realmSlug, c.name, account.access_token!)
+        getCharacterProfile(region, c.realmSlug, c.name, accessToken!)
       )
     );
 

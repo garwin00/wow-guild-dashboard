@@ -107,10 +107,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     },
   ],
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   callbacks: {
-    session({ session, user }) {
-      session.user.id = user.id;
+    async jwt({ token, user, account }) {
+      // On first sign-in, persist user.id and bnetId into the token
+      if (user) {
+        token.sub = user.id;
+        token.bnetId = (user as { bnetId?: string }).bnetId;
+      }
+      // After OAuth, store the access token for BNet API calls
+      if (account?.provider === "battlenet") {
+        token.bnetAccessToken = account.access_token;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      session.user.id = token.sub!;
+      (session as { bnetAccessToken?: string }).bnetAccessToken = token.bnetAccessToken as string | undefined;
       return session;
     },
   },
