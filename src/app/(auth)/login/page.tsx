@@ -78,6 +78,10 @@ function LoginForm() {
             <Link href="/register" style={{ color: "#c8a96a" }} className="hover:text-[#f0c040] transition-colors">
               Create one
             </Link>
+            {" · "}
+            <Link href="/forgot-password" style={{ color: "#c8a96a" }} className="hover:text-[#f0c040] transition-colors">
+              Forgot password?
+            </Link>
           </p>
 
           <div className="flex items-center gap-3">
