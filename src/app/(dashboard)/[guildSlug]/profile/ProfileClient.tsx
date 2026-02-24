@@ -337,8 +337,8 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                 </div>
 
                 {/* Two-column layout: portrait | data */}
-                <div className="flex gap-4 p-4 pr-12">
-                  {/* Col 1 — portrait */}
+                <div className="flex items-center gap-4 p-4 pr-12">
+                  {/* Col 1 — portrait, vertically centered */}
                   {mainChar.avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -363,9 +363,8 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                     </div>
                     <p className="text-sm" style={{ color: "var(--wow-text-muted)" }}>
                       {mainChar.spec ? `${mainChar.spec} ` : ""}{mainChar.class}
-                      <span className="ml-2 text-xs" style={{ color: "var(--wow-text-faint)" }}>{mainChar.realm}</span>
                     </p>
-                    <div className="flex items-end gap-5 mt-1">
+                    <div className="flex items-end gap-5 mt-3">
                       <div>
                         <p className="text-xl font-bold leading-none tabular-nums" style={{ color: mainChar.itemLevel ? "var(--wow-text)" : "var(--wow-text-faint)" }}>
                           {mainChar.itemLevel ?? "—"}
