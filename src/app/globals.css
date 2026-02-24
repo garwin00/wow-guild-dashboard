@@ -173,36 +173,36 @@
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
 }
 
-/* ── Theme: Horde (red/black) ── */
+/* ── Theme: Horde — near-black base, red accent ── */
 [data-theme="horde"] {
-  --wow-bg:           #0d0505;
-  --wow-surface:      #140808;
-  --wow-surface-2:    #1c0c0c;
-  --wow-border:       rgba(180, 30, 30, 0.2);
-  --wow-border-bright: rgba(200, 50, 50, 0.5);
-  --wow-gold:         #cc3333;
-  --wow-gold-bright:  #ff4422;
-  --wow-gold-dim:     #6b1a1a;
-  --wow-text:         #f0dcd8;
-  --wow-text-muted:   #8a5050;
-  --wow-text-faint:   #6b3030;
-  --wow-primary-rgb:  200, 50, 50;
+  --wow-bg:            #0c0b0b;
+  --wow-surface:       #131010;
+  --wow-surface-2:     #1a1616;
+  --wow-border:        rgba(200, 40, 40, 0.18);
+  --wow-border-bright: rgba(220, 60, 60, 0.45);
+  --wow-gold:          #d94040;
+  --wow-gold-bright:   #ff5533;
+  --wow-gold-dim:      #7a2525;
+  --wow-text:          #f4eeec;
+  --wow-text-muted:    #a08888;
+  --wow-text-faint:    #6a4848;
+  --wow-primary-rgb:   210, 55, 55;
 }
 [data-theme="horde"] .wow-btn { color: #fff; }
 
-/* ── Theme: Alliance (blue/gold) ── */
+/* ── Theme: Alliance — near-black base, blue accent ── */
 [data-theme="alliance"] {
-  --wow-bg:           #050a14;
-  --wow-surface:      #081320;
-  --wow-surface-2:    #0d1e30;
-  --wow-border:       rgba(30, 80, 180, 0.2);
-  --wow-border-bright: rgba(74, 143, 212, 0.5);
-  --wow-gold:         #4a8fd4;
-  --wow-gold-bright:  #7ab8f5;
-  --wow-gold-dim:     #1a4070;
-  --wow-text:         #d8e8f0;
-  --wow-text-muted:   #506080;
-  --wow-text-faint:   #304060;
-  --wow-primary-rgb:  74, 143, 212;
+  --wow-bg:            #0a0c10;
+  --wow-surface:       #10141c;
+  --wow-surface-2:     #161c28;
+  --wow-border:        rgba(60, 110, 200, 0.18);
+  --wow-border-bright: rgba(80, 140, 220, 0.45);
+  --wow-gold:          #5a9fdf;
+  --wow-gold-bright:   #88c0f8;
+  --wow-gold-dim:      #2a5080;
+  --wow-text:          #ecf0f8;
+  --wow-text-muted:    #8898b0;
+  --wow-text-faint:    #4a5870;
+  --wow-primary-rgb:   80, 140, 210;
 }
 [data-theme="alliance"] .wow-btn { color: #fff; }
