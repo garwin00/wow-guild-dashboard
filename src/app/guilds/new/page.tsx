@@ -39,6 +39,11 @@ export default function NewGuildPage() {
     fetch("/api/auth/bnet-status")
       .then(r => r.json())
       .then(status => {
+        if (!status.authenticated) {
+          // Stale JWT — redirect to login
+          window.location.href = "/login?callbackUrl=/guilds/new";
+          return;
+        }
         if (!status.linked) {
           setHasBnet(false);
           setShowManual(true);
