@@ -80,7 +80,10 @@ export async function POST(req: Request) {
 
     const role = specToRole(spec);
 
-    await prisma.character.upsert({
+    // Map Blizzard guild rank to GuildRole: 0=GM, 1=Officer, 2+=Member
+    const guildRole = guildRank === 0 ? "GM" : guildRank === 1 ? "OFFICER" : "MEMBER";
+
+    const upserted = await prisma.character.upsert({
       where: { name_realm_region: { name: char.name, realm: realmSlug, region: guild.region } },
       update: {
         class: className,
@@ -103,6 +106,14 @@ export async function POST(req: Request) {
         userId: placeholder.id,
       },
     });
+
+    // Update GuildMembership role for users who own this character
+    if (upserted.userId !== placeholder.id) {
+      await prisma.guildMembership.updateMany({
+        where: { userId: upserted.userId, guildId: guild.id },
+        data: { role: guildRole as "GM" | "OFFICER" | "MEMBER" },
+      });
+    }
     synced++;
   });
 
