@@ -62,17 +62,17 @@ export async function POST(req: Request) {
 
   let synced = 0;
 
-  await chunked(members, 10, async (member: { rank?: number; character?: { name?: string; realm?: { slug?: string }; playable_class?: { name?: string }; level?: number } }) => {
+  await chunked(members, 10, async (member: { rank?: number; character?: { name?: string; realm?: { slug?: string }; playable_class?: { name?: string; id?: number }; level?: number } }) => {
     const char = member?.character;
     if (!char?.name) return;
 
     const realmSlug = char.realm?.slug ?? guild.realm;
-    // Class ID from roster (name not included in roster response)
-    const classIdFallback = CLASS_ID_MAP[(char as { playable_class?: { id?: number } }).playable_class?.id ?? 0] ?? null;
+    // Blizzard guild roster returns both playable_class.name AND .id — prefer name directly
+    const rosterClassName: string | null = char.playable_class?.name ?? CLASS_ID_MAP[char.playable_class?.id ?? 0] ?? null;
     const guildRank: number | null = member?.rank ?? null;
 
-    // Fetch individual profile (Blizzard) + avatar/class/spec (Raider.IO) in parallel
-    let className: string | null = null;
+    // Fetch individual profile (Blizzard) + avatar/spec (Raider.IO) in parallel
+    let className: string | null = rosterClassName; // start with roster data as baseline
     let spec: string | null = null;
     let itemLevel: number | null = null;
     let avatarUrl: string | null = null;
@@ -81,8 +81,8 @@ export async function POST(req: Request) {
         getCharacterProfile(guild.region, realmSlug, char.name),
         fetchCharacterAvatar(guild.region, realmSlug, char.name),
       ]);
-      // Blizzard profile is authoritative for class/spec/ilvl
-      className = profile?.character_class?.name ?? profile?.playable_class?.name ?? rio.className ?? classIdFallback;
+      // Blizzard individual profile > RIO > roster name > class ID map
+      className = profile?.character_class?.name ?? profile?.playable_class?.name ?? rio.className ?? rosterClassName;
       spec = profile?.active_spec?.name ?? rio.spec ?? null;
       itemLevel = profile?.equipped_item_level ?? profile?.average_item_level ?? null;
       avatarUrl = rio.avatarUrl;
@@ -92,11 +92,11 @@ export async function POST(req: Request) {
       // Still try Raider.IO alone as fallback
       try {
         const rio = await fetchCharacterAvatar(guild.region, realmSlug, char.name);
-        className = rio.className ?? classIdFallback;
+        className = rio.className ?? rosterClassName;
         spec = rio.spec;
         avatarUrl = rio.avatarUrl;
       } catch {
-        className = classIdFallback;
+        className = rosterClassName;
       }
     }
 
@@ -108,6 +108,7 @@ export async function POST(req: Request) {
     const upserted = await prisma.character.upsert({
       where: { name_realm_region: { name: char.name, realm: realmSlug, region: guild.region } },
       update: {
+        // Always update class — overwrite old "Unknown" values when we now have data
         ...(className ? { class: className } : {}),
         spec,
         role,
@@ -120,7 +121,7 @@ export async function POST(req: Request) {
         name: char.name,
         realm: realmSlug,
         region: guild.region,
-        class: className ?? "Unknown",
+        class: className ?? rosterClassName ?? "Unknown",
         spec,
         role,
         itemLevel,
