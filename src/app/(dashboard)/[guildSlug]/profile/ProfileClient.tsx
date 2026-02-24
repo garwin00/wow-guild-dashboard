@@ -323,8 +323,9 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
             <div>
               <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--wow-text-faint)" }}>Main Character</p>
               <div className="rounded-lg overflow-hidden relative group" style={{
+                background: "var(--wow-surface)",
                 border: `2px solid ${classColor(mainChar.class)}50`,
-                boxShadow: `0 0 30px ${classColor(mainChar.class)}15`,
+                boxShadow: `0 0 24px ${classColor(mainChar.class)}18`,
               }}>
                 {/* Unlink button */}
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-20">
@@ -333,60 +334,46 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                     style={{ background: "rgba(0,0,0,0.7)", color: "#e06060" }}>✕</button>
                 </div>
 
-                {/* Portrait banner */}
-                <div className="relative overflow-hidden" style={{ height: "7rem", background: `${classColor(mainChar.class)}18` }}>
-                  {mainChar.avatarUrl && (
-                    <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={avatarToInset(mainChar.avatarUrl)}
-                        alt=""
-                        className="w-full h-full object-cover object-top"
-                        style={{ filter: "brightness(0.8)" }}
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                      />
-                      <div className="absolute inset-0" style={{
-                        background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.65) 100%)",
-                      }} />
-                    </>
-                  )}
-                  {/* Name overlaid at bottom of banner */}
-                  <div className="absolute bottom-0 left-0 right-0 flex items-end gap-3 px-5 pb-3">
-                    {mainChar.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={mainChar.avatarUrl} alt="" className="w-12 h-12 rounded-full object-cover shrink-0"
-                        style={{ boxShadow: `0 0 0 2px ${classColor(mainChar.class)}80` }} />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shrink-0"
-                        style={{ background: `${classColor(mainChar.class)}30`, color: classColor(mainChar.class) }}>
-                        {mainChar.name[0].toUpperCase()}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-xl font-bold truncate drop-shadow" style={{ color: mainChar.avatarUrl ? "#fff" : classColor(mainChar.class) }}>{mainChar.name}</p>
-                      <p className="text-xs drop-shadow" style={{ color: mainChar.avatarUrl ? "rgba(255,255,255,0.75)" : "var(--wow-text-muted)" }}>
-                        {mainChar.spec ? `${mainChar.spec} ` : ""}{mainChar.class}
-                      </p>
+                {/* Two-column layout: portrait | data */}
+                <div className="flex gap-4 p-4 pr-12">
+                  {/* Col 1 — portrait */}
+                  {mainChar.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={avatarToInset(mainChar.avatarUrl)}
+                      alt=""
+                      className="rounded-lg object-cover object-top shrink-0"
+                      style={{ width: "80px", height: "80px", boxShadow: `0 0 0 2px ${classColor(mainChar.class)}60` }}
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                    />
+                  ) : (
+                    <div className="rounded-lg flex items-center justify-center font-bold text-2xl shrink-0"
+                      style={{ width: "80px", height: "80px", background: `${classColor(mainChar.class)}20`, color: classColor(mainChar.class) }}>
+                      {mainChar.name[0].toUpperCase()}
                     </div>
-                  </div>
-                </div>
+                  )}
 
-                {/* Stats row */}
-                <div className="flex items-center gap-5 px-5 py-3" style={{ background: "var(--wow-surface)", borderTop: `1px solid ${classColor(mainChar.class)}20` }}>
-                  <div>
-                    <p className="text-lg font-bold leading-tight" style={{ color: mainChar.itemLevel ? "var(--wow-text)" : "var(--wow-text-faint)" }}>
-                      {mainChar.itemLevel ?? "—"}
+                  {/* Col 2 — name, spec, stats */}
+                  <div className="min-w-0 flex-1 flex flex-col justify-center gap-1">
+                    <p className="text-2xl font-bold truncate leading-tight" style={{ color: classColor(mainChar.class) }}>{mainChar.name}</p>
+                    <p className="text-sm" style={{ color: "var(--wow-text-muted)" }}>
+                      {mainChar.spec ? `${mainChar.spec} ` : ""}{mainChar.class}
+                      <span className="ml-2 text-xs" style={{ color: "var(--wow-text-faint)" }}>{mainChar.realm}</span>
                     </p>
-                    <p className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Item Level</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold leading-tight" style={{ color: (mainChar.mythicScore && mainChar.mythicScore > 0) ? scoreColor(mainChar.mythicScore) : "var(--wow-text-faint)" }}>
-                      {(mainChar.mythicScore && mainChar.mythicScore > 0) ? mainChar.mythicScore.toFixed(1) : "—"}
-                    </p>
-                    <p className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Mythic+ Score</p>
-                  </div>
-                  <div className="ml-auto text-right">
-                    <p className="text-sm font-medium" style={{ color: "var(--wow-text-muted)" }}>{mainChar.realm}</p>
+                    <div className="flex items-end gap-5 mt-1">
+                      <div>
+                        <p className="text-xl font-bold leading-none tabular-nums" style={{ color: mainChar.itemLevel ? "var(--wow-text)" : "var(--wow-text-faint)" }}>
+                          {mainChar.itemLevel ?? "—"}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-faint)" }}>Item Level</p>
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold leading-none tabular-nums" style={{ color: (mainChar.mythicScore && mainChar.mythicScore > 0) ? scoreColor(mainChar.mythicScore) : "var(--wow-text-faint)" }}>
+                          {(mainChar.mythicScore && mainChar.mythicScore > 0) ? mainChar.mythicScore.toFixed(0) : "—"}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-faint)" }}>Mythic+ Score</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
