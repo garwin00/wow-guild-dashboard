@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
   let reports;
   try {
-    const result = await getGuildReports(guild.wclGuildId, guild.realm.toLowerCase().replace(/\s+/g, "-"), guild.region);
+    const result = await getGuildReports(guild.name, guild.realm.toLowerCase().replace(/\s+/g, "-"), guild.region.toUpperCase());
     // getGuildReports returns the full GQL response — unwrap to the data array
     type GqlResult = { reportData?: { reports?: { data?: unknown[] } } };
     const typed = result as GqlResult;

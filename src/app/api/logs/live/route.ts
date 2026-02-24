@@ -19,9 +19,9 @@ export async function GET(req: Request) {
   const { guild } = membership;
   if (!guild.wclGuildId) return NextResponse.json({ active: null, fights: null });
 
-  // wclGuildId stores the guild name for WCL lookups
+  // Use actual guild name from DB — WCL expects proper casing with spaces, not URL slug
   const realmSlug = guild.realm.toLowerCase().replace(/\s+/g, "-");
-  const active = await getActiveReport(guild.wclGuildId, realmSlug, guild.region);
+  const active = await getActiveReport(guild.name, realmSlug, guild.region.toUpperCase());
   if (!active) return NextResponse.json({ active: null, fights: null });
 
   const fights = await getLiveFights(active.code);
