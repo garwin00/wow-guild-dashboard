@@ -76,31 +76,15 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
   pending: boolean;
 }) {
   const color = classColor(char.class);
-  const [editing, setEditing] = useState(false);
-  const [editRole, setEditRole] = useState(char.role);
-  const [editSpec, setEditSpec] = useState(char.spec ?? "");
-  const specs = SPECS[char.class?.toLowerCase() ?? ""] ?? [];
-
-  function saveEdit() {
-    onEdit({ role: editRole, spec: editSpec || undefined });
-    setEditing(false);
-  }
 
   return (
-    <div className="rounded-lg transition-all relative group" style={{
+    <div className="rounded-lg transition-all relative" style={{
       background: "var(--wow-surface)",
       border: isMain ? `2px solid ${color}60` : "1px solid rgba(var(--wow-primary-rgb),0.15)",
       boxShadow: isMain ? `0 0 20px ${color}20` : "none",
     }}>
-      {/* Action buttons — top right */}
-      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-        <button onClick={() => setEditing(e => !e)} title="Edit role/spec"
-          className="w-6 h-6 rounded flex items-center justify-center text-xs"
-          style={{ background: "rgba(0,0,0,0.6)", color: "var(--wow-gold)" }}>✏</button>
-      </div>
-
       {/* Two-column: avatar | data */}
-      <div className="flex items-start gap-3 p-3 pr-12">
+      <div className="flex items-start gap-3 p-4">
         {/* Col 1 — avatar */}
         {char.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -120,10 +104,10 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
             {isMain && <span className="text-xs px-1 py-0.5 rounded shrink-0" style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}>Main</span>}
             {char.level && <span className="text-xs ml-auto shrink-0 tabular-nums" style={{ color: "var(--wow-text-faint)" }}>Lv {char.level}</span>}
           </div>
-          <p className="text-xs truncate mb-1.5" style={{ color: "var(--wow-text-muted)" }}>
+          <p className="text-xs truncate mb-2" style={{ color: "var(--wow-text-muted)" }}>
             {char.spec ? `${char.spec} ` : ""}{char.class}
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-5 mt-2">
             <span className="text-sm font-bold tabular-nums" style={{ color: char.itemLevel ? "var(--wow-text)" : "var(--wow-text-faint)" }}>
               {char.itemLevel ?? "—"}
               <span className="text-xs font-normal ml-0.5" style={{ color: "var(--wow-text-muted)" }}>iLvl</span>
@@ -135,43 +119,6 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
           </div>
         </div>
       </div>
-
-      {/* Edit inline form */}
-      {editing && (
-        <div className="mx-3 mb-3 space-y-2 p-2 rounded" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <p className="text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Role</p>
-              <select value={editRole} onChange={e => setEditRole(e.target.value)}
-                className="w-full text-xs rounded px-2 py-1"
-                style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.3)", color: "var(--wow-text)" }}>
-                {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
-            {specs.length > 0 && (
-              <div className="flex-1">
-                <p className="text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Spec</p>
-                <select value={editSpec} onChange={e => setEditSpec(e.target.value)}
-                  className="w-full text-xs rounded px-2 py-1"
-                  style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.3)", color: "var(--wow-text)" }}>
-                  <option value="">—</option>
-                  {specs.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <button onClick={saveEdit} className="flex-1 text-xs py-1 rounded font-medium"
-              style={{ background: "rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-gold)", border: "1px solid rgba(var(--wow-primary-rgb),0.3)" }}>
-              Save
-            </button>
-            <button onClick={() => setEditing(false)} className="flex-1 text-xs py-1 rounded"
-              style={{ background: "rgba(var(--wow-primary-rgb),0.05)", color: "var(--wow-text-faint)", border: "1px solid rgba(var(--wow-primary-rgb),0.1)" }}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Set as main — subtle link-style */}
       {!isMain && !editing && (
@@ -401,10 +348,10 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                   <div className="min-w-0 flex-1 flex flex-col justify-center gap-1">
                     <div className="flex items-baseline gap-2">
                       <p className="text-2xl font-bold truncate leading-tight" style={{ color: classColor(mainChar.class) }}>{mainChar.name}</p>
-                      {mainChar.level && <span className="text-sm ml-auto shrink-0 tabular-nums" style={{ color: "var(--wow-text-faint)" }}>Lv {mainChar.level}</span>}
                     </div>
-                    <p className="text-sm" style={{ color: "var(--wow-text-muted)" }}>
-                      {mainChar.spec ? `${mainChar.spec} ` : ""}{mainChar.class}
+                    <p className="text-sm flex items-center gap-2" style={{ color: "var(--wow-text-muted)" }}>
+                      <span>{mainChar.spec ? `${mainChar.spec} ` : ""}{mainChar.class}</span>
+                      {mainChar.level && <span className="text-xs tabular-nums" style={{ color: "var(--wow-text-faint)" }}>Lv {mainChar.level}</span>}
                     </p>
                     <div className="flex items-end gap-5 mt-3">
                       <div>
