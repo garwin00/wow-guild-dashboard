@@ -5,70 +5,49 @@ import { useRouter } from "next/navigation";
 
 interface BnetGuild { name: string; realm: string; realmSlug: string; region: string; }
 
-const inputStyle = {
-  background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)",
-  color: "#e8dfc8", borderRadius: "0.375rem",
-  padding: "0.5rem 0.75rem", width: "100%", fontSize: "0.875rem", outline: "none",
-};
-const labelStyle = {
-  display: "block", fontSize: "0.75rem", marginBottom: "0.375rem",
-  textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "#5a5040",
-};
-
 export default function NewGuildPage() {
   const router = useRouter();
   const [guilds, setGuilds] = useState<BnetGuild[]>([]);
-  const [realms, setRealms] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasBnet, setHasBnet] = useState(false);
+  const [fetchingGuilds, setFetchingGuilds] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState<string | null>(null);
-  const [manualName, setManualName] = useState("");
-  const [manualRealm, setManualRealm] = useState("");
-  const [showManual, setShowManual] = useState(false);
 
-  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-  const justLinked = searchParams?.get("bnet_linked") === "1";
+  const justLinked = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("bnet_linked") === "1";
 
   useEffect(() => {
-    if (justLinked) {
-      window.history.replaceState({}, "", "/guilds/new");
-    }
+    if (justLinked) window.history.replaceState({}, "", "/guilds/new");
 
-    // First check BNet link status (fast DB-only check)
     fetch("/api/auth/bnet-status")
       .then(r => r.json())
       .then(status => {
         if (!status.authenticated) {
-          // Stale JWT — redirect to login
           window.location.href = "/login?callbackUrl=/guilds/new";
           return;
         }
         if (!status.linked) {
           setHasBnet(false);
-          setShowManual(true);
           setLoading(false);
           return;
         }
         setHasBnet(true);
-        // BNet is linked — fetch guilds
+        setFetchingGuilds(true);
         return fetch("/api/guilds/from-bnet")
           .then(r => r.json())
           .then(data => {
-            if (!data.error) {
-              setGuilds(data.guilds ?? []);
-              setRealms(data.realms ?? []);
-              if (data.realms?.length) setManualRealm(data.realms[0]);
-            }
-            if (!data.guilds?.length) setShowManual(true);
-          });
+            setGuilds(data.guilds ?? []);
+            if (data.error) setError("Could not load guilds from Battle.net.");
+          })
+          .finally(() => setFetchingGuilds(false));
       })
-      .catch(() => { setHasBnet(false); setShowManual(true); })
+      .catch(() => setError("Failed to connect."))
       .finally(() => setLoading(false));
   }, []);
 
   async function selectGuild(guild: BnetGuild) {
     setCreating(guild.name);
+    setError(null);
     const res = await fetch("/api/guilds/create", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify(guild),
@@ -76,13 +55,6 @@ export default function NewGuildPage() {
     const data = await res.json();
     if (data.slug) router.push(`/${data.slug}/overview`);
     else { setError(data.error ?? "Failed to create guild"); setCreating(null); }
-  }
-
-  async function submitManual(e: React.FormEvent) {
-    e.preventDefault();
-    if (!manualName || !manualRealm) return;
-    const region = process.env.NEXT_PUBLIC_BNET_REGION ?? "eu";
-    await selectGuild({ name: manualName, realm: manualRealm, realmSlug: manualRealm.toLowerCase().replace(/\s/g, "-"), region });
   }
 
   return (
@@ -106,10 +78,10 @@ export default function NewGuildPage() {
             <h1 className="text-xl font-bold" style={{ color: "#f0c040" }}>Set Up Your Guild</h1>
           </div>
 
-          {loading && (
+          {(loading || fetchingGuilds) && (
             <div className="text-center py-6" style={{ color: "#8a8070" }}>
               <div className="animate-spin text-2xl mb-2">⚙️</div>
-              <p className="text-sm">Checking Battle.net…</p>
+              <p className="text-sm">{loading ? "Checking Battle.net…" : "Loading your guilds…"}</p>
             </div>
           )}
 
@@ -124,11 +96,9 @@ export default function NewGuildPage() {
           {!loading && !hasBnet && (
             <div className="rounded-lg p-5 text-center space-y-4"
               style={{ background: "rgba(200,169,106,0.05)", border: "1px solid rgba(200,169,106,0.2)" }}>
-              <p className="text-sm font-medium" style={{ color: "#e8dfc8" }}>
-                🎮 Connect Battle.net
-              </p>
+              <p className="text-sm font-medium" style={{ color: "#e8dfc8" }}>🎮 Connect Battle.net</p>
               <p className="text-xs" style={{ color: "#8a8070" }}>
-                Link your Battle.net account to automatically import your guild and characters.
+                Link your Battle.net account to import your guilds automatically.
               </p>
               <button onClick={() => { window.location.href = "/api/auth/link-battlenet?returnTo=/guilds/new"; }}
                 className="wow-btn w-full">
@@ -137,8 +107,8 @@ export default function NewGuildPage() {
             </div>
           )}
 
-          {/* BNet guilds list */}
-          {!loading && hasBnet && guilds.length > 0 && (
+          {/* Guild list from BNet */}
+          {!loading && !fetchingGuilds && hasBnet && guilds.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-widest" style={{ color: "#5a5040" }}>Your Guilds</p>
               {guilds.map(g => (
@@ -163,38 +133,11 @@ export default function NewGuildPage() {
             </div>
           )}
 
-          {/* Manual entry — always available as fallback */}
-          {!loading && (
-            <div style={{ borderTop: "1px solid rgba(200,169,106,0.1)", paddingTop: "1.25rem" }}>
-              <button onClick={() => setShowManual(!showManual)}
-                className="text-sm transition-colors" style={{ color: "#8a8070" }}>
-                {showManual ? "▲ Hide manual entry" : "▼ Enter guild manually"}
-              </button>
-
-              {showManual && (
-                <form onSubmit={submitManual} className="mt-4 space-y-3">
-                  <div>
-                    <label style={labelStyle}>Guild Name</label>
-                    <input type="text" value={manualName} onChange={e => setManualName(e.target.value)}
-                      style={inputStyle} placeholder="e.g. Risen" required />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Realm</label>
-                    {realms.length > 0 ? (
-                      <select value={manualRealm} onChange={e => setManualRealm(e.target.value)}
-                        style={{ ...inputStyle, cursor: "pointer" }}>
-                        {realms.map(r => <option key={r} value={r} style={{ background: "#0f1019" }}>{r}</option>)}
-                      </select>
-                    ) : (
-                      <input type="text" value={manualRealm} onChange={e => setManualRealm(e.target.value)}
-                        style={inputStyle} placeholder="e.g. kazzak" required />
-                    )}
-                  </div>
-                  <button type="submit" disabled={!!creating || !manualName || !manualRealm} className="wow-btn w-full">
-                    {creating ? "Setting up…" : "Create Guild"}
-                  </button>
-                </form>
-              )}
+          {/* BNet linked but no guilds found */}
+          {!loading && !fetchingGuilds && hasBnet && guilds.length === 0 && !error && (
+            <div className="text-center py-4 space-y-2">
+              <p className="text-sm" style={{ color: "#8a8070" }}>No guilds found on your Battle.net account.</p>
+              <p className="text-xs" style={{ color: "#5a5040" }}>Make sure your characters are in a guild and are level 60+.</p>
             </div>
           )}
         </div>
