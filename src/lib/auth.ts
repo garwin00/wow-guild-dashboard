@@ -10,8 +10,8 @@ function customAdapter() {
   const base = PrismaAdapter(prisma);
   return {
     ...base,
-    createUser: (data: AdapterUser & { bnetId?: string; battletag?: string }) => {
-      return prisma.user.create({
+    createUser: async (data: AdapterUser & { bnetId?: string; battletag?: string }) => {
+      const user = await prisma.user.create({
         data: {
           id: data.id,
           name: data.name ?? null,
@@ -22,6 +22,7 @@ function customAdapter() {
           battletag: data.battletag ?? data.name ?? "",
         },
       });
+      return { ...user, email: user.email ?? "" } as AdapterUser;
     },
   };
 }

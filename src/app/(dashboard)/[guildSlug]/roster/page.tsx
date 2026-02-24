@@ -1,8 +1,40 @@
-export default function Page() {
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import RosterClient from "./RosterClient";
+
+interface Props { params: Promise<{ guildSlug: string }> }
+
+export default async function RosterPage({ params }: Props) {
+  const { guildSlug } = await params;
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const membership = await prisma.guildMembership.findFirst({
+    where: { userId: session.user.id, guild: { slug: guildSlug } },
+    include: { guild: true },
+  });
+  if (!membership) redirect("/");
+
+  const characters = await prisma.character.findMany({
+    where: { guildId: membership.guild.id, user: { bnetId: { not: "ROSTER_SYNC_PLACEHOLDER" } } },
+    include: { user: true },
+    orderBy: [{ role: "asc" }, { name: "asc" }],
+  });
+
+  const allChars = await prisma.character.findMany({
+    where: { guildId: membership.guild.id },
+    orderBy: [{ role: "asc" }, { name: "asc" }],
+  });
+
+  const isOfficer = ["GM", "OFFICER"].includes(membership.role);
+
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-white capitalize">roster</h1>
-      <p className="text-gray-400 mt-2">Coming soon.</p>
-    </div>
+    <RosterClient
+      characters={allChars}
+      guildSlug={guildSlug}
+      isOfficer={isOfficer}
+      guildName={membership.guild.name}
+    />
   );
 }
