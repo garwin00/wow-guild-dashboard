@@ -338,7 +338,7 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
           {mainChar && (
             <div>
               <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--wow-text-faint)" }}>Main Character</p>
-              <div className="rounded-lg overflow-hidden relative group" style={{
+              <div className="rounded-lg relative group" style={{
                 background: "var(--wow-surface)",
                 border: `2px solid ${classColor(mainChar.class)}50`,
                 boxShadow: `0 0 24px ${classColor(mainChar.class)}18`,
@@ -356,8 +356,9 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                     {linksOpen && (() => {
                       const links = externalLinks(mainChar.region, mainChar.realm, mainChar.name);
                       return (
-                        <div className="absolute right-0 top-8 rounded-lg py-1 min-w-[160px] z-30"
-                          style={{ background: "var(--wow-surface-2)", border: "1px solid rgba(var(--wow-primary-rgb),0.25)", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                        <div className="absolute right-0 bottom-9 rounded-lg py-1 min-w-[160px] z-30"
+                          style={{ background: "var(--wow-surface-2)", border: "1px solid rgba(var(--wow-primary-rgb),0.25)", boxShadow: "0 -4px 24px rgba(0,0,0,0.5)" }}>
+                          <p className="px-3 pt-1.5 pb-1 text-[10px] uppercase tracking-widest" style={{ color: "var(--wow-text-faint)" }}>View on</p>
                           {[
                             { href: links.armory, label: "Armory" },
                             { href: links.raiderio, label: "Raider.IO" },
