@@ -40,7 +40,7 @@ function ReadinessBadge({ ilvl, min }: { ilvl: number | null; min: number }) {
 function CompositionPanel({ signups }: { signups: Signup[] }) {
   const accepted = signups.filter(s => s.status === "ACCEPTED");
   if (accepted.length === 0) return (
-    <p className="text-center py-12" style={{ color: "var(--wow-text-faint)", fontSize: "0.875rem" }}>No confirmed sign-ups yet.</p>
+    <p className="text-center py-12 text-sm" style={{ color: "var(--wow-text-faint)" }}>No confirmed sign-ups yet.</p>
   );
   const tanks = accepted.filter(s => s.character.role === "TANK").length;
   const healers = accepted.filter(s => s.character.role === "HEALER").length;
@@ -65,7 +65,7 @@ function CompositionPanel({ signups }: { signups: Signup[] }) {
   return (
     <div className="space-y-6">
       <div className="wow-panel" style={{ padding: "1.25rem" }}>
-        <h3 style={{ color: "var(--wow-gold)", fontWeight: 600, fontSize: "0.8125rem", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1rem" }}>Role Breakdown ({accepted.length} confirmed)</h3>
+        <h3 className="wow-section-label mb-4" style={{ color: "var(--wow-gold)" }}>Role Breakdown ({accepted.length} confirmed)</h3>
         <div className="space-y-3">
           <RoleBar count={tanks} total={accepted.length} label="Tanks" color="#3FC7EB" />
           <RoleBar count={healers} total={accepted.length} label="Healers" color="#1eff00" />
@@ -73,7 +73,7 @@ function CompositionPanel({ signups }: { signups: Signup[] }) {
         </div>
       </div>
       <div className="wow-panel" style={{ padding: "1.25rem" }}>
-        <h3 style={{ color: "var(--wow-gold)", fontWeight: 600, fontSize: "0.8125rem", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1rem" }}>Utility Coverage</h3>
+        <h3 className="wow-section-label mb-4" style={{ color: "var(--wow-gold)" }}>Utility Coverage</h3>
         <div className="flex flex-wrap gap-2">
           <span className="text-xs px-2.5 py-1 rounded-full font-medium"
             style={hasBloodlust ? { background: "rgba(255,80,80,0.12)", border: "1px solid rgba(255,80,80,0.3)", color: "#ff6060" }
@@ -106,10 +106,10 @@ function CompositionPanel({ signups }: { signups: Signup[] }) {
           <tbody>
             {accepted.map(s => (
               <tr key={s.id} style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}>
-                <td className="px-4 py-2.5" style={{ color: classColor(s.character.class), fontSize: "0.875rem", fontWeight: 500 }}>{s.character.name}</td>
-                <td className="px-4 py-2.5" style={{ color: "var(--wow-text-muted)", fontSize: "0.8125rem" }}>{s.character.class}</td>
-                <td className="px-4 py-2.5" style={{ color: "var(--wow-text-muted)", fontSize: "0.8125rem" }}>{s.character.role}</td>
-                <td className="px-4 py-2.5 text-right" style={{ color: "var(--wow-text-muted)", fontSize: "0.8125rem" }}>{s.character.itemLevel ?? "—"}</td>
+                <td className="px-4 py-2.5 font-medium" style={{ color: classColor(s.character.class) }}>{s.character.name}</td>
+                <td className="px-4 py-2.5" style={{ color: "var(--wow-text-muted)" }}>{s.character.class}</td>
+                <td className="px-4 py-2.5" style={{ color: "var(--wow-text-muted)" }}>{s.character.role}</td>
+                <td className="px-4 py-2.5 text-right" style={{ color: "var(--wow-text-muted)" }}>{s.character.itemLevel ?? "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -337,15 +337,15 @@ export default function RaidsClient({ guildSlug, isOfficer }: {
           <>
             {/* Raid header */}
             <div className="mb-6">
-              <p style={{ color: "var(--wow-text-muted)", fontSize: "0.8125rem", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>{selectedEvent.raidZone}</p>
+              <p className="wow-section-label mb-1" style={{ color: "var(--wow-text-muted)" }}>{selectedEvent.raidZone}</p>
               <div className="flex items-center gap-3">
                 <h2 className="wow-heading text-2xl font-bold" style={{ color: "var(--wow-gold-bright)" }}>{selectedEvent.title}</h2>
                 <span className="text-xs rounded-full px-2.5 py-0.5" style={statusStyle[selectedEvent.status]}>{selectedEvent.status}</span>
               </div>
-              <p style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem", marginTop: "0.25rem" }}>
+              <p className="text-sm mt-1" style={{ color: "var(--wow-text-muted)" }}>
                 {new Date(selectedEvent.scheduledAt).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {new Date(selectedEvent.scheduledAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
               </p>
-              {selectedEvent.description && <p style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem", marginTop: "0.4rem" }}>{selectedEvent.description}</p>}
+              {selectedEvent.description && <p className="text-sm" style={{ color: "var(--wow-text-muted)", marginTop: "0.4rem" }}>{selectedEvent.description}</p>}
               {selectedEvent.minItemLevel && signups && (() => {
                 const accepted = signups.filter(s => s.status === "ACCEPTED");
                 const ready = accepted.filter(s => (s.character.itemLevel ?? 0) >= selectedEvent.minItemLevel!).length;
@@ -372,7 +372,7 @@ export default function RaidsClient({ guildSlug, isOfficer }: {
                       {userCharacters.map(c => <option key={c.id} value={c.id}>{c.name} ({c.class})</option>)}
                     </select>
                   ) : (
-                    <span style={{ color: "var(--wow-text)", fontSize: "0.875rem", alignSelf: "center" }}>{userCharacters[0].name} ({userCharacters[0].class})</span>
+                    <span className="text-sm self-center" style={{ color: "var(--wow-text)" }}>{userCharacters[0].name} ({userCharacters[0].class})</span>
                   )}
                   <input value={note} onChange={e => setNote(e.target.value)} placeholder="Optional note…"
                     className="wow-input" style={{ flex: 1, minWidth: "140px" }} />
@@ -399,15 +399,15 @@ export default function RaidsClient({ guildSlug, isOfficer }: {
             {/* Main tabs */}
             <div className="flex gap-1 mb-5">
               <button onClick={() => setMainTab("signups")} className={`wow-tab${mainTab === "signups" ? " wow-tab-active" : ""}`}>
-                Sign-ups {signups && <span style={{ opacity: 0.65, fontSize: "0.75rem" }}>({signups.length})</span>}
+                Sign-ups {signups && <span className="text-xs" style={{ opacity: 0.65 }}>({signups.length})</span>}
               </button>
               <button onClick={() => setMainTab("composition")} className={`wow-tab${mainTab === "composition" ? " wow-tab-active" : ""}`}>
-                Composition {signups && <span style={{ opacity: 0.65, fontSize: "0.75rem" }}>({counts.ACCEPTED} confirmed)</span>}
+                Composition {signups && <span className="text-xs" style={{ opacity: 0.65 }}>({counts.ACCEPTED} confirmed)</span>}
               </button>
             </div>
 
             {loadingSignups && (
-              <p style={{ color: "var(--wow-text-faint)", fontSize: "0.875rem" }}>Loading…</p>
+              <p className="text-sm" style={{ color: "var(--wow-text-faint)" }}>Loading…</p>
             )}
 
             {!loadingSignups && signups && mainTab === "signups" && (
@@ -420,11 +420,11 @@ export default function RaidsClient({ guildSlug, isOfficer }: {
                       </button>
                     ))}
                   </div>
-                  <span style={{ fontSize: "0.75rem", color: "var(--wow-text-faint)" }}>{counts.ACCEPTED}/{selectedEvent.maxAttendees} confirmed</span>
+                  <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{counts.ACCEPTED}/{selectedEvent.maxAttendees} confirmed</span>
                 </div>
                 <div className="wow-panel" style={{ overflow: "hidden" }}>
                   {displayed.length === 0 ? (
-                    <p className="text-center py-8" style={{ color: "var(--wow-text-faint)", fontSize: "0.875rem" }}>No sign-ups yet.</p>
+                    <p className="text-center py-8 text-sm" style={{ color: "var(--wow-text-faint)" }}>No sign-ups yet.</p>
                   ) : (
                     <table className="wow-table w-full">
                       <thead>
@@ -438,13 +438,11 @@ export default function RaidsClient({ guildSlug, isOfficer }: {
                       </thead>
                       <tbody>
                         {displayed.map(signup => (
-                          <tr key={signup.id} style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}
-                            onMouseOver={e => (e.currentTarget.style.background = "rgba(var(--wow-primary-rgb),0.04)")}
-                            onMouseOut={e => (e.currentTarget.style.background = "transparent")}>
-                            <td className="px-4 py-3" style={{ fontSize: "0.875rem", fontWeight: 500 }}>
+                          <tr key={signup.id}>
+                            <td className="px-4 py-3 font-medium">
                               <span style={{ color: classColor(signup.character.class) }}>{signup.character.name}</span>
                             </td>
-                            <td className="px-4 py-3" style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem" }}>{signup.character.role}</td>
+                            <td className="px-4 py-3" style={{ color: "var(--wow-text-muted)" }}>{signup.character.role}</td>
                             {selectedEvent.minItemLevel && (
                               <td className="px-4 py-3 text-right"><ReadinessBadge ilvl={signup.character.itemLevel} min={selectedEvent.minItemLevel} /></td>
                             )}
@@ -462,7 +460,7 @@ export default function RaidsClient({ guildSlug, isOfficer }: {
                                 </span>
                               )}
                             </td>
-                            <td className="px-4 py-3" style={{ color: "var(--wow-text-faint)", fontSize: "0.875rem" }}>{signup.note ?? "—"}</td>
+                            <td className="px-4 py-3" style={{ color: "var(--wow-text-faint)" }}>{signup.note ?? "—"}</td>
                           </tr>
                         ))}
                       </tbody>

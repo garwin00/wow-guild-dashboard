@@ -67,7 +67,7 @@ function CompositionPanel({ signups }: { signups: Signup[] }) {
 
   return (
     <div className="wow-panel p-4 mb-6">
-      <h2 style={{ color: "var(--wow-gold)", fontWeight: 600, fontSize: "0.8125rem", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>Composition ({accepted.length})</h2>
+      <h2 className="wow-section-label mb-3" style={{ color: "var(--wow-gold)" }}>Composition ({accepted.length})</h2>
       <div className="space-y-2 mb-3">
         <RoleBar count={tanks} total={accepted.length} label="Tanks" color="#3FC7EB" />
         <RoleBar count={healers} total={accepted.length} label="Healers" color="var(--wow-success)" />
@@ -142,12 +142,12 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
     <div className="p-8 max-w-3xl">
       {/* Header */}
       <div className="mb-6">
-        <p style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem", marginBottom: "0.25rem", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.05em" }}>{event.raidZone}</p>
+        <p className="wow-section-label mb-1" style={{ color: "var(--wow-text-muted)" }}>{event.raidZone}</p>
         <h1 className="wow-heading text-3xl font-bold" style={{ color: "var(--wow-gold-bright)" }}>{event.title}</h1>
         <p style={{ color: "var(--wow-text-muted)", marginTop: "0.25rem" }}>
           {date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
         </p>
-        {event.description && <p style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem", marginTop: "0.5rem" }}>{event.description}</p>}
+        {event.description && <p className="text-sm mt-2" style={{ color: "var(--wow-text-muted)" }}>{event.description}</p>}
         {event.minItemLevel && (() => {
           const accepted = signups.filter(s => s.status === "ACCEPTED");
           const ready = accepted.filter(s => (s.character.itemLevel ?? 0) >= event.minItemLevel!).length;
@@ -168,10 +168,10 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
       {/* Top-level tabs */}
       <div className="flex gap-1 mb-5">
         <button onClick={() => setMainTab("signups")} className={`wow-tab${mainTab === "signups" ? " wow-tab-active" : ""}`}>
-          Sign-ups <span style={{ opacity: 0.7, fontSize: "0.75rem" }}>({signups.length})</span>
+          Sign-ups <span className="text-xs" style={{ opacity: 0.7 }}>({signups.length})</span>
         </button>
         <button onClick={() => setMainTab("composition")} className={`wow-tab${mainTab === "composition" ? " wow-tab-active" : ""}`}>
-          Composition <span style={{ opacity: 0.7, fontSize: "0.75rem" }}>({counts.ACCEPTED} confirmed)</span>
+          Composition <span className="text-xs" style={{ opacity: 0.7 }}>({counts.ACCEPTED} confirmed)</span>
         </button>
       </div>
 
@@ -190,7 +190,7 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
                   </select>
                 )}
                 {userCharacters.length === 1 && (
-                  <span style={{ color: "var(--wow-text)", fontSize: "0.875rem", alignSelf: "center" }}>{userCharacters[0].name} ({userCharacters[0].class})</span>
+                  <span className="text-sm self-center" style={{ color: "var(--wow-text)" }}>{userCharacters[0].name} ({userCharacters[0].class})</span>
                 )}
                 <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional note…"
                   className="wow-input" style={{ flex: 1, minWidth: "140px", width: "auto" }} />
@@ -224,12 +224,12 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
                 </button>
               ))}
             </div>
-            <span style={{ fontSize: "0.75rem", color: "var(--wow-text-faint)" }}>{counts.ACCEPTED}/{event.maxAttendees} confirmed</span>
+            <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{counts.ACCEPTED}/{event.maxAttendees} confirmed</span>
           </div>
 
           <div className="wow-panel overflow-hidden">
             {displayed.length === 0 ? (
-              <p className="text-center py-8" style={{ color: "var(--wow-text-faint)", fontSize: "0.875rem" }}>No sign-ups yet.</p>
+              <p className="text-center py-8 text-sm" style={{ color: "var(--wow-text-faint)" }}>No sign-ups yet.</p>
             ) : (
               <table className="wow-table">
                 <thead>
@@ -244,10 +244,10 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
                 <tbody>
                   {displayed.map((signup) => (
                     <tr key={signup.id}>
-                      <td className="px-4 py-3" style={{ color: "var(--wow-text)", fontSize: "0.875rem", fontWeight: 500 }}>
+                      <td className="px-4 py-3 font-medium">
                         <span style={{ color: classColor(signup.character.class) }}>{signup.character.name}</span>
                       </td>
-                      <td className="px-4 py-3" style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem" }}>{signup.character.role}</td>
+                      <td className="px-4 py-3" style={{ color: "var(--wow-text-muted)" }}>{signup.character.role}</td>
                       {event.minItemLevel && (
                         <td className="px-4 py-3 text-right">
                           <ReadinessBadge ilvl={signup.character.itemLevel} min={event.minItemLevel} />
@@ -267,7 +267,7 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3" style={{ color: "var(--wow-text-faint)", fontSize: "0.875rem" }}>{signup.note ?? "—"}</td>
+                      <td className="px-4 py-3" style={{ color: "var(--wow-text-faint)" }}>{signup.note ?? "—"}</td>
                     </tr>
                   ))}
                 </tbody>

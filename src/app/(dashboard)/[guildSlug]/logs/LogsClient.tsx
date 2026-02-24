@@ -62,9 +62,9 @@ export default function LogsClient({ guildSlug, isOfficer }: {
       {message && <p className="mb-4 text-sm" style={{ color: "var(--wow-gold)" }}>{message}</p>}
 
       {!hasWcl && isOfficer && (
-        <div style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", borderRadius: "0.5rem", padding: "1.25rem", marginBottom: "1.5rem" }}>
+        <div className="wow-panel p-5 mb-6">
           <p style={{ color: "var(--wow-gold-bright)", fontWeight: 600, marginBottom: "0.25rem" }}>Connect Warcraft Logs</p>
-          <p style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem", marginBottom: "0.75rem" }}>Link your guild&apos;s Warcraft Logs profile in Settings to enable automatic log syncing and parse tracking.</p>
+          <p className="text-sm mb-3" style={{ color: "var(--wow-text-muted)" }}>Link your guild&apos;s Warcraft Logs profile in Settings to enable automatic log syncing and parse tracking.</p>
           <Link href={`/${guildSlug}/settings`} className="wow-btn inline-block">
             Go to Settings →
           </Link>
@@ -72,12 +72,12 @@ export default function LogsClient({ guildSlug, isOfficer }: {
       )}
 
       {reports.length === 0 ? (
-        <p style={{ color: "var(--wow-text-faint)", fontSize: "0.875rem" }}>{hasWcl ? "No reports synced yet. Click 'Sync from WCL' above." : "No reports yet."}</p>
+        <p className="text-sm" style={{ color: "var(--wow-text-faint)" }}>{hasWcl ? "No reports synced yet. Click 'Sync from WCL' above." : "No reports yet."}</p>
       ) : (
-        <div style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)", borderRadius: "0.5rem", overflow: "hidden" }}>
-          <table className="w-full">
+        <div className="wow-panel overflow-hidden">
+          <table className="wow-table w-full">
             <thead>
-              <tr style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)", textAlign: "left", fontSize: "0.75rem", fontFamily: "inherit", color: "var(--wow-text-faint)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <tr>
                 <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Zone</th>
                 <th className="px-4 py-3">Date</th>
@@ -88,22 +88,20 @@ export default function LogsClient({ guildSlug, isOfficer }: {
             </thead>
             <tbody>
               {reports.map((r) => (
-                <tr key={r.id} style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}
-                  onMouseOver={(e) => (e.currentTarget.style.background = "rgba(var(--wow-primary-rgb),0.04)")}
-                  onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}>
+                <tr key={r.id}>
                   <td className="px-4 py-3">
-                    <p style={{ color: "var(--wow-text)", fontSize: "0.875rem", fontWeight: 500 }}>{r.title}</p>
-                    <p style={{ color: "var(--wow-text-faint)", fontSize: "0.75rem", fontFamily: "monospace" }}>{r.wclCode}</p>
+                    <p className="font-medium">{r.title}</p>
+                    <p className="text-xs font-mono" style={{ color: "var(--wow-text-faint)" }}>{r.wclCode}</p>
                   </td>
-                  <td className="px-4 py-3" style={{ color: "var(--wow-text)", fontSize: "0.875rem" }}>{r.zone ?? <span style={{ color: "var(--wow-text-faint)", fontStyle: "italic" }}>Unknown</span>}</td>
-                  <td className="px-4 py-3" style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem", whiteSpace: "nowrap" }}>
+                  <td className="px-4 py-3">{r.zone ?? <span style={{ color: "var(--wow-text-faint)", fontStyle: "italic" }}>Unknown</span>}</td>
+                  <td className="px-4 py-3" style={{ color: "var(--wow-text-muted)", whiteSpace: "nowrap" }}>
                     {new Date(r.startTime).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                   </td>
-                  <td className="px-4 py-3 text-center" style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem" }}>{r.fightCount}</td>
-                  <td className="px-4 py-3 text-center" style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem" }}>{r._count.parses}</td>
+                  <td className="px-4 py-3 text-center" style={{ color: "var(--wow-text-muted)" }}>{r.fightCount}</td>
+                  <td className="px-4 py-3 text-center" style={{ color: "var(--wow-text-muted)" }}>{r._count.parses}</td>
                   <td className="px-4 py-3 text-right">
                     <a href={`https://www.warcraftlogs.com/reports/${r.wclCode}`} target="_blank" rel="noopener noreferrer"
-                      style={{ color: "var(--wow-gold)", fontSize: "0.75rem" }}>View on WCL ↗</a>
+                      className="text-xs" style={{ color: "var(--wow-gold)" }}>View on WCL ↗</a>
                   </td>
                 </tr>
               ))}
