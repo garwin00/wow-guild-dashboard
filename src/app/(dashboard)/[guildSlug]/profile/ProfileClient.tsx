@@ -5,6 +5,23 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { scoreColor } from "@/lib/raiderio";
 
+const ROLES = ["TANK", "HEALER", "DPS"] as const;
+const SPECS: Record<string, string[]> = {
+  "death knight": ["Blood", "Frost", "Unholy"],
+  "demon hunter": ["Havoc", "Vengeance"],
+  druid: ["Balance", "Feral", "Guardian", "Restoration"],
+  evoker: ["Augmentation", "Devastation", "Preservation"],
+  hunter: ["Beast Mastery", "Marksmanship", "Survival"],
+  mage: ["Arcane", "Fire", "Frost"],
+  monk: ["Brewmaster", "Mistweaver", "Windwalker"],
+  paladin: ["Holy", "Protection", "Retribution"],
+  priest: ["Discipline", "Holy", "Shadow"],
+  rogue: ["Assassination", "Outlaw", "Subtlety"],
+  shaman: ["Elemental", "Enhancement", "Restoration"],
+  warlock: ["Affliction", "Demonology", "Destruction"],
+  warrior: ["Arms", "Fury", "Protection"],
+};
+
 const CLASS_COLORS: Record<string, string> = {
   "death knight": "#C41E3A", "demon hunter": "#A330C9", druid: "#FF7C0A",
   evoker: "#33937F", hunter: "#AAD372", mage: "#3FC7EB", monk: "#00FF98",
@@ -39,20 +56,40 @@ interface Props {
   characters: Character[];
 }
 
-function CharCard({ char, isMain, onSetMain, pending }: {
-  char: Character; isMain: boolean; onSetMain: () => void; pending: boolean;
+function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
+  char: Character; isMain: boolean; onSetMain: () => void;
+  onUnlink: () => void; onEdit: (updates: { role?: string; spec?: string }) => void;
+  pending: boolean;
 }) {
   const color = classColor(char.class);
-  return (
-    <div className={`rounded-lg p-4 transition-all ${!isMain ? "cursor-pointer" : ""}`}
-      style={{
-        background: isMain ? "rgba(200,169,106,0.08)" : "#0f1019",
-        border: isMain ? `2px solid ${color}60` : "1px solid rgba(200,169,106,0.15)",
-        boxShadow: isMain ? `0 0 20px ${color}20` : "none",
-      }}
-      onClick={!isMain ? onSetMain : undefined}>
+  const [editing, setEditing] = useState(false);
+  const [editRole, setEditRole] = useState(char.role);
+  const [editSpec, setEditSpec] = useState(char.spec ?? "");
+  const specs = SPECS[char.class?.toLowerCase() ?? ""] ?? [];
 
-      <div className="flex items-center gap-3 mb-3">
+  function saveEdit() {
+    onEdit({ role: editRole, spec: editSpec || undefined });
+    setEditing(false);
+  }
+
+  return (
+    <div className="rounded-lg p-4 transition-all relative group" style={{
+      background: isMain ? "rgba(200,169,106,0.08)" : "#0f1019",
+      border: isMain ? `2px solid ${color}60` : "1px solid rgba(200,169,106,0.15)",
+      boxShadow: isMain ? `0 0 20px ${color}20` : "none",
+    }}>
+      {/* Action buttons — top right */}
+      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={() => setEditing(e => !e)} title="Edit role/spec"
+          className="w-6 h-6 rounded flex items-center justify-center text-xs transition-colors"
+          style={{ background: "rgba(200,169,106,0.1)", color: "#c8a96a" }}>✏</button>
+        <button onClick={onUnlink} title="Unlink character"
+          className="w-6 h-6 rounded flex items-center justify-center text-xs transition-colors"
+          style={{ background: "rgba(200,60,60,0.15)", color: "#e06060" }}>✕</button>
+      </div>
+
+      {/* Avatar + name */}
+      <div className="flex items-center gap-3 mb-3 pr-14">
         {char.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={char.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover"
@@ -75,6 +112,43 @@ function CharCard({ char, isMain, onSetMain, pending }: {
         <span className="text-base">{ROLE_ICON[char.role] ?? "⚔️"}</span>
       </div>
 
+      {/* Edit inline form */}
+      {editing && (
+        <div className="mb-3 space-y-2 p-2 rounded" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(200,169,106,0.2)" }}>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <p className="text-xs mb-1" style={{ color: "#5a5040" }}>Role</p>
+              <select value={editRole} onChange={e => setEditRole(e.target.value)}
+                className="w-full text-xs rounded px-2 py-1"
+                style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.3)", color: "#e8dfc8" }}>
+                {ROLES.map(r => <option key={r} value={r}>{ROLE_ICON[r]} {r}</option>)}
+              </select>
+            </div>
+            {specs.length > 0 && (
+              <div className="flex-1">
+                <p className="text-xs mb-1" style={{ color: "#5a5040" }}>Spec</p>
+                <select value={editSpec} onChange={e => setEditSpec(e.target.value)}
+                  className="w-full text-xs rounded px-2 py-1"
+                  style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.3)", color: "#e8dfc8" }}>
+                  <option value="">—</option>
+                  {specs.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button onClick={saveEdit} className="flex-1 text-xs py-1 rounded font-medium"
+              style={{ background: "rgba(200,169,106,0.2)", color: "#c8a96a", border: "1px solid rgba(200,169,106,0.3)" }}>
+              Save
+            </button>
+            <button onClick={() => setEditing(false)} className="flex-1 text-xs py-1 rounded"
+              style={{ background: "rgba(200,169,106,0.05)", color: "#5a5040", border: "1px solid rgba(200,169,106,0.1)" }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between text-xs">
         <span style={{ color: "#5a5040" }}>{char.realm}</span>
         <div className="flex items-center gap-2">
@@ -86,15 +160,15 @@ function CharCard({ char, isMain, onSetMain, pending }: {
       </div>
 
       {char.guildName && (
-        <p className="text-xs mt-1.5" style={{ color: "#5a5040" }}>
-          &lt;{char.guildName}&gt;
-        </p>
+        <p className="text-xs mt-1.5" style={{ color: "#5a5040" }}>&lt;{char.guildName}&gt;</p>
       )}
 
-      {!isMain && (
-        <p className="text-xs mt-2 text-center" style={{ color: pending ? "#5a5040" : "#c8a96a" }}>
-          {pending ? "Setting…" : "Tap to set as main"}
-        </p>
+      {!isMain && !editing && (
+        <button onClick={onSetMain} disabled={pending}
+          className="w-full mt-2 text-xs py-1 rounded transition-colors"
+          style={{ background: "rgba(200,169,106,0.08)", color: pending ? "#5a5040" : "#c8a96a", border: "1px solid rgba(200,169,106,0.15)" }}>
+          {pending ? "Setting…" : "Set as main"}
+        </button>
       )}
     </div>
   );
@@ -106,17 +180,23 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
   const [isPending, startTransition] = useTransition();
   const [settingMain, setSettingMain] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
-  const [linkMsg, setLinkMsg] = useState<string | null>(null);
+  const [linkMsg, setLinkMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+  // Account settings state
+  const [showPwForm, setShowPwForm] = useState(false);
+  const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
+  const [pwMsg, setPwMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [pwSaving, setPwSaving] = useState(false);
 
   const mainChar = chars.find(c => c.isMain) ?? chars[0] ?? null;
   const alts = chars.filter(c => c.id !== mainChar?.id);
-  const hasBnet = !user.bnetId.startsWith("email:");
+  const hasBnet = Boolean(user.bnetId) && !user.bnetId.startsWith("email:");
+  const hasPassword = Boolean(user.email);
 
   async function setMain(charId: string) {
     setSettingMain(charId);
     await fetch("/api/characters/set-main", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ characterId: charId }),
     });
     setChars(prev => prev.map(c => ({ ...c, isMain: c.id === charId })));
@@ -124,18 +204,58 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
     startTransition(() => router.refresh());
   }
 
+  async function unlinkChar(charId: string) {
+    if (!confirm("Remove this character from your profile?")) return;
+    await fetch("/api/characters/unlink", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ characterId: charId }),
+    });
+    setChars(prev => prev.filter(c => c.id !== charId));
+  }
+
+  async function editChar(charId: string, updates: { role?: string; spec?: string }) {
+    await fetch(`/api/characters/${charId}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    });
+    setChars(prev => prev.map(c => c.id === charId ? { ...c, ...updates } : c));
+  }
+
   async function syncChars() {
     setLinking(true);
     setLinkMsg(null);
     const res = await fetch("/api/roster/link-characters", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ guildSlug }),
     });
     const data = await res.json();
-    setLinkMsg(data.error ?? `✓ Linked ${data.linked} character(s)`);
+    if (data.error) {
+      setLinkMsg({ text: data.error, ok: false });
+    } else {
+      setLinkMsg({ text: `✓ Linked ${data.linked} character(s)`, ok: true });
+      if (data.linked > 0) startTransition(() => router.refresh());
+    }
     setLinking(false);
-    if (data.linked > 0) startTransition(() => router.refresh());
+  }
+
+  async function changePassword() {
+    if (pwForm.next !== pwForm.confirm) {
+      setPwMsg({ text: "Passwords don't match", ok: false }); return;
+    }
+    setPwSaving(true);
+    const res = await fetch("/api/account/change-password", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword: pwForm.current, newPassword: pwForm.next }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      setPwMsg({ text: "✓ Password updated", ok: true });
+      setPwForm({ current: "", next: "", confirm: "" });
+      setShowPwForm(false);
+    } else {
+      setPwMsg({ text: data.error ?? "Failed", ok: false });
+    }
+    setPwSaving(false);
   }
 
   return (
@@ -169,11 +289,16 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
       </div>
 
       {linkMsg && (
-        <div className="px-4 py-2 rounded text-sm" style={{ background: "rgba(200,169,106,0.08)", border: "1px solid rgba(200,169,106,0.25)", color: "#c8a96a" }}>
-          {linkMsg}
+        <div className="px-4 py-2 rounded text-sm" style={{
+          background: linkMsg.ok ? "rgba(200,169,106,0.08)" : "rgba(200,60,60,0.08)",
+          border: `1px solid ${linkMsg.ok ? "rgba(200,169,106,0.25)" : "rgba(200,60,60,0.25)"}`,
+          color: linkMsg.ok ? "#c8a96a" : "#e06060",
+        }}>
+          {linkMsg.text}
         </div>
       )}
 
+      {/* Characters */}
       {chars.length === 0 ? (
         <div className="rounded-lg p-8 text-center" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
           <p className="text-sm mb-3" style={{ color: "#8a8070" }}>No characters linked yet.</p>
@@ -189,11 +314,10 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
         </div>
       ) : (
         <>
-          {/* Main character — large card */}
           {mainChar && (
             <div>
               <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#5a5040" }}>Main Character</p>
-              <div className="rounded-lg p-6" style={{
+              <div className="rounded-lg p-6 relative group" style={{
                 background: "rgba(200,169,106,0.05)",
                 border: `2px solid ${classColor(mainChar.class)}50`,
                 boxShadow: `0 0 30px ${classColor(mainChar.class)}15`,
@@ -209,7 +333,7 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                       {mainChar.name[0].toUpperCase()}
                     </div>
                   )}
-                  <div>
+                  <div className="flex-1">
                     <p className="text-2xl font-bold" style={{ color: classColor(mainChar.class) }}>{mainChar.name}</p>
                     <p className="text-sm mt-0.5" style={{ color: "#8a8070" }}>
                       {mainChar.spec ? `${mainChar.spec} ` : ""}{mainChar.class} · {mainChar.realm}
@@ -223,20 +347,23 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                       )}
                       <span>{ROLE_ICON[mainChar.role] ?? "⚔️"}</span>
                     </div>
-                    {mainChar.guildName && (
-                      <p className="text-xs mt-1" style={{ color: "#5a5040" }}>&lt;{mainChar.guildName}&gt;</p>
-                    )}
+                    {mainChar.guildName && <p className="text-xs mt-1" style={{ color: "#5a5040" }}>&lt;{mainChar.guildName}&gt;</p>}
+                  </div>
+                  {/* Edit/unlink for main */}
+                  <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => unlinkChar(mainChar.id)} title="Unlink"
+                      className="w-7 h-7 rounded flex items-center justify-center text-sm"
+                      style={{ background: "rgba(200,60,60,0.15)", color: "#e06060" }}>✕</button>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Alts grid */}
           {alts.length > 0 && (
             <div>
               <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#5a5040" }}>
-                Alts ({alts.length}) — tap to set as main
+                Alts ({alts.length})
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {alts.map(char => (
@@ -245,6 +372,8 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                     char={char}
                     isMain={false}
                     onSetMain={() => setMain(char.id)}
+                    onUnlink={() => unlinkChar(char.id)}
+                    onEdit={(updates) => editChar(char.id, updates)}
                     pending={settingMain === char.id || isPending}
                   />
                 ))}
@@ -253,6 +382,85 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
           )}
         </>
       )}
+
+      {/* Account Settings */}
+      <div className="rounded-lg p-6 space-y-4" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
+        <h2 className="text-sm uppercase tracking-widest font-semibold" style={{ color: "#5a5040" }}>Account Settings</h2>
+
+        {/* BNet status */}
+        <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid rgba(200,169,106,0.1)" }}>
+          <div>
+            <p className="text-sm font-medium" style={{ color: "#e8dfc8" }}>Battle.net</p>
+            <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>
+              {hasBnet ? user.battletag : "Not linked"}
+            </p>
+          </div>
+          {hasBnet ? (
+            <span className="text-xs px-2 py-1 rounded" style={{ background: "rgba(0,112,221,0.15)", color: "#4aadff", border: "1px solid rgba(0,112,221,0.3)" }}>
+              ✓ Linked
+            </span>
+          ) : (
+            <button onClick={() => signIn("battlenet")} className="wow-btn text-xs">
+              Link Account
+            </button>
+          )}
+        </div>
+
+        {/* Email */}
+        <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid rgba(200,169,106,0.1)" }}>
+          <div>
+            <p className="text-sm font-medium" style={{ color: "#e8dfc8" }}>Email</p>
+            <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>{user.email ?? "—"}</p>
+          </div>
+        </div>
+
+        {/* Password */}
+        {hasPassword && (
+          <div>
+            <div className="flex items-center justify-between py-3">
+              <div>
+                <p className="text-sm font-medium" style={{ color: "#e8dfc8" }}>Password</p>
+                <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>Change your login password</p>
+              </div>
+              <button onClick={() => { setShowPwForm(f => !f); setPwMsg(null); }}
+                className="wow-btn-ghost text-xs">
+                {showPwForm ? "Cancel" : "Change"}
+              </button>
+            </div>
+
+            {showPwForm && (
+              <div className="space-y-3 pt-2">
+                {[
+                  { label: "Current password", key: "current" as const, placeholder: "••••••••" },
+                  { label: "New password", key: "next" as const, placeholder: "Min. 8 characters" },
+                  { label: "Confirm new password", key: "confirm" as const, placeholder: "••••••••" },
+                ].map(({ label, key, placeholder }) => (
+                  <div key={key}>
+                    <label className="block text-xs mb-1" style={{ color: "#8a8070" }}>{label}</label>
+                    <input
+                      type="password"
+                      value={pwForm[key]}
+                      placeholder={placeholder}
+                      onChange={e => setPwForm(f => ({ ...f, [key]: e.target.value }))}
+                      className="w-full rounded px-3 py-2 text-sm outline-none"
+                      style={{ background: "#070a10", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8" }}
+                    />
+                  </div>
+                ))}
+                {pwMsg && (
+                  <p className="text-xs" style={{ color: pwMsg.ok ? "#c8a96a" : "#e06060" }}>{pwMsg.text}</p>
+                )}
+                <button onClick={changePassword} disabled={pwSaving} className="wow-btn text-sm w-full">
+                  {pwSaving ? "Saving…" : "Update Password"}
+                </button>
+              </div>
+            )}
+            {pwMsg && !showPwForm && (
+              <p className="text-xs mt-2" style={{ color: pwMsg.ok ? "#c8a96a" : "#e06060" }}>{pwMsg.text}</p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

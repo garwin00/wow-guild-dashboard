@@ -108,7 +108,7 @@ export async function POST(req: Request) {
     });
 
     // Update GuildMembership role for users who own this character
-    if (upserted.userId !== placeholder.id) {
+    if (upserted.userId && upserted.userId !== placeholder.id) {
       await prisma.guildMembership.updateMany({
         where: { userId: upserted.userId, guildId: guild.id },
         data: { role: guildRole as "GM" | "OFFICER" | "MEMBER" },
