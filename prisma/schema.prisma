@@ -8,13 +8,16 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  bnetId        String   @unique
+  id            String    @id @default(cuid())
+  bnetId        String    @unique
   battletag     String
-  bnetRegion    String   @default("eu")
+  bnetRegion    String    @default("eu")
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
   image         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   memberships   GuildMembership[]
   characters    Character[]

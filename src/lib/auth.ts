@@ -13,17 +13,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       type: "oauth",
       authorization: {
         url: `https://${BNET_REGION}.battle.net/oauth/authorize`,
-        params: { scope: "wow.profile openid" },
+        params: { scope: "wow.profile openid", response_type: "code" },
       },
       token: `https://${BNET_REGION}.battle.net/oauth/token`,
       userinfo: `https://${BNET_REGION}.battle.net/oauth/userinfo`,
       clientId: process.env.BLIZZARD_CLIENT_ID,
       clientSecret: process.env.BLIZZARD_CLIENT_SECRET,
+      checks: ["state"],
       profile(profile) {
         return {
           id: String(profile.id ?? profile.sub),
           bnetId: String(profile.id ?? profile.sub),
           battletag: profile.battletag ?? profile.name ?? "Unknown",
+          name: profile.battletag ?? profile.name ?? "Unknown",
+          email: profile.email ?? null,
           image: null,
         };
       },
