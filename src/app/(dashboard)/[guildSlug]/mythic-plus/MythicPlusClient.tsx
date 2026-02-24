@@ -267,12 +267,12 @@ export default function MythicPlusClient({
             <tr className="border-b border-zinc-800">
               <th className="text-left py-3 px-4 text-zinc-400 font-medium w-10">#</th>
               <th className="text-left py-3 px-4 text-zinc-400 font-medium">Character</th>
-              <th className="text-left py-3 px-4 text-zinc-400 font-medium">Role</th>
+              <th className="text-left py-3 px-4 text-zinc-400 font-medium hidden sm:table-cell">Role</th>
               <th className="text-right py-3 px-4 text-zinc-400 font-medium">Score</th>
-              <th className="text-right py-3 px-4 text-zinc-400 font-medium">Tank</th>
-              <th className="text-right py-3 px-4 text-zinc-400 font-medium">Healer</th>
-              <th className="text-right py-3 px-4 text-zinc-400 font-medium">DPS</th>
-              <th className="text-right py-3 px-4 text-zinc-400 font-medium">Best Key</th>
+              <th className="text-right py-3 px-4 text-zinc-400 font-medium hidden md:table-cell">Tank</th>
+              <th className="text-right py-3 px-4 text-zinc-400 font-medium hidden md:table-cell">Healer</th>
+              <th className="text-right py-3 px-4 text-zinc-400 font-medium hidden md:table-cell">DPS</th>
+              <th className="text-right py-3 px-4 text-zinc-400 font-medium hidden sm:table-cell">Best Key</th>
               <th className="w-4 px-2" />
             </tr>
           </thead>
@@ -324,22 +324,22 @@ export default function MythicPlusClient({
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 hidden sm:table-cell">
                       <span className="text-xs text-zinc-400">{char.role}</span>
                     </td>
                     <td className="py-3 px-4 text-right">
                       <ScoreBadge score={score?.all ?? 0} />
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right hidden md:table-cell">
                       <ScoreBadge score={score?.tank ?? 0} />
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right hidden md:table-cell">
                       <ScoreBadge score={score?.healer ?? 0} />
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right hidden md:table-cell">
                       <ScoreBadge score={score?.dps ?? 0} />
                     </td>
-                    <td className="py-3 px-4 text-right text-zinc-300 font-medium">
+                    <td className="py-3 px-4 text-right text-zinc-300 font-medium hidden sm:table-cell">
                       {bestRun ? `+${bestRun.level}` : <span className="text-zinc-600">—</span>}
                     </td>
                     <td className="px-2 text-zinc-600">
