@@ -66,15 +66,26 @@ export async function GET(req: NextRequest) {
   const bnetId = String(profile.id ?? profile.sub);
   const battletag = profile.battletag ?? profile.battle_tag ?? null;
 
-  // Update the user record
-  await prisma.user.update({
-    where: { id: stored.userId },
-    data: {
-      bnetId,
-      battletag,
-      name: battletag ?? undefined,
-    },
-  });
+  try {
+    // If bnetId is already on a different user, clear it from there first
+    const existingBnetUser = await prisma.user.findUnique({ where: { bnetId } });
+    if (existingBnetUser && existingBnetUser.id !== stored.userId) {
+      // Clear bnetId from the stale BNet-only account
+      await prisma.user.update({
+        where: { id: existingBnetUser.id },
+        data: { bnetId: `orphaned:${existingBnetUser.id}` },
+      });
+    }
+
+    // Update the current user with BNet details
+    await prisma.user.update({
+      where: { id: stored.userId },
+      data: { bnetId, battletag, name: battletag ?? undefined },
+    });
+  } catch (err) {
+    console.error("[link-battlenet] user update failed:", err);
+    return clearCookie(NextResponse.redirect(new URL("/account/settings?error=bnet_link_failed", APP_URL)));
+  }
 
   const returnTo = stored.returnTo ?? "/guilds/new";
   const successUrl = new URL(returnTo.startsWith("/") ? `${APP_URL}${returnTo}` : returnTo);
