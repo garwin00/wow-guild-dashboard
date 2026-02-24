@@ -90,7 +90,7 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
 
       {/* Portrait header */}
       {char.avatarUrl ? (
-        <div className="relative h-16 overflow-hidden">
+        <div className="relative h-16 overflow-hidden" style={{ zIndex: 0 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={avatarToInset(char.avatarUrl)}
@@ -342,7 +342,7 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
               }}>
                 {/* Portrait banner */}
                 {mainChar.avatarUrl ? (
-                  <div className="relative h-28 overflow-hidden">
+                  <div className="relative h-28 overflow-hidden" style={{ zIndex: 0 }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={avatarToInset(mainChar.avatarUrl)}
