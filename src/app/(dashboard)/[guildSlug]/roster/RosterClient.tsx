@@ -10,35 +10,35 @@ interface Character {
 }
 
 const CLASS_COLORS: Record<string, string> = {
-  "Death Knight": "text-red-400",
-  "Demon Hunter": "text-purple-400",
-  "Druid": "text-orange-400",
-  "Evoker": "text-teal-400",
-  "Hunter": "text-green-400",
-  "Mage": "text-blue-300",
-  "Monk": "text-emerald-400",
-  "Paladin": "text-yellow-300",
-  "Priest": "text-gray-100",
-  "Rogue": "text-yellow-500",
-  "Shaman": "text-blue-500",
-  "Warlock": "text-violet-400",
-  "Warrior": "text-orange-600",
+  "death knight": "text-red-400",
+  "demon hunter": "text-purple-400",
+  "druid": "text-orange-400",
+  "evoker": "text-teal-400",
+  "hunter": "text-green-400",
+  "mage": "text-blue-300",
+  "monk": "text-emerald-400",
+  "paladin": "text-yellow-300",
+  "priest": "text-gray-100",
+  "rogue": "text-yellow-500",
+  "shaman": "text-blue-500",
+  "warlock": "text-violet-400",
+  "warrior": "text-orange-600",
 };
 
 const CLASS_BG: Record<string, string> = {
-  "Death Knight": "bg-red-950",
-  "Demon Hunter": "bg-purple-950",
-  "Druid": "bg-orange-950",
-  "Evoker": "bg-teal-950",
-  "Hunter": "bg-green-950",
-  "Mage": "bg-blue-950",
-  "Monk": "bg-emerald-950",
-  "Paladin": "bg-yellow-950",
-  "Priest": "bg-gray-900",
-  "Rogue": "bg-yellow-950",
-  "Shaman": "bg-blue-950",
-  "Warlock": "bg-violet-950",
-  "Warrior": "bg-orange-950",
+  "death knight": "bg-red-950",
+  "demon hunter": "bg-purple-950",
+  "druid": "bg-orange-950",
+  "evoker": "bg-teal-950",
+  "hunter": "bg-green-950",
+  "mage": "bg-blue-950",
+  "monk": "bg-emerald-950",
+  "paladin": "bg-yellow-950",
+  "priest": "bg-gray-900",
+  "rogue": "bg-yellow-950",
+  "shaman": "bg-blue-950",
+  "warlock": "bg-violet-950",
+  "warrior": "bg-orange-950",
 };
 
 const ROLE_ICON: Record<CharRole, string> = { TANK: "🛡️", HEALER: "💚", DPS: "⚔️" };
@@ -184,7 +184,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={char.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover ring-1 ring-gray-700" />
                       ) : (
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${CLASS_BG[char.class] ?? "bg-gray-800"} ${CLASS_COLORS[char.class] ?? "text-gray-300"}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${CLASS_BG[char.class.toLowerCase()] ?? "bg-gray-800"} ${CLASS_COLORS[char.class.toLowerCase()] ?? "text-gray-300"}`}>
                           {char.name[0].toUpperCase()}
                         </div>
                       )}
@@ -195,8 +195,8 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-sm font-medium ${CLASS_COLORS[char.class] ?? "text-gray-300"}`}>
-                      {char.spec ? `${char.spec} ` : ""}{char.class !== "Unknown" ? char.class : <span className="text-gray-600 italic">Unknown</span>}
+                    <span className={`text-sm font-medium ${CLASS_COLORS[char.class.toLowerCase()] ?? "text-gray-300"}`}>
+                      {char.spec ? `${char.spec} ` : ""}{char.class && char.class !== "Unknown" ? char.class : <span className="text-gray-600 italic">Unknown</span>}
                     </span>
                   </td>
                   <td className={`px-4 py-3 text-sm font-semibold text-right tabular-nums ${iLvlColor(char.itemLevel)}`}>

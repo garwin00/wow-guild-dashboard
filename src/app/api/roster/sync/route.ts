@@ -59,18 +59,23 @@ export async function POST(req: Request) {
     if (!char?.name) return;
 
     const realmSlug = char.realm?.slug ?? guild.realm;
-    const className = char.playable_class?.name ?? "Unknown";
+    // Use guild roster class as fallback only — profile is authoritative
+    const rosterClass = char.playable_class?.name ?? "Unknown";
     const guildRank: number | null = member?.rank ?? null;
 
-    // Fetch individual profile for spec + item level
+    // Fetch individual profile for class, spec, and item level
+    let className = rosterClass;
     let spec: string | null = null;
     let itemLevel: number | null = null;
     try {
       const profile = await getCharacterProfile(guild.region, realmSlug, char.name);
+      // profile.character_class.name is the authoritative class name
+      className = profile?.character_class?.name ?? profile?.playable_class?.name ?? rosterClass;
       spec = profile?.active_spec?.name ?? null;
       itemLevel = profile?.equipped_item_level ?? profile?.average_item_level ?? null;
-    } catch {
-      // Profile fetch failed — keep defaults
+      console.log(`[roster sync] ${char.name}: class=${className}, spec=${spec}, ilvl=${itemLevel}, rank=${guildRank}`);
+    } catch (err) {
+      console.warn(`[roster sync] profile fetch failed for ${char.name}:`, err);
     }
 
     const role = specToRole(spec);
