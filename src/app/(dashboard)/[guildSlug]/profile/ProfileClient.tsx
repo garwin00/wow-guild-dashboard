@@ -78,29 +78,29 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
       border: isMain ? `2px solid ${color}60` : "1px solid rgba(var(--wow-primary-rgb),0.15)",
       boxShadow: isMain ? `0 0 20px ${color}20` : "none",
     }}>
-      {/* Action buttons — top right, always on top */}
+      {/* Action buttons — top right */}
       <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <button onClick={() => setEditing(e => !e)} title="Edit role/spec"
-          className="w-6 h-6 rounded flex items-center justify-center text-xs transition-colors"
+          className="w-6 h-6 rounded flex items-center justify-center text-xs"
           style={{ background: "rgba(0,0,0,0.6)", color: "var(--wow-gold)" }}>✏</button>
         <button onClick={onUnlink} title="Unlink character"
-          className="w-6 h-6 rounded flex items-center justify-center text-xs transition-colors"
+          className="w-6 h-6 rounded flex items-center justify-center text-xs"
           style={{ background: "rgba(0,0,0,0.6)", color: "#e06060" }}>✕</button>
       </div>
 
-      {/* Avatar + name row — plain, no banner on small cards */}
-      <div className="flex items-center gap-3 p-4 pr-14">
+      {/* Avatar + name */}
+      <div className="flex items-center gap-3 p-3 pr-12">
         {char.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={char.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover shrink-0"
+          <img src={char.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover shrink-0"
             style={{ boxShadow: `0 0 0 2px ${color}60` }} />
         ) : (
-          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
+          <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
             style={{ background: `${color}20`, color }}>
             {char.name[0].toUpperCase()}
           </div>
         )}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="font-semibold text-sm truncate" style={{ color }}>{char.name}</p>
             {isMain && <span className="text-xs px-1 py-0.5 rounded shrink-0" style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}>Main</span>}
@@ -109,19 +109,35 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
             {char.spec ? `${char.spec} ` : ""}{char.class}
           </p>
         </div>
-        <span className="text-sm shrink-0">{ROLE_ICON[char.role] ?? "⚔️"}</span>
       </div>
+
+      {/* Stats */}
+      {(char.itemLevel || char.mythicScore) && (
+        <div className="flex items-center gap-3 px-3 pb-3">
+          {char.itemLevel && (
+            <span className="text-sm font-bold" style={{ color: "var(--wow-text)" }}>{char.itemLevel}
+              <span className="text-xs font-normal ml-0.5" style={{ color: "var(--wow-text-muted)" }}>iLvl</span>
+            </span>
+          )}
+          {char.mythicScore && (
+            <span className="text-sm font-bold" style={{ color: scoreColor(char.mythicScore) }}>
+              {char.mythicScore.toFixed(0)}
+              <span className="text-xs font-normal ml-0.5" style={{ color: "var(--wow-text-muted)" }}>M+</span>
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Edit inline form */}
       {editing && (
-        <div className="mx-4 mb-4 space-y-2 p-2 rounded" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+        <div className="mx-3 mb-3 space-y-2 p-2 rounded" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
           <div className="flex gap-2">
             <div className="flex-1">
               <p className="text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Role</p>
               <select value={editRole} onChange={e => setEditRole(e.target.value)}
                 className="w-full text-xs rounded px-2 py-1"
                 style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.3)", color: "var(--wow-text)" }}>
-                {ROLES.map(r => <option key={r} value={r}>{ROLE_ICON[r]} {r}</option>)}
+                {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
             {specs.length > 0 && (
@@ -149,24 +165,17 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
         </div>
       )}
 
-      <div className="flex items-center justify-between text-xs px-4 pb-4">
-        <span style={{ color: "var(--wow-text-faint)" }}>{char.realm}</span>
-        <div className="flex items-center gap-2">
-          {char.itemLevel && <span style={{ color: "var(--wow-text)" }}>{char.itemLevel} iLvl</span>}
-          {char.mythicScore && (
-            <span className="font-bold" style={{ color: scoreColor(char.mythicScore) }}>{char.mythicScore.toFixed(0)}</span>
-          )}
-        </div>
-      </div>
-
-      {char.guildName && (
-        <p className="text-xs mt-1.5" style={{ color: "var(--wow-text-faint)" }}>&lt;{char.guildName}&gt;</p>
-      )}
-
+      {/* Set as main — subtle link-style */}
       {!isMain && !editing && (
         <button onClick={onSetMain} disabled={pending}
-          className="w-full mt-2 text-xs py-1 rounded transition-colors"
-          style={{ background: "rgba(var(--wow-primary-rgb),0.08)", color: pending ? "var(--wow-text-faint)" : "var(--wow-gold)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+          className="w-full py-2 text-xs transition-colors"
+          style={{
+            borderTop: "1px solid rgba(var(--wow-primary-rgb),0.1)",
+            color: pending ? "var(--wow-text-faint)" : "var(--wow-text-faint)",
+            background: "transparent",
+          }}
+          onMouseOver={e => !pending && (e.currentTarget.style.color = "var(--wow-gold)")}
+          onMouseOut={e => (e.currentTarget.style.color = "var(--wow-text-faint)")}>
           {pending ? "Setting…" : "Set as main"}
         </button>
       )}
@@ -321,63 +330,67 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                 border: `2px solid ${classColor(mainChar.class)}50`,
                 boxShadow: `0 0 30px ${classColor(mainChar.class)}15`,
               }}>
-                {/* Portrait banner */}
-                {mainChar.avatarUrl ? (
-                  <div className="relative h-28 overflow-hidden" style={{ zIndex: 0 }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={avatarToInset(mainChar.avatarUrl)}
-                      alt=""
-                      className="w-full h-full object-cover object-top"
-                      style={{ filter: "brightness(0.85)" }}
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                    />
-                    <div className="absolute inset-0" style={{
-                      background: `linear-gradient(to bottom, transparent 40%, var(--wow-surface) 100%)`,
-                    }} />
-                  </div>
-                ) : (
-                  <div className="h-20" style={{ background: `${classColor(mainChar.class)}15` }} />
-                )}
+                {/* Unlink button */}
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                  <button onClick={() => unlinkChar(mainChar.id)} title="Unlink"
+                    className="w-7 h-7 rounded flex items-center justify-center text-sm"
+                    style={{ background: "rgba(0,0,0,0.7)", color: "#e06060" }}>✕</button>
+                </div>
 
-                {/* Info row */}
-                <div className="flex items-end gap-4 px-5 pb-5" style={{
-                  marginTop: mainChar.avatarUrl ? "-2.5rem" : "0",
-                  paddingTop: mainChar.avatarUrl ? 0 : "1.25rem",
-                  background: "var(--wow-surface)",
-                }}>
-                  {/* Small avatar circle as anchor */}
-                  {mainChar.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={mainChar.avatarUrl} alt="" className="w-14 h-14 rounded-full object-cover shrink-0 relative z-10"
-                      style={{ boxShadow: `0 0 0 3px ${classColor(mainChar.class)}60, 0 0 0 4px var(--wow-surface)` }} />
-                  ) : (
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-xl shrink-0"
-                      style={{ background: `${classColor(mainChar.class)}20`, color: classColor(mainChar.class) }}>
-                      {mainChar.name[0].toUpperCase()}
+                {/* Portrait banner */}
+                <div className="relative overflow-hidden" style={{ height: "7rem", background: `${classColor(mainChar.class)}18` }}>
+                  {mainChar.avatarUrl && (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={avatarToInset(mainChar.avatarUrl)}
+                        alt=""
+                        className="w-full h-full object-cover object-top"
+                        style={{ filter: "brightness(0.8)" }}
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                      />
+                      <div className="absolute inset-0" style={{
+                        background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.65) 100%)",
+                      }} />
+                    </>
+                  )}
+                  {/* Name overlaid at bottom of banner */}
+                  <div className="absolute bottom-0 left-0 right-0 flex items-end gap-3 px-5 pb-3">
+                    {mainChar.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={mainChar.avatarUrl} alt="" className="w-12 h-12 rounded-full object-cover shrink-0"
+                        style={{ boxShadow: `0 0 0 2px ${classColor(mainChar.class)}80` }} />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shrink-0"
+                        style={{ background: `${classColor(mainChar.class)}30`, color: classColor(mainChar.class) }}>
+                        {mainChar.name[0].toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xl font-bold truncate drop-shadow" style={{ color: mainChar.avatarUrl ? "#fff" : classColor(mainChar.class) }}>{mainChar.name}</p>
+                      <p className="text-xs drop-shadow" style={{ color: mainChar.avatarUrl ? "rgba(255,255,255,0.75)" : "var(--wow-text-muted)" }}>
+                        {mainChar.spec ? `${mainChar.spec} ` : ""}{mainChar.class}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats row */}
+                <div className="flex items-center gap-5 px-5 py-3" style={{ background: "var(--wow-surface)", borderTop: `1px solid ${classColor(mainChar.class)}20` }}>
+                  {mainChar.itemLevel && (
+                    <div>
+                      <p className="text-lg font-bold leading-tight" style={{ color: "var(--wow-text)" }}>{mainChar.itemLevel}</p>
+                      <p className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Item Level</p>
                     </div>
                   )}
-                  <div className="flex-1 min-w-0 pb-0.5">
-                    <p className="text-xl font-bold truncate" style={{ color: classColor(mainChar.class) }}>{mainChar.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-muted)" }}>
-                      {mainChar.spec ? `${mainChar.spec} ` : ""}{mainChar.class} · {mainChar.realm}
-                    </p>
-                    <div className="flex items-center gap-4 mt-1.5">
-                      {mainChar.itemLevel && <span className="text-sm font-medium" style={{ color: "var(--wow-text)" }}>{mainChar.itemLevel} iLvl</span>}
-                      {mainChar.mythicScore && (
-                        <span className="text-sm font-bold" style={{ color: scoreColor(mainChar.mythicScore) }}>
-                          {mainChar.mythicScore.toFixed(1)} M+
-                        </span>
-                      )}
-                      <span>{ROLE_ICON[mainChar.role] ?? "⚔️"}</span>
+                  {mainChar.mythicScore && (
+                    <div>
+                      <p className="text-lg font-bold leading-tight" style={{ color: scoreColor(mainChar.mythicScore) }}>{mainChar.mythicScore.toFixed(1)}</p>
+                      <p className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Mythic+ Score</p>
                     </div>
-                    {mainChar.guildName && <p className="text-xs mt-1" style={{ color: "var(--wow-text-faint)" }}>&lt;{mainChar.guildName}&gt;</p>}
-                  </div>
-                  {/* Unlink */}
-                  <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 pb-0.5">
-                    <button onClick={() => unlinkChar(mainChar.id)} title="Unlink"
-                      className="w-7 h-7 rounded flex items-center justify-center text-sm"
-                      style={{ background: "rgba(200,60,60,0.15)", color: "#e06060" }}>✕</button>
+                  )}
+                  <div className="ml-auto text-right">
+                    <p className="text-sm font-medium" style={{ color: "var(--wow-text-muted)" }}>{mainChar.realm}</p>
                   </div>
                 </div>
               </div>
