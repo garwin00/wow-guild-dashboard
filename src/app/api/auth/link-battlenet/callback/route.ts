@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 const BNET_REGION = process.env.BLIZZARD_REGION ?? "eu";
 const CLIENT_ID = process.env.BLIZZARD_CLIENT_ID!;
 const CLIENT_SECRET = process.env.BLIZZARD_CLIENT_SECRET!;
-const APP_URL = process.env.NEXTAUTH_URL ?? "https://zugzug.pro";
+const APP_URL = process.env.NEXTAUTH_URL ?? "https://www.zugzug.pro";
 const CALLBACK_URL = `${APP_URL}/api/auth/link-battlenet/callback`;
 
 export async function GET(req: NextRequest) {

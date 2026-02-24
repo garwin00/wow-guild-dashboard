@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM = process.env.RESEND_FROM_EMAIL ?? "noreply@zugzug.pro";
-const APP_URL = process.env.NEXTAUTH_URL ?? "https://zugzug.pro";
+const APP_URL = process.env.NEXTAUTH_URL ?? "https://www.zugzug.pro";
 
 export async function sendWelcomeEmail(email: string, name: string) {
   const dashboardUrl = APP_URL;
