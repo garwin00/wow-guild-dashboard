@@ -20,7 +20,16 @@ async function getClientToken(region: string): Promise<string> {
   return data.access_token as string;
 }
 
-export async function getGuildRoster(
+export async function getUserWowProfile(region: string, userAccessToken: string) {
+  const res = await fetch(
+    `${BNET_BASE(region)}/profile/user/wow?namespace=profile-${region}&locale=en_GB`,
+    { headers: { Authorization: `Bearer ${userAccessToken}` } }
+  );
+  if (!res.ok) throw new Error(`Blizzard API error: ${res.status}`);
+  return res.json();
+}
+
+
   region: string,
   realm: string,
   guildName: string

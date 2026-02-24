@@ -12,6 +12,7 @@ export default async function HomePage() {
     include: { guild: true },
   });
 
+  if (memberships.length === 0) redirect("/guilds/new");
   if (memberships.length === 1) {
     redirect(`/${memberships[0].guild.slug}/overview`);
   }

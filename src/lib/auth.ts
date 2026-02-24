@@ -1,11 +1,33 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import type { AdapterUser } from "next-auth/adapters";
 
 const BNET_REGION = process.env.BLIZZARD_REGION ?? "eu";
 
+// Wrap PrismaAdapter to handle custom bnetId/battletag fields
+function customAdapter() {
+  const base = PrismaAdapter(prisma);
+  return {
+    ...base,
+    createUser: (data: AdapterUser & { bnetId?: string; battletag?: string }) => {
+      return prisma.user.create({
+        data: {
+          id: data.id,
+          name: data.name ?? null,
+          email: data.email ?? null,
+          emailVerified: data.emailVerified ?? null,
+          image: data.image ?? null,
+          bnetId: data.bnetId ?? data.id ?? "",
+          battletag: data.battletag ?? data.name ?? "",
+        },
+      });
+    },
+  };
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: customAdapter(),
   providers: [
     {
       id: "battlenet",
@@ -13,7 +35,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       type: "oauth",
       authorization: {
         url: `https://${BNET_REGION}.battle.net/oauth/authorize`,
-        params: { scope: "wow.profile openid", response_type: "code" },
+        params: { scope: "wow.profile", response_type: "code" },
       },
       token: `https://${BNET_REGION}.battle.net/oauth/token`,
       userinfo: `https://${BNET_REGION}.battle.net/oauth/userinfo`,
@@ -24,8 +46,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return {
           id: String(profile.id ?? profile.sub),
           bnetId: String(profile.id ?? profile.sub),
-          battletag: profile.battletag ?? profile.name ?? "Unknown",
-          name: profile.battletag ?? profile.name ?? "Unknown",
+          battletag: profile.battletag ?? profile.battle_tag ?? "Unknown",
+          name: profile.battletag ?? profile.battle_tag ?? "Unknown",
           email: profile.email ?? null,
           image: null,
         };
