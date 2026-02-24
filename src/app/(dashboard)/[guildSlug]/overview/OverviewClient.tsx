@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { RioRaidTier } from "@/lib/raiderio";
 
 const CLASS_COLORS: Record<string, string> = {
@@ -19,19 +19,12 @@ const ROLE_ICON: Record<string, string> = { TANK: "🛡️", HEALER: "💚", DPS
 
 interface Character { id: string; name: string; class: string | null; spec: string | null; role: string; isMain: boolean; }
 interface Signup {
-  id: string;
-  status: string;
-  characterId: string;
+  id: string; status: string; characterId: string;
   character: { name: string; class: string | null; spec: string | null; role: string } | null;
 }
 interface RaidEvent {
-  id: string;
-  title: string;
-  scheduledAt: string;
-  raidZone: string;
-  maxAttendees: number;
-  signupCount: number;
-  signups: Signup[];
+  id: string; title: string; scheduledAt: string; raidZone: string;
+  maxAttendees: number; signupCount: number; signups: Signup[];
 }
 interface MySignup { id: string; status: string; characterName: string | null; raidEventId: string; }
 interface Announcement {
@@ -43,13 +36,16 @@ interface Announcement {
 interface Props {
   guild: { name: string; realm: string; region: string; slug: string };
   memberRole: string;
+  isOfficer: boolean;
+}
+
+interface OverviewData {
+  upcomingRaids: RaidEvent[];
   rosterCount: number;
   myCharacters: Character[];
-  mySignup: MySignup | null;
-  upcomingRaids: RaidEvent[];
   progression: RioRaidTier[] | null;
   announcements: Announcement[];
-  isOfficer: boolean;
+  mySignup: MySignup | null;
 }
 
 function RoleBar({ signups }: { signups: Signup[] }) {
@@ -75,25 +71,55 @@ function RoleBar({ signups }: { signups: Signup[] }) {
   );
 }
 
-export default function OverviewClient({ guild, memberRole, rosterCount, myCharacters, mySignup, upcomingRaids, progression, announcements: initialAnnouncements, isOfficer }: Props) {
-  const router = useRouter();
+export default function OverviewClient({ guild, memberRole, isOfficer }: Props) {
+  const queryClient = useQueryClient();
   const [modal, setModal] = useState<{ type: "signups"; raid: RaidEvent } | null>(null);
   const [linkStatus, setLinkStatus] = useState<string | null>(null);
   const [signingUp, setSigningUp] = useState(false);
   const [signupStatus, setSignupStatus] = useState<string | null>(null);
-  const [selectedCharId, setSelectedCharId] = useState<string>(myCharacters[0]?.id ?? "");
-  const [localMySignup, setLocalMySignup] = useState<MySignup | null>(mySignup);
-
-  // Absence notices
+  const [selectedCharId, setSelectedCharId] = useState<string>("");
+  const [localMySignup, setLocalMySignup] = useState<MySignup | null>(null);
   const [absenceForm, setAbsenceForm] = useState({ startDate: "", endDate: "", reason: "" });
   const [absenceStatus, setAbsenceStatus] = useState<string | null>(null);
   const [submittingAbsence, setSubmittingAbsence] = useState(false);
-
-  // Announcements
-  const [announcements, setAnnouncements] = useState(initialAnnouncements);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showAnnForm, setShowAnnForm] = useState(false);
   const [annForm, setAnnForm] = useState({ title: "", body: "", pinned: false, expiresAt: "" });
   const [savingAnn, setSavingAnn] = useState(false);
+  const firstLoad = useRef(false);
+
+  const { data, isLoading } = useQuery<OverviewData>({
+    queryKey: ["overview", guild.slug],
+    queryFn: () => fetch(`/api/guild/${guild.slug}/overview`).then((r) => r.json()),
+  });
+
+  // Sync mutable state from initial data load only
+  useEffect(() => {
+    if (data && !firstLoad.current) {
+      firstLoad.current = true;
+      setAnnouncements(data.announcements ?? []);
+      setLocalMySignup(data.mySignup ?? null);
+      setSelectedCharId(data.myCharacters?.[0]?.id ?? "");
+    }
+  }, [data]);
+
+  // Auto-link characters on first load (once per session per guild)
+  useEffect(() => {
+    const key = `chars-linked-${guild.slug}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    fetch("/api/roster/link-characters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guildSlug: guild.slug }),
+    }).then(r => r.json()).then(d => {
+      if (d.linked > 0 || d.role) {
+        setLinkStatus(`Linked ${d.linked} character(s) · Role: ${d.role}`);
+        firstLoad.current = false;
+        queryClient.invalidateQueries({ queryKey: ["overview", guild.slug] });
+      }
+    }).catch(() => {});
+  }, [guild.slug, queryClient]);
 
   async function submitAbsence(e: React.FormEvent) {
     e.preventDefault();
@@ -143,29 +169,6 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
       .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
   }
 
-  const nextRaid = upcomingRaids[0] ?? null;
-
-  useEffect(() => {
-    if (myCharacters[0]) setSelectedCharId(myCharacters[0].id);
-  }, [myCharacters]);
-
-  // Auto-link characters on first load (once per session per guild)
-  useEffect(() => {
-    const key = `chars-linked-${guild.slug}`;
-    if (sessionStorage.getItem(key)) return;
-    sessionStorage.setItem(key, "1");
-    fetch("/api/roster/link-characters", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ guildSlug: guild.slug }),
-    }).then(r => r.json()).then(data => {
-      if (data.linked > 0 || data.role) {
-        setLinkStatus(`Linked ${data.linked} character(s) · Role: ${data.role}`);
-        router.refresh();
-      }
-    }).catch(() => {});
-  }, [guild.slug, router]);
-
   async function handleSignup(status: "ACCEPTED" | "DECLINED" | "TENTATIVE") {
     if (!nextRaid || !selectedCharId) return;
     setSigningUp(true);
@@ -175,13 +178,12 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ raidEventId: nextRaid.id, characterId: selectedCharId, status }),
     });
-    const data = await res.json();
-    if (data.signup) {
+    const d = await res.json();
+    if (d.signup) {
       const char = myCharacters.find(c => c.id === selectedCharId);
-      setLocalMySignup({ id: data.signup.id, status, characterName: char?.name ?? null, raidEventId: nextRaid.id });
-      router.refresh();
+      setLocalMySignup({ id: d.signup.id, status, characterName: char?.name ?? null, raidEventId: nextRaid.id });
     } else {
-      setSignupStatus(data.error ?? "Failed to sign up");
+      setSignupStatus(d.error ?? "Failed to sign up");
     }
     setSigningUp(false);
   }
@@ -194,13 +196,23 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ raidEventId: localMySignup.raidEventId, characterId: selectedCharId, status }),
     });
-    const data = await res.json();
-    if (data.signup) {
+    const d = await res.json();
+    if (d.signup) {
       setLocalMySignup(prev => prev ? { ...prev, status } : null);
-      router.refresh();
     }
     setSigningUp(false);
   }
+
+  if (isLoading || !data) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <span className="text-sm" style={{ color: "var(--wow-text-faint)" }}>Loading…</span>
+      </div>
+    );
+  }
+
+  const { upcomingRaids, rosterCount, myCharacters, progression } = data;
+  const nextRaid = upcomingRaids[0] ?? null;
 
   const stats = [
     { label: "Roster Size", value: rosterCount },
@@ -372,7 +384,6 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
 
             <div className="wow-divider my-4" />
 
-            {/* My signup status */}
             {localMySignup ? (
               <div>
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--wow-text-faint)" }}>Your Status</p>

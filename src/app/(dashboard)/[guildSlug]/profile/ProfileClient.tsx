@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { signIn } from "next-auth/react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { scoreColor, avatarToInset } from "@/lib/raiderio";
 
 const ROLES = ["TANK", "HEALER", "DPS"] as const;
@@ -47,28 +47,12 @@ function externalLinks(region: string, realm: string, name: string) {
 }
 
 interface Character {
-  id: string;
-  name: string;
-  realm: string;
-  region: string;
-  class: string;
-  spec: string | null;
-  role: string;
-  itemLevel: number | null;
-  level: number | null;
-  isMain: boolean;
-  avatarUrl: string | null;
-  guildName: string | null;
-  guildSlug: string | null;
-  mythicScore: number | null;
+  id: string; name: string; realm: string; region: string; class: string; spec: string | null;
+  role: string; itemLevel: number | null; level: number | null; isMain: boolean; avatarUrl: string | null;
+  guildName: string | null; guildSlug: string | null; mythicScore: number | null;
 }
 
-interface Props {
-  user: { id: string; battletag: string; email: string | null; image: string | null; bnetId: string };
-  memberRole: string;
-  guildSlug: string;
-  characters: Character[];
-}
+interface Props { guildSlug: string; memberRole: string; }
 
 function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
   char: Character; isMain: boolean; onSetMain: () => void;
@@ -83,9 +67,7 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
       border: isMain ? `2px solid ${color}60` : "1px solid rgba(var(--wow-primary-rgb),0.15)",
       boxShadow: isMain ? `0 0 20px ${color}20` : "none",
     }}>
-      {/* Two-column: avatar | data */}
       <div className="flex items-start gap-3 p-4">
-        {/* Col 1 — avatar */}
         {char.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={char.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover shrink-0 mt-0.5"
@@ -96,8 +78,6 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
             {char.name[0].toUpperCase()}
           </div>
         )}
-
-        {/* Col 2 — name, spec/class, stats */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 mb-0.5">
             <p className="font-semibold text-sm truncate" style={{ color }}>{char.name}</p>
@@ -120,13 +100,12 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
         </div>
       </div>
 
-      {/* Set as main — subtle link-style */}
       {!isMain && (
         <button onClick={onSetMain} disabled={pending}
           className="w-full py-2 text-xs transition-colors"
           style={{
             borderTop: "1px solid rgba(var(--wow-primary-rgb),0.1)",
-            color: pending ? "var(--wow-text-faint)" : "var(--wow-text-faint)",
+            color: "var(--wow-text-faint)",
             background: "transparent",
           }}
           onMouseOver={e => !pending && (e.currentTarget.style.color = "var(--wow-gold)")}
@@ -138,25 +117,41 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
   );
 }
 
-export default function ProfileClient({ user, memberRole, guildSlug, characters: initialChars }: Props) {
-  const router = useRouter();
-  const [chars, setChars] = useState(initialChars);
+export default function ProfileClient({ guildSlug, memberRole }: Props) {
+  const queryClient = useQueryClient();
+  const [chars, setChars] = useState<Character[]>([]);
   const [isPending, startTransition] = useTransition();
   const [settingMain, setSettingMain] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
   const [linkMsg, setLinkMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [linksOpen, setLinksOpen] = useState(false);
-
-  // Account settings state
   const [showPwForm, setShowPwForm] = useState(false);
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
   const [pwMsg, setPwMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [pwSaving, setPwSaving] = useState(false);
+  const firstLoad = useRef(false);
 
+  const { data, isLoading } = useQuery<{
+    user: { id: string; battletag: string | null; email: string | null; image: string | null; bnetId: string | null };
+    memberRole: string;
+    characters: Character[];
+  }>({
+    queryKey: ["profile", guildSlug],
+    queryFn: () => fetch(`/api/guild/${guildSlug}/profile`).then((r) => r.json()),
+  });
+
+  useEffect(() => {
+    if (data && !firstLoad.current) {
+      firstLoad.current = true;
+      setChars(data.characters ?? []);
+    }
+  }, [data]);
+
+  const user = data?.user;
   const mainChar = chars.find(c => c.isMain) ?? chars[0] ?? null;
   const alts = chars.filter(c => c.id !== mainChar?.id);
-  const hasBnet = Boolean(user.bnetId) && !user.bnetId.startsWith("email:");
-  const hasPassword = Boolean(user.email);
+  const hasBnet = Boolean(user?.bnetId) && !user?.bnetId?.startsWith("email:");
+  const hasPassword = Boolean(user?.email);
 
   async function setMain(charId: string) {
     setSettingMain(charId);
@@ -166,7 +161,6 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
     });
     setChars(prev => prev.map(c => ({ ...c, isMain: c.id === charId })));
     setSettingMain(null);
-    startTransition(() => router.refresh());
   }
 
   async function unlinkChar(charId: string) {
@@ -193,12 +187,15 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ guildSlug }),
     });
-    const data = await res.json();
-    if (data.error) {
-      setLinkMsg({ text: data.error, ok: false });
+    const d = await res.json();
+    if (d.error) {
+      setLinkMsg({ text: d.error, ok: false });
     } else {
-      setLinkMsg({ text: `✓ Linked ${data.linked} character(s)`, ok: true });
-      if (data.linked > 0) startTransition(() => router.refresh());
+      setLinkMsg({ text: `✓ Linked ${d.linked} character(s)`, ok: true });
+      if (d.linked > 0) {
+        firstLoad.current = false;
+        queryClient.invalidateQueries({ queryKey: ["profile", guildSlug] });
+      }
     }
     setLinking(false);
   }
@@ -212,15 +209,23 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ currentPassword: pwForm.current, newPassword: pwForm.next }),
     });
-    const data = await res.json();
-    if (data.ok) {
+    const d = await res.json();
+    if (d.ok) {
       setPwMsg({ text: "✓ Password updated", ok: true });
       setPwForm({ current: "", next: "", confirm: "" });
       setShowPwForm(false);
     } else {
-      setPwMsg({ text: data.error ?? "Failed", ok: false });
+      setPwMsg({ text: d.error ?? "Failed", ok: false });
     }
     setPwSaving(false);
+  }
+
+  if (isLoading || !data || !user) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <span className="text-sm" style={{ color: "var(--wow-text-faint)" }}>Loading…</span>
+      </div>
+    );
   }
 
   return (
@@ -287,9 +292,7 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                 border: `2px solid ${classColor(mainChar.class)}50`,
                 boxShadow: `0 0 24px ${classColor(mainChar.class)}18`,
               }}>
-                {/* Top-right controls: links dropdown */}
                 <div className="absolute top-3 right-3 flex items-center gap-1.5 z-20">
-                  {/* External links dropdown */}
                   <div className="relative">
                     <button onClick={() => setLinksOpen(o => !o)}
                       className="flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-colors"
@@ -325,9 +328,7 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                   </div>
                 </div>
 
-                {/* Two-column layout: portrait | data */}
                 <div className="flex items-center gap-4 p-4 pr-12">
-                  {/* Col 1 — portrait, vertically centered */}
                   {mainChar.avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -344,7 +345,6 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                     </div>
                   )}
 
-                  {/* Col 2 — name, spec, stats */}
                   <div className="min-w-0 flex-1 flex flex-col justify-center gap-1">
                     <div className="flex items-baseline gap-2">
                       <p className="text-2xl font-bold truncate leading-tight" style={{ color: classColor(mainChar.class) }}>{mainChar.name}</p>
@@ -400,7 +400,6 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
       <div className="rounded-lg p-6 space-y-4" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
         <h2 className="text-sm uppercase tracking-widest font-semibold" style={{ color: "var(--wow-text-faint)" }}>Account Settings</h2>
 
-        {/* BNet status */}
         <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.1)" }}>
           <div>
             <p className="text-sm font-medium" style={{ color: "var(--wow-text)" }}>Battle.net</p>
@@ -419,7 +418,6 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
           )}
         </div>
 
-        {/* Email */}
         <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.1)" }}>
           <div>
             <p className="text-sm font-medium" style={{ color: "var(--wow-text)" }}>Email</p>
@@ -427,7 +425,6 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
           </div>
         </div>
 
-        {/* Password */}
         {hasPassword && (
           <div>
             <div className="flex items-center justify-between py-3">

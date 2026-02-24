@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 type EventStatus = "OPEN" | "CLOSED" | "CANCELLED";
 type SignupStatus = "ACCEPTED" | "TENTATIVE" | "DECLINED";
@@ -118,11 +119,11 @@ function CompositionPanel({ signups }: { signups: Signup[] }) {
   );
 }
 
-export default function RaidsClient({ events: initial, guildSlug, isOfficer, userCharacters }: {
-  events: RaidEvent[]; guildSlug: string; isOfficer: boolean; userCharacters: UserCharacter[];
+export default function RaidsClient({ guildSlug, isOfficer }: {
+  guildSlug: string; isOfficer: boolean;
 }) {
-  const [events, setEvents] = useState(initial);
-  const [selectedId, setSelectedId] = useState<string | null>(initial.find(e => new Date(e.scheduledAt) >= new Date() && e.status !== "CANCELLED")?.id ?? initial[0]?.id ?? null);
+  const [events, setEvents] = useState<RaidEvent[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [signups, setSignups] = useState<Signup[] | null>(null);
   const [loadingSignups, setLoadingSignups] = useState(false);
   const [mainTab, setMainTab] = useState<"signups" | "composition">("signups");
@@ -130,10 +131,27 @@ export default function RaidsClient({ events: initial, guildSlug, isOfficer, use
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ title: "", raidZone: "", scheduledAt: "", maxAttendees: "25", minItemLevel: "", description: "" });
   const [saving, setSaving] = useState(false);
-  const [selectedChar, setSelectedChar] = useState(userCharacters[0]?.id ?? "");
+  const [selectedChar, setSelectedChar] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const firstLoad = useRef(false);
 
+  const { data, isLoading } = useQuery<{ events: RaidEvent[]; userCharacters: UserCharacter[] }>({
+    queryKey: ["raids", guildSlug],
+    queryFn: () => fetch(`/api/guild/${guildSlug}/raids`).then(r => r.json()),
+  });
+
+  useEffect(() => {
+    if (data && !firstLoad.current) {
+      firstLoad.current = true;
+      setEvents(data.events ?? []);
+      const first = (data.events ?? []).find(e => new Date(e.scheduledAt) >= new Date() && e.status !== "CANCELLED")?.id ?? (data.events ?? [])[0]?.id ?? null;
+      setSelectedId(first);
+      setSelectedChar((data.userCharacters ?? [])[0]?.id ?? "");
+    }
+  }, [data]);
+
+  const userCharacters = data?.userCharacters ?? [];
   const selectedEvent = events.find(e => e.id === selectedId) ?? null;
 
   const loadSignups = useCallback(async (id: string) => {
@@ -155,9 +173,9 @@ export default function RaidsClient({ events: initial, guildSlug, isOfficer, use
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, maxAttendees: parseInt(form.maxAttendees), minItemLevel: form.minItemLevel ? parseInt(form.minItemLevel) : null, guildSlug }),
     });
-    const data = await res.json();
+    const d = await res.json();
     if (res.ok) {
-      const newEvent = { ...data, _count: { signups: 0 } };
+      const newEvent = { ...d, _count: { signups: 0 } };
       setEvents(prev => [...prev, newEvent].sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()));
       setSelectedId(newEvent.id);
       setShowCreate(false);
@@ -173,10 +191,10 @@ export default function RaidsClient({ events: initial, guildSlug, isOfficer, use
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ raidEventId: selectedId, characterId: selectedChar, status, note }),
     });
-    const data = await res.json();
+    const d = await res.json();
     if (res.ok) {
       const char = userCharacters.find(c => c.id === selectedChar)!;
-      const full: Signup = { ...data, character: { ...char, spec: null, role: data.character?.role ?? "DPS", itemLevel: data.character?.itemLevel ?? null } };
+      const full: Signup = { ...d, character: { ...char, spec: null, role: d.character?.role ?? "DPS", itemLevel: d.character?.itemLevel ?? null } };
       setSignups(prev => {
         if (!prev) return [full];
         const idx = prev.findIndex(s => s.character.id === selectedChar);
@@ -193,6 +211,14 @@ export default function RaidsClient({ events: initial, guildSlug, isOfficer, use
       body: JSON.stringify({ signupId, status, guildSlug }),
     });
     setSignups(prev => prev ? prev.map(s => s.id === signupId ? { ...s, status } : s) : prev);
+  }
+
+  if (isLoading && events.length === 0) {
+    return (
+      <div className="p-8 flex items-center justify-center py-24">
+        <span className="text-sm" style={{ color: "var(--wow-text-faint)" }}>Loading…</span>
+      </div>
+    );
   }
 
   const upcoming = events.filter(e => new Date(e.scheduledAt) >= new Date() && e.status !== "CANCELLED");

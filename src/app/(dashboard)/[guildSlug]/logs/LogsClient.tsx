@@ -2,30 +2,34 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface LogReport { id: string; wclCode: string; title: string; zone: string | null; startTime: string | Date; fightCount: number; _count: { parses: number }; }
 interface Guild { id: string; name: string; wclGuildId: string | null; }
 
-export default function LogsClient({ reports, guild, guildSlug, isOfficer }: {
-  reports: LogReport[]; guild: Guild; guildSlug: string; isOfficer: boolean;
+export default function LogsClient({ guildSlug, isOfficer }: {
+  guildSlug: string; isOfficer: boolean;
 }) {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState("");
+
+  const { data, isLoading } = useQuery<{ reports: LogReport[]; guild: Guild }>({
+    queryKey: ["logs", guildSlug],
+    queryFn: () => fetch(`/api/guild/${guildSlug}/logs`).then((r) => r.json()),
+  });
 
   async function syncReports() {
     setSyncing(true); setMessage("");
     try {
       const res = await fetch(`/api/logs/sync?guildSlug=${guildSlug}`, { method: "POST" });
       const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
+      const d = text ? JSON.parse(text) : {};
       if (res.ok) {
-        setMessage(`✓ Synced ${data.count} reports`);
-        // Refresh server component data so the table updates
-        router.refresh();
+        setMessage(`✓ Synced ${d.count} reports`);
+        queryClient.invalidateQueries({ queryKey: ["logs", guildSlug] });
       } else {
-        setMessage(`Error: ${data.error ?? "Sync failed"}`);
+        setMessage(`Error: ${d.error ?? "Sync failed"}`);
       }
     } catch (err) {
       setMessage(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
@@ -33,6 +37,15 @@ export default function LogsClient({ reports, guild, guildSlug, isOfficer }: {
     setSyncing(false);
   }
 
+  if (isLoading || !data) {
+    return (
+      <div className="p-8 flex items-center justify-center py-24">
+        <span className="text-sm" style={{ color: "var(--wow-text-faint)" }}>Loading…</span>
+      </div>
+    );
+  }
+
+  const { reports, guild } = data;
   const hasWcl = !!guild.wclGuildId;
 
   return (

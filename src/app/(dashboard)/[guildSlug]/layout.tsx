@@ -1,8 +1,7 @@
-import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { signOut } from "@/lib/auth";
 import { getGuildProgression } from "@/lib/raiderio";
+import { getSession, getGuildMembership } from "@/lib/queries";
 import SidebarNav from "./SidebarNav";
 
 interface Props {
@@ -12,13 +11,10 @@ interface Props {
 
 export default async function DashboardLayout({ children, params }: Props) {
   const { guildSlug } = await params;
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) redirect("/login");
 
-  const membership = await prisma.guildMembership.findFirst({
-    where: { userId: session.user.id, guild: { slug: guildSlug } },
-    include: { guild: true },
-  });
+  const membership = await getGuildMembership(session.user.id, guildSlug);
 
   if (!membership) redirect("/");
 

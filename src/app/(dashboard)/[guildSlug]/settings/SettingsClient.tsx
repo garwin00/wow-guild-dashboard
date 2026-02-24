@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 type GuildRole = "GM" | "OFFICER" | "MEMBER" | "TRIALIST";
 interface Guild {
@@ -48,23 +48,35 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export default function SettingsClient({ guild, members: initial, isGm, guildSlug }: {
-  guild: Guild; members: Member[]; isGm: boolean; guildSlug: string;
+export default function SettingsClient({ guildSlug, isGm }: {
+  guildSlug: string; isGm: boolean;
 }) {
-  const router = useRouter();
-  const [members, setMembers] = useState(initial);
-
-  // WCL
-  const [wclId, setWclId] = useState(guild.wclGuildId ?? "");
+  const [members, setMembers] = useState<Member[]>([]);
+  const [wclId, setWclId] = useState("");
   const [wclSaving, setWclSaving] = useState(false);
   const [wclMsg, setWclMsg] = useState("");
-
-  // Appearance
-  const [imageUrl, setImageUrl] = useState(guild.imageUrl ?? "");
-  const [bannerUrl, setBannerUrl] = useState(guild.bannerUrl ?? "");
-  const [theme, setTheme] = useState(guild.theme ?? "default");
+  const [imageUrl, setImageUrl] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [theme, setTheme] = useState("default");
   const [appearanceSaving, setAppearanceSaving] = useState(false);
   const [appearanceMsg, setAppearanceMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const firstLoad = useRef(false);
+
+  const { data, isLoading } = useQuery<{ guild: Guild; members: Member[] }>({
+    queryKey: ["settings", guildSlug],
+    queryFn: () => fetch(`/api/guild/${guildSlug}/settings`).then((r) => r.json()),
+  });
+
+  useEffect(() => {
+    if (data && !firstLoad.current) {
+      firstLoad.current = true;
+      setMembers(data.members ?? []);
+      setWclId(data.guild.wclGuildId ?? "");
+      setImageUrl(data.guild.imageUrl ?? "");
+      setBannerUrl(data.guild.bannerUrl ?? "");
+      setTheme(data.guild.theme ?? "default");
+    }
+  }, [data]);
 
   async function saveAppearance() {
     setAppearanceSaving(true);
@@ -76,10 +88,9 @@ export default function SettingsClient({ guild, members: initial, isGm, guildSlu
     });
     if (res.ok) {
       setAppearanceMsg({ text: "✓ Saved", ok: true });
-      router.refresh();
     } else {
-      const data = await res.json();
-      setAppearanceMsg({ text: data.error ?? "Failed to save", ok: false });
+      const d = await res.json();
+      setAppearanceMsg({ text: d.error ?? "Failed to save", ok: false });
     }
     setAppearanceSaving(false);
   }
@@ -98,12 +109,23 @@ export default function SettingsClient({ guild, members: initial, isGm, guildSlu
   }
 
   async function updateRole(memberId: string, role: GuildRole) {
+    if (!data?.guild) return;
     const res = await fetch("/api/settings/role", {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ membershipId: memberId, role, guildId: guild.id }),
+      body: JSON.stringify({ membershipId: memberId, role, guildId: data.guild.id }),
     });
     if (res.ok) setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role } : m));
   }
+
+  if (isLoading || !data) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <span className="text-sm" style={{ color: "var(--wow-text-faint)" }}>Loading…</span>
+      </div>
+    );
+  }
+
+  const guild = data.guild;
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -120,7 +142,6 @@ export default function SettingsClient({ guild, members: initial, isGm, guildSlu
 
       {/* ── Appearance ── */}
       <Section title="Appearance">
-        {/* Theme picker */}
         <div>
           <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--wow-text-faint)" }}>Theme</p>
           <div className="grid grid-cols-3 gap-3">
@@ -145,7 +166,6 @@ export default function SettingsClient({ guild, members: initial, isGm, guildSlu
           </div>
         </div>
 
-        {/* Guild image URL */}
         <div>
           <label className="block text-xs uppercase tracking-widest mb-1.5" style={{ color: "var(--wow-text-faint)" }}>
             Guild Profile Image URL
@@ -166,7 +186,6 @@ export default function SettingsClient({ guild, members: initial, isGm, guildSlu
           </p>
         </div>
 
-        {/* Banner URL */}
         <div>
           <label className="block text-xs uppercase tracking-widest mb-1.5" style={{ color: "var(--wow-text-faint)" }}>
             Guild Banner Image URL

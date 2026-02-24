@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type CharRole = "TANK" | "HEALER" | "DPS";
 interface Character {
@@ -9,7 +10,6 @@ interface Character {
   guildRank: number | null; userId: string | null;
 }
 
-// Official Blizzard WoW class colours
 const CLASS_COLOR_HEX: Record<string, string> = {
   "death knight": "#C41E3A",
   "demon hunter": "#A330C9",
@@ -30,11 +30,9 @@ function classColor(cls: string): string {
   return CLASS_COLOR_HEX[cls.toLowerCase()] ?? "#9ca3af";
 }
 
-// 15% opacity version of the class colour for avatar backgrounds
 function classColorBg(cls: string): string {
   const hex = CLASS_COLOR_HEX[cls.toLowerCase()];
   if (!hex) return "rgba(156,163,175,0.15)";
-  // Convert #RRGGBB → rgba
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
@@ -44,14 +42,12 @@ function classColorBg(cls: string): string {
 const ROLE_ICON: Record<CharRole, string> = { TANK: "🛡️", HEALER: "💚", DPS: "⚔️" };
 const ROLE_LABEL: Record<CharRole, string> = { TANK: "Tanks", HEALER: "Healers", DPS: "DPS" };
 
-// Midnight-era squished item levels (100–300 range)
-// ~Raid Finder ≈ 160, Normal ≈ 180, Heroic ≈ 200, Mythic ≈ 220+
 function iLvlColor(ilvl: number | null): string {
   if (!ilvl) return "text-gray-500";
-  if (ilvl >= 220) return "text-orange-400"; // Mythic / BiS
-  if (ilvl >= 200) return "text-purple-400"; // Heroic
-  if (ilvl >= 180) return "text-blue-400";   // Normal
-  if (ilvl >= 160) return "text-green-400";  // Raid Finder / world gear
+  if (ilvl >= 220) return "text-orange-400";
+  if (ilvl >= 200) return "text-purple-400";
+  if (ilvl >= 180) return "text-blue-400";
+  if (ilvl >= 160) return "text-green-400";
   return "text-gray-400";
 }
 
@@ -62,13 +58,11 @@ function attendanceColor(pct: number): string {
   return "var(--wow-error)";
 }
 
-export default function RosterClient({ characters, guildSlug, isOfficer, guildName, attendanceMap, absencesByUser, currentUserId }: {
-  characters: Character[]; guildSlug: string; isOfficer: boolean; guildName: string;
-  attendanceMap: Record<string, { attended: number; total: number }>;
-  absencesByUser: Record<string, { startDate: Date | string; endDate: Date | string; reason: string | null }[]>;
-  currentUserId: string;
+export default function RosterClient({ guildSlug, isOfficer, guildName, currentUserId }: {
+  guildSlug: string; isOfficer: boolean; guildName: string; currentUserId: string;
 }) {
-  const [chars, setChars] = useState(characters);
+  const queryClient = useQueryClient();
+  const [chars, setChars] = useState<Character[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState("");
   const [filter, setFilter] = useState<CharRole | "ALL">("ALL");
@@ -79,11 +73,23 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
     return parseInt(localStorage.getItem(`roster-sync-cooldown-${guildSlug}`) ?? "0", 10);
   });
 
-  // Officer notes panel
   const [notePanel, setNotePanel] = useState<{ char: Character } | null>(null);
   const [notes, setNotes] = useState<{ id: string; content: string; createdAt: string; author: { name: string | null; email: string } }[]>([]);
   const [noteInput, setNoteInput] = useState("");
   const [noteLoading, setNoteLoading] = useState(false);
+
+  const { data, isLoading } = useQuery<{
+    characters: Character[];
+    attendanceMap: Record<string, { attended: number; total: number }>;
+    absencesByUser: Record<string, { startDate: string; endDate: string; reason: string | null }[]>;
+  }>({
+    queryKey: ["roster", guildSlug],
+    queryFn: () => fetch(`/api/guild/${guildSlug}/roster`).then((r) => r.json()),
+  });
+
+  useEffect(() => {
+    if (data?.characters) setChars(data.characters);
+  }, [data]);
 
   const openNotePanel = useCallback(async (char: Character) => {
     if (!char.userId) return;
@@ -114,7 +120,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
     setNotes((prev) => prev.filter((n) => n.id !== id));
   }
 
-  const COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
+  const COOLDOWN_MS = 15 * 60 * 1000;
   const cooldownRemaining = Math.max(0, cooldownUntil - Date.now());
   const cooldownMins = Math.ceil(cooldownRemaining / 60000);
   const onCooldown = cooldownRemaining > 0;
@@ -126,14 +132,14 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ guildSlug }),
     });
-    const data = await res.json();
-    setSyncMsg(res.ok ? `✓ Synced ${data.synced} characters` : `Error: ${data.error}`);
+    const d = await res.json();
+    setSyncMsg(res.ok ? `✓ Synced ${d.synced} characters` : `Error: ${d.error}`);
     setSyncing(false);
     if (res.ok) {
       const until = Date.now() + COOLDOWN_MS;
       localStorage.setItem(`roster-sync-cooldown-${guildSlug}`, String(until));
       setCooldownUntil(until);
-      window.location.reload();
+      queryClient.invalidateQueries({ queryKey: ["roster", guildSlug] });
     }
   }
 
@@ -143,6 +149,17 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
       body: JSON.stringify({ characterId, role, guildSlug }),
     });
     setChars((prev) => prev.map((c) => c.id === characterId ? { ...c, role } : c));
+  }
+
+  const attendanceMap = data?.attendanceMap ?? {};
+  const absencesByUser = data?.absencesByUser ?? {};
+
+  if (isLoading || !data) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <span className="text-sm" style={{ color: "var(--wow-text-faint)" }}>Loading…</span>
+      </div>
+    );
   }
 
   const filtered = chars

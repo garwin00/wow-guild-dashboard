@@ -1,31 +1,21 @@
-import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { getSession, getGuildMembership } from "@/lib/queries";
 import LogsClient from "./LogsClient";
 
 interface Props { params: Promise<{ guildSlug: string }> }
 
 export default async function LogsPage({ params }: Props) {
   const { guildSlug } = await params;
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) redirect("/login");
 
-  const membership = await prisma.guildMembership.findFirst({
-    where: { userId: session.user.id, guild: { slug: guildSlug } },
-    include: { guild: true },
-  });
+  const membership = await getGuildMembership(session.user.id, guildSlug);
   if (!membership) redirect("/");
 
-  const [reports, guild] = await Promise.all([
-    prisma.logReport.findMany({
-      where: { guildId: membership.guild.id },
-      include: { _count: { select: { parses: true } } },
-      orderBy: { startTime: "desc" },
-    }),
-    prisma.guild.findUnique({ where: { id: membership.guild.id } }),
-  ]);
-
-  const isOfficer = ["GM", "OFFICER"].includes(membership.role);
-
-  return <LogsClient reports={reports} guild={guild!} guildSlug={guildSlug} isOfficer={isOfficer} />;
+  return (
+    <LogsClient
+      guildSlug={guildSlug}
+      isOfficer={["GM", "OFFICER"].includes(membership.role)}
+    />
+  );
 }

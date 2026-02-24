@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { scoreColor } from "@/lib/raiderio";
 import type { RioAffixesResponse } from "@/lib/raiderio";
 
@@ -71,8 +71,6 @@ interface CharacterWithScore {
 }
 
 interface Props {
-  characters: CharacterWithScore[];
-  affixes: RioAffixesResponse | null;
   guildSlug: string;
   isOfficer: boolean;
   guildName: string;
@@ -96,21 +94,18 @@ function upgradeArrows(n: number): string {
   return "⏱";
 }
 
-export default function MythicPlusClient({
-  characters,
-  affixes,
-  guildSlug,
-  isOfficer,
-  guildName,
-  guildRegion,
-}: Props) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+export default function MythicPlusClient({ guildSlug, isOfficer, guildName, guildRegion }: Props) {
+  const queryClient = useQueryClient();
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [roleTab, setRoleTab] = useState<RoleTab>("all");
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  const { data, isLoading } = useQuery<{ characters: CharacterWithScore[]; affixes: RioAffixesResponse | null }>({
+    queryKey: ["mythic-plus", guildSlug],
+    queryFn: () => fetch(`/api/guild/${guildSlug}/mythic-plus`).then((r) => r.json()),
+  });
 
   async function handleSync() {
     setSyncing(true);
@@ -121,16 +116,26 @@ export default function MythicPlusClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ guildSlug }),
       });
-      const data = await res.json();
-      if (!res.ok) setSyncResult(`Error: ${data.error}`);
-      else setSyncResult(`✓ Synced ${data.synced}/${data.total} characters`);
-      startTransition(() => router.refresh());
-    } catch (e) {
+      const d = await res.json();
+      if (!res.ok) setSyncResult(`Error: ${d.error}`);
+      else setSyncResult(`✓ Synced ${d.synced}/${d.total} characters`);
+      queryClient.invalidateQueries({ queryKey: ["mythic-plus", guildSlug] });
+    } catch {
       setSyncResult("Network error");
     } finally {
       setSyncing(false);
     }
   }
+
+  if (isLoading || !data) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <span className="text-sm" style={{ color: "var(--wow-text-faint)" }}>Loading…</span>
+      </div>
+    );
+  }
+
+  const { characters, affixes } = data;
 
   const filtered = characters
     .filter((c) => roleTab === "all" || c.role === roleTab)
