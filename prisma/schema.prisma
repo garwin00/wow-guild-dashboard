@@ -76,6 +76,7 @@ model Guild {
   characters   Character[]
   raidEvents   RaidEvent[]
   logReports   LogReport[]
+  mythicScores MythicPlusScore[]
 }
 
 model GuildMembership {
@@ -113,6 +114,8 @@ model Character {
   signups     Signup[]
   rosters     RosterSlot[]
   parses      CharacterParse[]
+  mythicScore MythicPlusScore?
+  mythicRuns  MythicPlusRun[]
 
   @@unique([name, realm, region])
 }
@@ -219,4 +222,38 @@ enum SignupStatus {
   ACCEPTED
   TENTATIVE
   DECLINED
+}
+
+model MythicPlusScore {
+  id          String    @id @default(cuid())
+  characterId String    @unique
+  guildId     String
+  season      String    @default("current")
+  all         Float     @default(0)
+  dps         Float     @default(0)
+  healer      Float     @default(0)
+  tank        Float     @default(0)
+  updatedAt   DateTime  @updatedAt
+
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  guild       Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
+
+model MythicPlusRun {
+  id          String    @id @default(cuid())
+  characterId String
+  dungeon     String
+  shortName   String
+  level       Int
+  score       Float
+  completedAt DateTime
+  upgrades    Int       @default(0)
+  url         String?
+  affixes     String[]
+  isTank      Boolean   @default(false)
+  isHealer    Boolean   @default(false)
+
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, dungeon, level, completedAt])
 }

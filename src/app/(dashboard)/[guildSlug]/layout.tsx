@@ -29,6 +29,7 @@ export default async function DashboardLayout({ children, params }: Props) {
     { href: `/${guildSlug}/raids`, label: "Raids", icon: "📅" },
     { href: `/${guildSlug}/logs`, label: "Logs", icon: "📊" },
     { href: `/${guildSlug}/logs/live`, label: "Live", icon: "🔴" },
+    { href: `/${guildSlug}/mythic-plus`, label: "Mythic+", icon: "⚡" },
     { href: `/${guildSlug}/settings`, label: "Settings", icon: "⚙️" },
   ];
 
@@ -62,7 +63,7 @@ export default async function DashboardLayout({ children, params }: Props) {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto p-8">
         {children}
       </main>
     </div>
