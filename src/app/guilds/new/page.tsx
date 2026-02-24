@@ -30,15 +30,17 @@ export default function NewGuildPage() {
     fetch("/api/guilds/from-bnet")
       .then(r => r.json())
       .then(data => {
-        if (data.error) { setError(data.error); setShowManual(true); }
-        else {
+        if (data.error) {
+          // Not an error for email-only users — just show manual entry
+          setShowManual(true);
+        } else {
           setGuilds(data.guilds ?? []);
           setRealms(data.realms ?? []);
           if (data.realms?.length) setManualRealm(data.realms[0]);
           if (!data.guilds?.length) setShowManual(true);
         }
       })
-      .catch(() => { setError("Failed to contact Battle.net"); setShowManual(true); })
+      .catch(() => { setShowManual(true); })
       .finally(() => setLoading(false));
   }, []);
 
