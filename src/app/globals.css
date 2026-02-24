@@ -150,6 +150,15 @@
   border-color: var(--wow-gold);
 }
 
+/* Sign out button in sidebar */
+.wow-signout-btn {
+  color: #5a5040;
+  transition: color 0.15s;
+}
+.wow-signout-btn:hover {
+  color: #c8a96a;
+}
+
 /* Section heading with gold underline */
 .wow-heading {
   font-family: var(--font-cinzel), serif;
