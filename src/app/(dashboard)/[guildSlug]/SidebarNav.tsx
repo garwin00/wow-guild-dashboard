@@ -68,7 +68,7 @@ export default function SidebarNav({ navLinks, guildName, realm, region, guildIm
             {realm} · {region.toUpperCase()}
           </p>
           {progressionBadge && (
-            <p className="text-xs mt-0.5 font-semibold" style={{ color: "#ff8000" }}>{progressionBadge}</p>
+            <p className="text-xs mt-0.5 font-semibold" style={{ color: "var(--wow-warning)" }}>{progressionBadge}</p>
           )}
         </div>
       </div>
@@ -97,7 +97,7 @@ export default function SidebarNav({ navLinks, guildName, realm, region, guildIm
           onMouseLeave={e => { if (!isActive(href)) (e.currentTarget as HTMLElement).style.color = "var(--wow-text-muted)"; }}
         >
           <span className="text-base">{icon}</span>
-          <span style={{ fontSize: "0.75rem", letterSpacing: "0.05em" }}>{label}</span>
+          <span className="text-xs tracking-widest">{label}</span>
         </Link>
       ))}
     </>
@@ -129,7 +129,7 @@ export default function SidebarNav({ navLinks, guildName, realm, region, guildIm
           )}
           <div>
             <p className="text-sm font-semibold truncate" style={{ color: activeColor }}>{guildName}</p>
-            <p className="text-xs" style={{ color: "var(--wow-text-muted)" }}>{realm} · {region.toUpperCase()}{progressionBadge ? ` · ` : ""}{progressionBadge && <span style={{ color: "#ff8000" }}>{progressionBadge}</span>}</p>
+            <p className="text-xs" style={{ color: "var(--wow-text-muted)" }}>{realm} · {region.toUpperCase()}{progressionBadge ? ` · ` : ""}{progressionBadge && <span style={{ color: "var(--wow-warning)" }}>{progressionBadge}</span>}</p>
           </div>
         </div>
         <button onClick={() => setMobileOpen((o) => !o)} className="p-2" style={{ color: activeBorder }} aria-label="Toggle menu">

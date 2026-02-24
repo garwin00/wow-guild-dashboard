@@ -56,10 +56,10 @@ function iLvlColor(ilvl: number | null): string {
 }
 
 function attendanceColor(pct: number): string {
-  if (pct >= 80) return "#1eff00";   // green — reliable
-  if (pct >= 60) return "#ff8000";   // orange — ok
-  if (pct >= 40) return "#ff6020";   // amber — poor
-  return "#e53e3e";                  // red — absent
+  if (pct >= 80) return "var(--wow-success)";
+  if (pct >= 60) return "var(--wow-warning)";
+  if (pct >= 40) return "var(--wow-warning)";
+  return "var(--wow-error)";
 }
 
 export default function RosterClient({ characters, guildSlug, isOfficer, guildName, attendanceMap, absencesByUser, currentUserId }: {
@@ -194,11 +194,8 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
       <div className="grid grid-cols-3 gap-3 mb-5">
         {(["TANK", "HEALER", "DPS"] as CharRole[]).map((r) => (
           <button key={r} onClick={() => setFilter(filter === r ? "ALL" : r)}
-            className="rounded-lg p-4 text-left transition-all"
-            style={{
-              background: filter === r ? "rgba(var(--wow-primary-rgb),0.12)" : "var(--wow-surface)",
-              border: filter === r ? "1px solid rgba(var(--wow-primary-rgb),0.5)" : "1px solid rgba(var(--wow-primary-rgb),0.15)",
-            }}>
+            className="wow-panel p-4 text-left transition-all"
+            style={filter === r ? { background: "rgba(var(--wow-primary-rgb),0.12)", borderColor: "rgba(var(--wow-primary-rgb),0.5)" } : undefined}>
             <span className="text-xl">{ROLE_ICON[r]}</span>
             <p className="font-bold text-xl mt-1" style={{ color: "var(--wow-text)" }}>{counts[r]}</p>
             <p className="text-xs" style={{ color: "var(--wow-text-muted)" }}>{ROLE_LABEL[r]}</p>
@@ -210,8 +207,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
       <div className="mb-4 flex items-center gap-3 flex-wrap">
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, class or spec…"
-          className="w-full max-w-xs rounded px-3 py-2 text-sm focus:outline-none"
-          style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+          className="max-w-xs wow-input" />
         <div className="flex gap-1 ml-auto">
           {(["rank", "ilvl", "name", "attendance"] as const).map((s) => (
             <button key={s} onClick={() => setSortBy(s)}
@@ -237,10 +233,10 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
             : "No characters match your search."}
         </div>
       ) : (
-        <div className="rounded-lg overflow-hidden" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
-          <table className="w-full">
+        <div className="wow-panel overflow-hidden">
+          <table className="wow-table">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)", fontFamily: "inherit", color: "var(--wow-text-faint)" }}>
+              <tr>
                 <th className="px-4 py-3 w-10 text-center hidden sm:table-cell">Rank</th>
                 <th className="px-4 py-3">Character</th>
                 <th className="px-4 py-3 hidden md:table-cell">Class · Spec</th>
@@ -252,10 +248,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
             </thead>
             <tbody>
               {filtered.map((char) => (
-                <tr key={char.id} className="transition-colors"
-                  style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}
-                  onMouseOver={(e) => (e.currentTarget.style.background = "rgba(var(--wow-primary-rgb),0.04)")}
-                  onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}>
+                <tr key={char.id}>
                   <td className="px-4 py-3 text-center text-xs tabular-nums hidden sm:table-cell" style={{ color: "var(--wow-text-faint)" }}>
                     {char.guildRank ?? "—"}
                   </td>
@@ -315,8 +308,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                     <div className="flex items-center gap-2">
                       {isOfficer ? (
                         <select value={char.role} onChange={(e) => setRole(char.id, e.target.value as CharRole)}
-                          className="text-xs rounded px-2 py-1 focus:outline-none"
-                          style={{ background: "var(--wow-surface-2)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }}>
+                          className="wow-select text-xs" style={{ width: "auto", padding: "0.25rem 0.5rem" }}>
                           <option value="TANK">🛡️ Tank</option>
                           <option value="HEALER">💚 Healer</option>
                           <option value="DPS">⚔️ DPS</option>
@@ -355,10 +347,10 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
               ) : notes.length === 0 ? (
                 <p className="text-sm text-center py-8" style={{ color: "var(--wow-text-faint)" }}>No notes yet.</p>
               ) : notes.map((n) => (
-                <div key={n.id} className="rounded-lg p-3" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.12)" }}>
+                <div key={n.id} className="wow-panel p-3">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm flex-1" style={{ color: "var(--wow-text)" }}>{n.content}</p>
-                    <button onClick={() => deleteNote(n.id)} className="text-xs opacity-40 hover:opacity-100 shrink-0" style={{ color: "#e53e3e" }}>✕</button>
+                    <button onClick={() => deleteNote(n.id)} className="text-xs opacity-40 hover:opacity-100 shrink-0" style={{ color: "var(--wow-error)" }}>✕</button>
                   </div>
                   <p className="text-[10px] mt-1.5" style={{ color: "var(--wow-text-faint)" }}>
                     {n.author.name ?? n.author.email} · {new Date(n.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
@@ -369,8 +361,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
             <div className="p-4" style={{ borderTop: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
               <textarea value={noteInput} onChange={(e) => setNoteInput(e.target.value)} rows={3}
                 placeholder="Add a note… (officer-only, not visible to member)"
-                className="w-full rounded-lg p-3 text-sm focus:outline-none resize-none"
-                style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+                className="wow-input resize-none" />
               <button onClick={addNote} disabled={!noteInput.trim()} className="wow-btn w-full mt-2" style={{ opacity: noteInput.trim() ? 1 : 0.4 }}>Add Note</button>
             </div>
           </div>

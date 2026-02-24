@@ -18,9 +18,9 @@ function classColor(cls: string) { return CLASS_COLOR_HEX[cls.toLowerCase()] ?? 
 function ReadinessBadge({ ilvl, min }: { ilvl: number | null; min: number }) {
   if (!ilvl) return <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>—</span>;
   const diff = ilvl - min;
-  if (diff >= 0) return <span className="text-xs font-semibold tabular-nums" style={{ color: "#1eff00" }}>✓ {ilvl}</span>;
-  if (diff >= -5) return <span className="text-xs font-semibold tabular-nums" style={{ color: "#ff8000" }}>⚠ {ilvl}</span>;
-  return <span className="text-xs font-semibold tabular-nums" style={{ color: "#e53e3e" }}>✗ {ilvl}</span>;
+  if (diff >= 0) return <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--wow-success)" }}>✓ {ilvl}</span>;
+  if (diff >= -5) return <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--wow-warning)" }}>⚠ {ilvl}</span>;
+  return <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--wow-error)" }}>✗ {ilvl}</span>;
 }
 
 const STATUS_ICON: Record<SignupStatus, string> = { ACCEPTED: "✓", TENTATIVE: "?", DECLINED: "✗" };
@@ -66,11 +66,11 @@ function CompositionPanel({ signups }: { signups: Signup[] }) {
   );
 
   return (
-    <div style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)", borderRadius: "0.5rem", padding: "1rem 1.25rem", marginBottom: "1.5rem" }}>
+    <div className="wow-panel p-4 mb-6">
       <h2 style={{ color: "var(--wow-gold)", fontWeight: 600, fontSize: "0.8125rem", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>Composition ({accepted.length})</h2>
       <div className="space-y-2 mb-3">
         <RoleBar count={tanks} total={accepted.length} label="Tanks" color="#3FC7EB" />
-        <RoleBar count={healers} total={accepted.length} label="Healers" color="#1eff00" />
+        <RoleBar count={healers} total={accepted.length} label="Healers" color="var(--wow-success)" />
         <RoleBar count={dps} total={accepted.length} label="DPS" color="#FF8C00" />
       </div>
       <div className="flex flex-wrap gap-2 pt-2" style={{ borderTop: "1px solid rgba(200,169,106,0.1)" }}>
@@ -137,9 +137,6 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
   const counts = { ACCEPTED: signups.filter(s => s.status === "ACCEPTED").length, TENTATIVE: signups.filter(s => s.status === "TENTATIVE").length, DECLINED: signups.filter(s => s.status === "DECLINED").length };
   const displayed = activeTab === "ALL" ? signups : signups.filter(s => s.status === activeTab);
 
-  const tabStyle = (active: boolean): React.CSSProperties => active
-    ? { background: "rgba(var(--wow-primary-rgb),0.12)", border: "1px solid rgba(var(--wow-primary-rgb),0.4)", color: "var(--wow-gold-bright)" }
-    : { color: "var(--wow-text-muted)", border: "1px solid transparent" };
 
   return (
     <div className="p-8 max-w-3xl">
@@ -160,7 +157,7 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
               style={{ background: "rgba(var(--wow-primary-rgb),0.08)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
               <span style={{ color: "var(--wow-text-faint)" }}>Min iLvl: <span style={{ color: "var(--wow-gold)" }}>{event.minItemLevel}</span></span>
               <span style={{ color: "var(--wow-text-faint)" }}>·</span>
-              <span style={{ color: readyPct === 100 ? "#1eff00" : readyPct >= 80 ? "#ff8000" : "#e53e3e" }}>
+              <span style={{ color: readyPct === 100 ? "var(--wow-success)" : readyPct >= 80 ? "var(--wow-warning)" : "var(--wow-error)" }}>
                 {ready}/{accepted.length} ready ({readyPct}%)
               </span>
             </div>
@@ -170,12 +167,10 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
 
       {/* Top-level tabs */}
       <div className="flex gap-1 mb-5">
-        <button onClick={() => setMainTab("signups")} className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          style={tabStyle(mainTab === "signups")}>
+        <button onClick={() => setMainTab("signups")} className={`wow-tab${mainTab === "signups" ? " wow-tab-active" : ""}`}>
           Sign-ups <span style={{ opacity: 0.7, fontSize: "0.75rem" }}>({signups.length})</span>
         </button>
-        <button onClick={() => setMainTab("composition")} className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          style={tabStyle(mainTab === "composition")}>
+        <button onClick={() => setMainTab("composition")} className={`wow-tab${mainTab === "composition" ? " wow-tab-active" : ""}`}>
           Composition <span style={{ opacity: 0.7, fontSize: "0.75rem" }}>({counts.ACCEPTED} confirmed)</span>
         </button>
       </div>
@@ -185,12 +180,12 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
         <>
           {/* Sign-up form (for members with characters) */}
           {userCharacters.length > 0 && event.status === "OPEN" && (
-            <div style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)", borderRadius: "0.5rem", padding: "1.25rem", marginBottom: "1.5rem" }}>
+            <div className="wow-panel p-5 mb-6">
               <h2 style={{ color: "var(--wow-text)", fontWeight: 600, marginBottom: "0.75rem" }}>Your Sign-up</h2>
               <div className="flex gap-3 mb-3 flex-wrap">
                 {userCharacters.length > 1 && (
                   <select value={selectedChar} onChange={(e) => setSelectedChar(e.target.value)}
-                    style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", outline: "none" }}>
+                    className="wow-select" style={{ width: "auto" }}>
                     {userCharacters.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.class})</option>)}
                   </select>
                 )}
@@ -198,7 +193,7 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
                   <span style={{ color: "var(--wow-text)", fontSize: "0.875rem", alignSelf: "center" }}>{userCharacters[0].name} ({userCharacters[0].class})</span>
                 )}
                 <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional note…"
-                  style={{ flex: 1, minWidth: "140px", background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", outline: "none" }} />
+                  className="wow-input" style={{ flex: 1, minWidth: "140px", width: "auto" }} />
               </div>
               <div className="flex gap-2">
                 {(["ACCEPTED", "TENTATIVE", "DECLINED"] as SignupStatus[]).map((s) => {
@@ -224,10 +219,7 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
             <div className="flex gap-1">
               {filterTabs.map((t) => (
                 <button key={t} onClick={() => setActiveTab(t)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                  style={activeTab === t
-                    ? { background: "rgba(var(--wow-primary-rgb),0.12)", border: "1px solid rgba(var(--wow-primary-rgb),0.4)", color: "var(--wow-gold-bright)" }
-                    : { color: "var(--wow-text-muted)" }}>
+                  className={`wow-tab${activeTab === t ? " wow-tab-active" : ""}`}>
                   {t === "ALL" ? `All (${signups.length})` : `${t.charAt(0)+t.slice(1).toLowerCase()} (${counts[t]})`}
                 </button>
               ))}
@@ -235,13 +227,13 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
             <span style={{ fontSize: "0.75rem", color: "var(--wow-text-faint)" }}>{counts.ACCEPTED}/{event.maxAttendees} confirmed</span>
           </div>
 
-          <div style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)", borderRadius: "0.5rem", overflow: "hidden" }}>
+          <div className="wow-panel overflow-hidden">
             {displayed.length === 0 ? (
               <p className="text-center py-8" style={{ color: "var(--wow-text-faint)", fontSize: "0.875rem" }}>No sign-ups yet.</p>
             ) : (
-              <table className="w-full">
+              <table className="wow-table">
                 <thead>
-                  <tr style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)", textAlign: "left", fontSize: "0.75rem", fontFamily: "inherit", color: "var(--wow-text-faint)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <tr>
                     <th className="px-4 py-3">Character</th>
                     <th className="px-4 py-3">Role</th>
                     {event.minItemLevel && <th className="px-4 py-3 text-right">iLvl</th>}
@@ -251,9 +243,7 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
                 </thead>
                 <tbody>
                   {displayed.map((signup) => (
-                    <tr key={signup.id} style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}
-                      onMouseOver={(e) => (e.currentTarget.style.background = "rgba(var(--wow-primary-rgb),0.04)")}
-                      onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}>
+                    <tr key={signup.id}>
                       <td className="px-4 py-3" style={{ color: "var(--wow-text)", fontSize: "0.875rem", fontWeight: 500 }}>
                         <span style={{ color: classColor(signup.character.class) }}>{signup.character.name}</span>
                       </td>
@@ -266,18 +256,13 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
                       <td className="px-4 py-3">
                         {isOfficer ? (
                           <select value={signup.status} onChange={(e) => officerUpdate(signup.id, e.target.value as SignupStatus)}
-                            style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)", fontSize: "0.75rem", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", outline: "none" }}>
+                            className="wow-select text-xs" style={{ width: "auto", padding: "0.25rem 0.5rem" }}>
                             <option value="ACCEPTED">✓ Accepted</option>
                             <option value="TENTATIVE">? Tentative</option>
                             <option value="DECLINED">✗ Declined</option>
                           </select>
                         ) : (
-                          <span className="text-xs rounded-full px-2 py-0.5"
-                            style={signup.status === "ACCEPTED"
-                              ? { background: "rgba(64,200,100,0.12)", border: "1px solid rgba(64,200,100,0.4)", color: "#40c864" }
-                              : signup.status === "TENTATIVE"
-                              ? { background: "rgba(var(--wow-primary-rgb),0.12)", border: "1px solid rgba(var(--wow-primary-rgb),0.4)", color: "var(--wow-gold)" }
-                              : { background: "rgba(200,64,64,0.12)", border: "1px solid rgba(200,64,64,0.4)", color: "#c84040" }}>
+                          <span className={`wow-badge wow-badge--${signup.status === "ACCEPTED" ? "success" : signup.status === "TENTATIVE" ? "info" : "error"}`}>
                             {STATUS_ICON[signup.status]} {signup.status}
                           </span>
                         )}

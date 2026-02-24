@@ -62,14 +62,14 @@ function RoleBar({ signups }: { signups: Signup[] }) {
   return (
     <div className="mt-3">
       <div className="flex gap-1 h-1.5 rounded-full overflow-hidden">
-        <div style={{ width: `${(tanks / total) * 100}%`, background: "#6dbf6d" }} />
+        <div style={{ width: `${(tanks / total) * 100}%`, background: "var(--wow-success)" }} />
         <div style={{ width: `${(healers / total) * 100}%`, background: "#54a2ff" }} />
-        <div style={{ width: `${(dps / total) * 100}%`, background: "#c84040" }} />
+        <div style={{ width: `${(dps / total) * 100}%`, background: "var(--wow-error)" }} />
       </div>
       <div className="flex gap-3 mt-1">
-        <span className="text-xs" style={{ color: "#6dbf6d" }}>🛡️ {tanks}</span>
+        <span className="text-xs" style={{ color: "var(--wow-success)" }}>🛡️ {tanks}</span>
         <span className="text-xs" style={{ color: "#54a2ff" }}>💚 {healers}</span>
-        <span className="text-xs" style={{ color: "#c84040" }}>⚔️ {dps}</span>
+        <span className="text-xs" style={{ color: "var(--wow-error)" }}>⚔️ {dps}</span>
       </div>
     </div>
   );
@@ -221,7 +221,7 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
       </div>
 
       {linkStatus && (
-        <div className="mb-4 px-4 py-2 rounded text-sm" style={{ background: "rgba(var(--wow-primary-rgb),0.08)", border: "1px solid rgba(var(--wow-primary-rgb),0.25)", color: "var(--wow-gold)" }}>
+        <div className="wow-panel mb-4 px-4 py-2 text-sm" style={{ color: "var(--wow-gold)" }}>
           ✓ {linkStatus}
         </div>
       )}
@@ -230,7 +230,7 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
       {(announcements.length > 0 || isOfficer) && (
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs uppercase tracking-widest" style={{ color: "var(--wow-text-faint)" }}>📢 Guild Announcements</p>
+            <p className="wow-section-label">📢 Guild Announcements</p>
             {isOfficer && (
               <button onClick={() => setShowAnnForm(f => !f)} className="text-xs px-3 py-1 rounded transition-all"
                 style={{ background: "rgba(var(--wow-primary-rgb),0.08)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-gold)" }}>
@@ -240,14 +240,11 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
           </div>
 
           {showAnnForm && (
-            <form onSubmit={postAnnouncement} className="rounded-lg p-4 mb-3 space-y-3"
-              style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+            <form onSubmit={postAnnouncement} className="wow-panel p-4 mb-3 space-y-3">
               <input required value={annForm.title} onChange={e => setAnnForm(f => ({ ...f, title: e.target.value }))}
-                placeholder="Title…" className="w-full rounded px-3 py-2 text-sm focus:outline-none"
-                style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+                placeholder="Title…" className="wow-input" />
               <textarea required value={annForm.body} onChange={e => setAnnForm(f => ({ ...f, body: e.target.value }))}
-                placeholder="Announcement body…" rows={3} className="w-full rounded px-3 py-2 text-sm focus:outline-none resize-none"
-                style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+                placeholder="Announcement body…" rows={3} className="wow-input resize-none" />
               <div className="flex items-center gap-4 flex-wrap">
                 <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "var(--wow-text-muted)" }}>
                   <input type="checkbox" checked={annForm.pinned} onChange={e => setAnnForm(f => ({ ...f, pinned: e.target.checked }))} />
@@ -256,8 +253,7 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
                 <div className="flex items-center gap-2">
                   <label className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Expires:</label>
                   <input type="date" value={annForm.expiresAt} onChange={e => setAnnForm(f => ({ ...f, expiresAt: e.target.value }))}
-                    className="rounded px-2 py-1 text-xs focus:outline-none"
-                    style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+                    className="wow-input" style={{ width: "auto" }} />
                 </div>
                 <button type="submit" disabled={savingAnn} className="wow-btn ml-auto" style={{ opacity: savingAnn ? 0.5 : 1 }}>
                   {savingAnn ? "Posting…" : "Post"}
@@ -271,11 +267,8 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
           ) : (
             <div className="space-y-2">
               {announcements.map(ann => (
-                <div key={ann.id} className="rounded-lg px-4 py-3"
-                  style={{
-                    background: ann.pinned ? "rgba(var(--wow-primary-rgb),0.08)" : "var(--wow-surface)",
-                    border: ann.pinned ? "1px solid rgba(var(--wow-primary-rgb),0.35)" : "1px solid rgba(var(--wow-primary-rgb),0.12)",
-                  }}>
+                <div key={ann.id} className="wow-panel px-4 py-3"
+                  style={ann.pinned ? { background: "rgba(var(--wow-primary-rgb),0.08)", borderColor: "rgba(var(--wow-primary-rgb),0.35)" } : undefined}>
                   <div className="flex items-start gap-2">
                     {ann.pinned && <span className="text-xs mt-0.5 shrink-0" style={{ color: "var(--wow-gold)" }}>📌</span>}
                     <div className="flex-1 min-w-0">
@@ -293,7 +286,7 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
                           {ann.pinned ? "📌" : "📍"}
                         </button>
                         <button onClick={() => deleteAnnouncement(ann.id)} title="Delete"
-                          className="text-xs opacity-40 hover:opacity-100 transition-opacity" style={{ color: "#e53e3e" }}>✕</button>
+                          className="text-xs opacity-40 hover:opacity-100 transition-opacity" style={{ color: "var(--wow-error)" }}>✕</button>
                       </div>
                     )}
                   </div>
@@ -307,7 +300,7 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map(({ label, value }) => (
-          <div key={label} className="rounded-lg p-5" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+          <div key={label} className="wow-panel p-5">
             <p className="text-xs uppercase tracking-widest" style={{ color: "var(--wow-text-faint)" }}>{label}</p>
             <p className="text-xl font-semibold mt-2" style={{ color: "var(--wow-text)" }}>{value}</p>
           </div>
@@ -316,8 +309,8 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
 
       {/* Raid Progression */}
       {progression && progression.length > 0 && (
-        <div className="rounded-lg p-5 mb-8" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
-          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--wow-text-faint)" }}>Raid Progression</p>
+        <div className="wow-panel p-5 mb-8">
+          <p className="wow-section-label mb-4">Raid Progression</p>
           <div className="space-y-3">
             {progression.map(tier => {
               const best = tier.mythicKilled > 0 ? "mythic"
@@ -329,11 +322,11 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
               const pct = (killed / tier.totalBosses) * 100;
               const barColor = best === "mythic" ? "#ff8000"
                 : best === "heroic" ? "#a335ee"
-                : best === "normal" ? "#1eff00"
+                : best === "normal" ? "var(--wow-success)"
                 : "rgba(var(--wow-primary-rgb),0.3)";
               const labelColor = best === "mythic" ? "#ff8000"
                 : best === "heroic" ? "#a335ee"
-                : best === "normal" ? "#1eff00"
+                : best === "normal" ? "var(--wow-success)"
                 : "var(--wow-text-faint)";
               return (
                 <div key={tier.slug}>
@@ -358,7 +351,7 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
 
         {/* ── Next Raid + Quick Signup ── */}
         {nextRaid ? (
-          <div className="rounded-lg p-6" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+          <div className="wow-panel p-6">
             <div className="flex items-start justify-between mb-3">
               <div>
                 <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-gold)" }}>Next Raid</p>
@@ -412,9 +405,8 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
                 {myCharacters.length > 0 ? (
                   <>
                     {myCharacters.length > 1 && (
-                      <select value={selectedCharId} onChange={e => setSelectedCharId(e.target.value)}
-                        className="w-full rounded px-3 py-2 text-sm mb-3"
-                        style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)", outline: "none" }}>
+                    <select value={selectedCharId} onChange={e => setSelectedCharId(e.target.value)}
+                        className="wow-select mb-3">
                         {myCharacters.map(c => (
                           <option key={c.id} value={c.id}>{c.name} ({c.spec} {c.class}){c.isMain ? " ★" : ""}</option>
                         ))}
@@ -435,7 +427,7 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
                         </button>
                       ))}
                     </div>
-                    {signupStatus && <p className="text-xs mt-2" style={{ color: "#c84040" }}>{signupStatus}</p>}
+                    {signupStatus && <p className="text-xs mt-2" style={{ color: "var(--wow-error)" }}>{signupStatus}</p>}
                   </>
                 ) : (
                   <p className="text-sm" style={{ color: "var(--wow-text-muted)" }}>
@@ -446,7 +438,7 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
             )}
           </div>
         ) : (
-          <div className="rounded-lg p-6 flex items-center justify-center" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.1)" }}>
+          <div className="wow-panel p-6 flex items-center justify-center">
             <div className="text-center">
               <p className="text-sm mb-2" style={{ color: "var(--wow-text-faint)" }}>No raids scheduled.</p>
               {["GM", "OFFICER"].includes(memberRole) && (
@@ -457,7 +449,7 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
         )}
 
         {/* ── Upcoming Raids ── */}
-        <div className="rounded-lg p-6" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+        <div className="wow-panel p-6">
           <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--wow-gold)" }}>Upcoming Raids</p>
           {upcomingRaids.length === 0 ? (
             <p className="text-sm" style={{ color: "var(--wow-text-faint)" }}>No upcoming raids.</p>
@@ -500,34 +492,31 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
       </div>
 
       {/* ── Absence Notice ── */}
-      <div className="rounded-lg p-6 mb-6" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
-        <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--wow-text-faint)" }}>Submit Absence Notice</p>
+      <div className="wow-panel p-6 mb-6">
+        <p className="wow-section-label mb-4">Submit Absence Notice</p>
         <form onSubmit={submitAbsence} className="flex flex-wrap gap-3 items-end">
           <div>
             <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>From</label>
             <input required type="date" value={absenceForm.startDate} onChange={e => setAbsenceForm(f => ({ ...f, startDate: e.target.value }))}
-              className="rounded px-3 py-2 text-sm focus:outline-none"
-              style={{ background: "var(--wow-surface-2,var(--wow-bg))", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+              className="wow-input" style={{ width: "auto" }} />
           </div>
           <div>
             <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>To</label>
             <input required type="date" value={absenceForm.endDate} onChange={e => setAbsenceForm(f => ({ ...f, endDate: e.target.value }))}
-              className="rounded px-3 py-2 text-sm focus:outline-none"
-              style={{ background: "var(--wow-surface-2,var(--wow-bg))", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+              className="wow-input" style={{ width: "auto" }} />
           </div>
           <div className="flex-1 min-w-[180px]">
             <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Reason (optional)</label>
             <input type="text" value={absenceForm.reason} onChange={e => setAbsenceForm(f => ({ ...f, reason: e.target.value }))}
               placeholder="Holiday, work, illness…"
-              className="w-full rounded px-3 py-2 text-sm focus:outline-none"
-              style={{ background: "var(--wow-surface-2,var(--wow-bg))", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+              className="wow-input" />
           </div>
           <button type="submit" disabled={submittingAbsence} className="wow-btn shrink-0" style={{ opacity: submittingAbsence ? 0.5 : 1 }}>
             {submittingAbsence ? "Submitting…" : "Submit"}
           </button>
         </form>
         {absenceStatus && (
-          <p className="text-sm mt-2" style={{ color: absenceStatus.startsWith("✓") ? "#1eff00" : "#e53e3e" }}>{absenceStatus}</p>
+          <p className="text-sm mt-2" style={{ color: absenceStatus.startsWith("✓") ? "var(--wow-success)" : "var(--wow-error)" }}>{absenceStatus}</p>
         )}
       </div>
 
@@ -536,8 +525,8 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: "rgba(0,0,0,0.75)" }}
           onClick={() => setModal(null)}>
-          <div className="w-full max-w-lg rounded-lg overflow-hidden"
-            style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.3)", maxHeight: "80vh", overflowY: "auto" }}
+          <div className="wow-panel w-full max-w-lg overflow-hidden"
+            style={{ maxHeight: "80vh", overflowY: "auto" }}
             onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-5" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
               <div>
