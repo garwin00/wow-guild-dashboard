@@ -97,9 +97,6 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
         <button onClick={() => setEditing(e => !e)} title="Edit role/spec"
           className="w-6 h-6 rounded flex items-center justify-center text-xs"
           style={{ background: "rgba(0,0,0,0.6)", color: "var(--wow-gold)" }}>✏</button>
-        <button onClick={onUnlink} title="Unlink character"
-          className="w-6 h-6 rounded flex items-center justify-center text-xs"
-          style={{ background: "rgba(0,0,0,0.6)", color: "#e06060" }}>✕</button>
       </div>
 
       {/* Two-column: avatar | data */}
@@ -343,15 +340,16 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                 border: `2px solid ${classColor(mainChar.class)}50`,
                 boxShadow: `0 0 24px ${classColor(mainChar.class)}18`,
               }}>
-                {/* Top-right controls: links dropdown + unlink */}
+                {/* Top-right controls: links dropdown */}
                 <div className="absolute top-3 right-3 flex items-center gap-1.5 z-20">
                   {/* External links dropdown */}
                   <div className="relative">
                     <button onClick={() => setLinksOpen(o => !o)}
-                      className="w-7 h-7 rounded flex items-center justify-center text-sm transition-opacity"
+                      className="flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-colors"
                       style={{ background: "rgba(0,0,0,0.55)", color: "var(--wow-text-muted)" }}
                       title="View on external sites">
-                      ↗
+                      <span>View</span>
+                      <span style={{ fontSize: "10px" }}>{linksOpen ? "▲" : "▼"}</span>
                     </button>
                     {linksOpen && (() => {
                       const links = externalLinks(mainChar.region, mainChar.realm, mainChar.name);
@@ -378,10 +376,6 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                       );
                     })()}
                   </div>
-                  {/* Unlink */}
-                  <button onClick={() => unlinkChar(mainChar.id)} title="Unlink"
-                    className="w-7 h-7 rounded flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: "rgba(0,0,0,0.55)", color: "#e06060" }}>✕</button>
                 </div>
 
                 {/* Two-column layout: portrait | data */}
