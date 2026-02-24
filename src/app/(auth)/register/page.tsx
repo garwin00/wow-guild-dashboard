@@ -30,7 +30,7 @@ export default function RegisterPage() {
       // Auto sign-in then go to onboarding
       const result = await signIn("credentials", { email, password, redirect: false });
       if (result?.error) { setError("Registration succeeded but sign-in failed. Please log in."); return; }
-      router.push("/onboarding/link-bnet");
+      router.push("/guilds/new");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
