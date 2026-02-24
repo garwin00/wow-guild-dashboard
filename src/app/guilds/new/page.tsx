@@ -32,22 +32,31 @@ export default function NewGuildPage() {
 
   useEffect(() => {
     if (justLinked) {
-      // Clear the query param cleanly
       window.history.replaceState({}, "", "/guilds/new");
     }
-    fetch("/api/guilds/from-bnet")
+
+    // First check BNet link status (fast DB-only check)
+    fetch("/api/auth/bnet-status")
       .then(r => r.json())
-      .then(data => {
-        if (data.error) {
+      .then(status => {
+        if (!status.linked) {
           setHasBnet(false);
           setShowManual(true);
-        } else {
-          setHasBnet(true);
-          setGuilds(data.guilds ?? []);
-          setRealms(data.realms ?? []);
-          if (data.realms?.length) setManualRealm(data.realms[0]);
-          if (!data.guilds?.length) setShowManual(true);
+          setLoading(false);
+          return;
         }
+        setHasBnet(true);
+        // BNet is linked — fetch guilds
+        return fetch("/api/guilds/from-bnet")
+          .then(r => r.json())
+          .then(data => {
+            if (!data.error) {
+              setGuilds(data.guilds ?? []);
+              setRealms(data.realms ?? []);
+              if (data.realms?.length) setManualRealm(data.realms[0]);
+            }
+            if (!data.guilds?.length) setShowManual(true);
+          });
       })
       .catch(() => { setHasBnet(false); setShowManual(true); })
       .finally(() => setLoading(false));
