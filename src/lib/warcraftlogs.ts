@@ -44,22 +44,22 @@ export async function getGuildReports(
   limit = 25
 ) {
   const query = `
-    query GuildReports($guildName: String!, $serverSlug: String!, $serverRegion: String!, $limit: Int!) {
+    query GuildReports($guildName: String!, $guildServerSlug: String!, $guildServerRegion: String!, $limit: Int!) {
       reportData {
-        reports(guildName: $guildName, serverSlug: $serverSlug, serverRegion: $serverRegion, limit: $limit) {
+        reports(guildName: $guildName, guildServerSlug: $guildServerSlug, guildServerRegion: $guildServerRegion, limit: $limit) {
           data {
             code
             title
             startTime
             endTime
             zone { name }
-            fights { id name difficulty kill }
+            fights { id name difficulty }
           }
         }
       }
     }
   `;
-  return wclQuery(query, { guildName, serverSlug, serverRegion, limit });
+  return wclQuery(query, { guildName, guildServerSlug: serverSlug, guildServerRegion: serverRegion, limit });
 }
 
 export async function getReportFights(reportCode: string) {
@@ -133,9 +133,9 @@ export async function getCharacterParses(
 
 export async function getActiveReport(guildName: string, serverSlug: string, serverRegion: string) {
   const query = `
-    query ActiveReport($guildName: String!, $serverSlug: String!, $serverRegion: String!) {
+    query ActiveReport($guildName: String!, $guildServerSlug: String!, $guildServerRegion: String!) {
       reportData {
-        reports(guildName: $guildName, serverSlug: $serverSlug, serverRegion: $serverRegion, limit: 1) {
+        reports(guildName: $guildName, guildServerSlug: $guildServerSlug, guildServerRegion: $guildServerRegion, limit: 1) {
           data {
             code
             title
@@ -149,7 +149,7 @@ export async function getActiveReport(guildName: string, serverSlug: string, ser
   `;
   type Rpt = { code: string; title: string; startTime: number; endTime: number; zone: { name: string; id: number } | null };
   type R = { reportData: { reports: { data: Rpt[] } } };
-  const data = await wclQuery<R>(query, { guildName, serverSlug, serverRegion });
+  const data = await wclQuery<R>(query, { guildName, guildServerSlug: serverSlug, guildServerRegion: serverRegion });
   const reports = data?.reportData?.reports?.data ?? [];
   return reports.find((r) => r.endTime === 0) ?? null;
 }
