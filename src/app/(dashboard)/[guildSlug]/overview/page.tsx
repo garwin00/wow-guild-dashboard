@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getGuildProgression } from "@/lib/raiderio";
 import OverviewClient from "./OverviewClient";
 
 interface Props {
@@ -18,7 +19,7 @@ export default async function OverviewPage({ params }: Props) {
   });
   if (!membership) redirect("/");
 
-  const [upcomingRaids, rosterCount, myCharacters] = await Promise.all([
+  const [upcomingRaids, rosterCount, myCharacters, progression] = await Promise.all([
     prisma.raidEvent.findMany({
       where: { guildId: membership.guild.id, status: "OPEN", scheduledAt: { gte: new Date() } },
       orderBy: { scheduledAt: "asc" },
@@ -37,6 +38,7 @@ export default async function OverviewPage({ params }: Props) {
       orderBy: [{ isMain: "desc" }, { itemLevel: "desc" }],
       select: { id: true, name: true, class: true, spec: true, role: true, isMain: true },
     }),
+    getGuildProgression(membership.guild.region, membership.guild.realm, membership.guild.name),
   ]);
 
   const nextRaid = upcomingRaids[0] ?? null;
@@ -79,6 +81,7 @@ export default async function OverviewPage({ params }: Props) {
           character: s.character,
         })),
       }))}
+      progression={progression}
     />
   );
 }

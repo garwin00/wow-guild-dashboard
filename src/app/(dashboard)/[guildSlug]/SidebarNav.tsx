@@ -14,6 +14,7 @@ interface Props {
   guildImageUrl: string | null;
   theme: string;
   signOutForm: React.ReactNode;
+  progressionBadge?: string | null;
 }
 
 const THEME_SIDEBAR: Record<string, { bg: string; border: string; headerBg: string }> = {
@@ -34,7 +35,7 @@ const THEME_SIDEBAR: Record<string, { bg: string; border: string; headerBg: stri
   },
 };
 
-export default function SidebarNav({ navLinks, guildName, realm, region, guildImageUrl, theme, signOutForm }: Props) {
+export default function SidebarNav({ navLinks, guildName, realm, region, guildImageUrl, theme, signOutForm, progressionBadge }: Props) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -66,6 +67,9 @@ export default function SidebarNav({ navLinks, guildName, realm, region, guildIm
           <p className="text-xs truncate mt-0.5" style={{ color: "var(--wow-text-muted)" }}>
             {realm} · {region.toUpperCase()}
           </p>
+          {progressionBadge && (
+            <p className="text-xs mt-0.5 font-semibold" style={{ color: "#ff8000" }}>{progressionBadge}</p>
+          )}
         </div>
       </div>
       <div className="wow-divider mt-3" />
@@ -125,7 +129,7 @@ export default function SidebarNav({ navLinks, guildName, realm, region, guildIm
           )}
           <div>
             <p className="text-sm font-semibold truncate" style={{ color: activeColor }}>{guildName}</p>
-            <p className="text-xs" style={{ color: "var(--wow-text-muted)" }}>{realm} · {region.toUpperCase()}</p>
+            <p className="text-xs" style={{ color: "var(--wow-text-muted)" }}>{realm} · {region.toUpperCase()}{progressionBadge ? ` · ` : ""}{progressionBadge && <span style={{ color: "#ff8000" }}>{progressionBadge}</span>}</p>
           </div>
         </div>
         <button onClick={() => setMobileOpen((o) => !o)} className="p-2" style={{ color: activeBorder }} aria-label="Toggle menu">

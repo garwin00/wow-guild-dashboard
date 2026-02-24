@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import type { RioRaidTier } from "@/lib/raiderio";
 
 const CLASS_COLORS: Record<string, string> = {
   "death knight": "#C41E3A", "demon hunter": "#A330C9", druid: "#FF7C0A",
@@ -41,6 +42,7 @@ interface Props {
   myCharacters: Character[];
   mySignup: MySignup | null;
   upcomingRaids: RaidEvent[];
+  progression: RioRaidTier[] | null;
 }
 
 function RoleBar({ signups }: { signups: Signup[] }) {
@@ -66,7 +68,7 @@ function RoleBar({ signups }: { signups: Signup[] }) {
   );
 }
 
-export default function OverviewClient({ guild, memberRole, rosterCount, myCharacters, mySignup, upcomingRaids }: Props) {
+export default function OverviewClient({ guild, memberRole, rosterCount, myCharacters, mySignup, upcomingRaids, progression }: Props) {
   const router = useRouter();
   const [modal, setModal] = useState<{ type: "signups"; raid: RaidEvent } | null>(null);
   const [linkStatus, setLinkStatus] = useState<string | null>(null);
@@ -167,6 +169,46 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
           </div>
         ))}
       </div>
+
+      {/* Raid Progression */}
+      {progression && progression.length > 0 && (
+        <div className="rounded-lg p-5 mb-8" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--wow-text-faint)" }}>Raid Progression</p>
+          <div className="space-y-3">
+            {progression.map(tier => {
+              const best = tier.mythicKilled > 0 ? "mythic"
+                : tier.heroicKilled > 0 ? "heroic"
+                : tier.normalKilled > 0 ? "normal" : null;
+              const killed = tier.mythicKilled > 0 ? tier.mythicKilled
+                : tier.heroicKilled > 0 ? tier.heroicKilled
+                : tier.normalKilled;
+              const pct = (killed / tier.totalBosses) * 100;
+              const barColor = best === "mythic" ? "#ff8000"
+                : best === "heroic" ? "#a335ee"
+                : best === "normal" ? "#1eff00"
+                : "rgba(var(--wow-primary-rgb),0.3)";
+              const labelColor = best === "mythic" ? "#ff8000"
+                : best === "heroic" ? "#a335ee"
+                : best === "normal" ? "#1eff00"
+                : "var(--wow-text-faint)";
+              return (
+                <div key={tier.slug}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm" style={{ color: "var(--wow-text-muted)" }}>{tier.name}</span>
+                    <span className="text-sm font-bold tabular-nums" style={{ color: labelColor }}>{tier.summary}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(var(--wow-primary-rgb),0.1)" }}>
+                    <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: barColor }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs mt-3 text-right" style={{ color: "var(--wow-text-faint)" }}>
+            via <a href="https://raider.io" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80">Raider.IO</a>
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 

@@ -124,6 +124,61 @@ export async function getCurrentAffixes(region: string): Promise<RioAffixesRespo
   return res.json();
 }
 
+export interface RioRaidTier {
+  slug: string;
+  name: string; // display name derived from slug
+  totalBosses: number;
+  normalKilled: number;
+  heroicKilled: number;
+  mythicKilled: number;
+  summary: string; // e.g. "8/8 M"
+}
+
+/**
+ * Fetch guild raid progression from Raider.IO.
+ * Returns tiers ordered most recent first, or null on failure.
+ */
+export async function getGuildProgression(
+  region: string,
+  realm: string,
+  guildName: string
+): Promise<RioRaidTier[] | null> {
+  try {
+    const params = new URLSearchParams({
+      region: region.toLowerCase(),
+      realm: realm.toLowerCase(),
+      name: guildName,
+      fields: "raid_progression",
+    });
+    const res = await fetch(`${BASE}/guilds/profile?${params}`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const prog = data.raid_progression as Record<string, {
+      summary: string;
+      total_bosses: number;
+      normal_bosses_killed: number;
+      heroic_bosses_killed: number;
+      mythic_bosses_killed: number;
+    }>;
+    if (!prog) return null;
+    // Convert slug keys to display names and return most recent first
+    return Object.entries(prog).reverse().map(([slug, tier]) => ({
+      slug,
+      name: slug.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" "),
+      totalBosses: tier.total_bosses,
+      normalKilled: tier.normal_bosses_killed,
+      heroicKilled: tier.heroic_bosses_killed,
+      mythicKilled: tier.mythic_bosses_killed,
+      summary: tier.summary,
+    }));
+  } catch {
+    return null;
+  }
+}
+
 /** Map Raider.IO score to a CSS colour string. */
 export function scoreColor(score: number): string {
   if (score >= 3000) return "#ff8000"; // legendary orange

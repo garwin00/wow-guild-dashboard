@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { signOut } from "@/lib/auth";
+import { getGuildProgression } from "@/lib/raiderio";
 import SidebarNav from "./SidebarNav";
 
 interface Props {
@@ -22,6 +23,16 @@ export default async function DashboardLayout({ children, params }: Props) {
   if (!membership) redirect("/");
 
   const { guild } = membership;
+
+  // Fetch progression for sidebar badge (cached 1h, non-blocking on failure)
+  const progression = await getGuildProgression(guild.region, guild.realm, guild.name);
+  // Pick the most progressed tier for the badge: highest mythic count, else heroic, else normal
+  const progressionBadge = (() => {
+    if (!progression) return null;
+    const best = progression.find(t => t.mythicKilled > 0) ?? progression.find(t => t.heroicKilled > 0) ?? progression.find(t => t.normalKilled > 0);
+    if (!best) return null;
+    return best.summary; // e.g. "8/8 M"
+  })();
 
   const navLinks = [
     { href: `/${guildSlug}/overview`, label: "Overview", icon: "🏠" },
@@ -53,6 +64,7 @@ export default async function DashboardLayout({ children, params }: Props) {
         guildImageUrl={guild.imageUrl ?? null}
         theme={guild.theme ?? "default"}
         signOutForm={signOutForm}
+        progressionBadge={progressionBadge}
       />
       {/* Main content — offset on mobile for top bar */}
       <main className="flex-1 overflow-auto p-4 pt-18 md:pt-4 md:p-8">
