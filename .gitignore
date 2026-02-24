@@ -45,3 +45,6 @@ next-env.d.ts
 # local env
 .env.local
 .env*.local
+
+# Prisma CLI env (keep out of git - contains local DB creds)
+.env
