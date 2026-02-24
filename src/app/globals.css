@@ -166,8 +166,84 @@
   text-transform: uppercase;
 }
 
+
 /* Subtle noise texture overlay for surfaces */
 .wow-surface {
   background-color: var(--wow-surface);
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* ── Theme: Horde (red/black) ── */
+[data-theme="horde"] {
+  --wow-bg:           #0d0505;
+  --wow-surface:      #140808;
+  --wow-surface-2:    #1c0c0c;
+  --wow-border:       rgba(180, 30, 30, 0.2);
+  --wow-border-bright: rgba(200, 50, 50, 0.5);
+  --wow-gold:         #cc3333;
+  --wow-gold-bright:  #ff4422;
+  --wow-gold-dim:     #6b1a1a;
+  --wow-text:         #f0dcd8;
+  --wow-text-muted:   #8a5050;
+}
+[data-theme="horde"] .wow-btn {
+  background: linear-gradient(135deg, #8b1a1a 0%, #cc2200 50%, #8b1a1a 100%);
+  border-color: rgba(200, 50, 50, 0.5);
+  box-shadow: 0 0 12px rgba(150, 30, 30, 0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+[data-theme="horde"] .wow-btn:hover {
+  background: linear-gradient(135deg, #a02020 0%, #dd3311 50%, #a02020 100%);
+  box-shadow: 0 0 20px rgba(180, 40, 40, 0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+[data-theme="horde"] .wow-btn-ghost {
+  color: #cc3333;
+  border-color: rgba(200, 50, 50, 0.4);
+}
+[data-theme="horde"] .wow-btn-ghost:hover {
+  background: rgba(150, 30, 30, 0.15);
+  border-color: #cc3333;
+}
+[data-theme="horde"] .wow-divider {
+  background: linear-gradient(to right, transparent, #8b1a1a, transparent);
+}
+[data-theme="horde"] .wow-heading {
+  color: #ff4422;
+}
+
+/* ── Theme: Alliance (blue/gold) ── */
+[data-theme="alliance"] {
+  --wow-bg:           #050a14;
+  --wow-surface:      #081320;
+  --wow-surface-2:    #0d1e30;
+  --wow-border:       rgba(30, 80, 180, 0.2);
+  --wow-border-bright: rgba(74, 143, 212, 0.5);
+  --wow-gold:         #4a8fd4;
+  --wow-gold-bright:  #7ab8f5;
+  --wow-gold-dim:     #1a4070;
+  --wow-text:         #d8e8f0;
+  --wow-text-muted:   #506080;
+}
+[data-theme="alliance"] .wow-btn {
+  background: linear-gradient(135deg, #1a5296 0%, #4a8fd4 50%, #1a5296 100%);
+  border-color: rgba(74, 143, 212, 0.5);
+  box-shadow: 0 0 12px rgba(30, 80, 180, 0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+  color: #ffffff;
+}
+[data-theme="alliance"] .wow-btn:hover {
+  background: linear-gradient(135deg, #2060aa 0%, #5a9fe4 50%, #2060aa 100%);
+  box-shadow: 0 0 20px rgba(74, 143, 212, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+[data-theme="alliance"] .wow-btn-ghost {
+  color: #4a8fd4;
+  border-color: rgba(74, 143, 212, 0.4);
+}
+[data-theme="alliance"] .wow-btn-ghost:hover {
+  background: rgba(30, 80, 180, 0.15);
+  border-color: #4a8fd4;
+}
+[data-theme="alliance"] .wow-divider {
+  background: linear-gradient(to right, transparent, #1a5296, transparent);
+}
+[data-theme="alliance"] .wow-heading {
+  color: #7ab8f5;
 }

@@ -1,35 +1,100 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type GuildRole = "GM" | "OFFICER" | "MEMBER" | "TRIALIST";
-interface Guild { id: string; name: string; realm: string; region: string; wclGuildId: string | null; }
-interface Member { id: string; role: GuildRole; user: { id: string; battletag: string | null; name: string | null; }; }
+interface Guild {
+  id: string; name: string; realm: string; region: string;
+  wclGuildId: string | null; imageUrl: string | null; bannerUrl: string | null; theme: string;
+}
+interface Member { id: string; role: GuildRole; user: { id: string; battletag: string | null; name: string | null } }
 
 const ROLES: GuildRole[] = ["GM", "OFFICER", "MEMBER", "TRIALIST"];
-const ROLE_BADGE: Record<GuildRole, string> = {
-  GM: "bg-yellow-900/50 text-yellow-300 border-yellow-700",
-  OFFICER: "bg-blue-900/50 text-blue-300 border-blue-700",
-  MEMBER: "bg-gray-800 text-gray-300 border-gray-700",
-  TRIALIST: "bg-gray-800/50 text-gray-500 border-gray-800",
-};
 
-export default function SettingsClient({ guild, members: initial, isGm }: {
-  guild: Guild; members: Member[]; isGm: boolean;
+const THEMES = [
+  {
+    id: "default",
+    label: "Default",
+    desc: "Dark gold & black",
+    preview: "linear-gradient(135deg, #0f1019 0%, #0a0b12 50%, #1a1508 100%)",
+    accent: "#c8a96a",
+    icon: "⚔️",
+  },
+  {
+    id: "horde",
+    label: "Horde",
+    desc: "Red & black",
+    preview: "linear-gradient(135deg, #140808 0%, #0d0505 50%, #1c0808 100%)",
+    accent: "#cc3333",
+    icon: "🔴",
+  },
+  {
+    id: "alliance",
+    label: "Alliance",
+    desc: "Blue & gold",
+    preview: "linear-gradient(135deg, #081320 0%, #050a14 50%, #0d1e2c 100%)",
+    accent: "#4a8fd4",
+    icon: "🔵",
+  },
+];
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg p-6 space-y-4" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
+      <h2 className="text-sm font-semibold uppercase tracking-widest" style={{ color: "#c8a96a" }}>{title}</h2>
+      {children}
+    </div>
+  );
+}
+
+export default function SettingsClient({ guild, members: initial, isGm, guildSlug }: {
+  guild: Guild; members: Member[]; isGm: boolean; guildSlug: string;
 }) {
+  const router = useRouter();
   const [members, setMembers] = useState(initial);
+
+  // WCL
   const [wclId, setWclId] = useState(guild.wclGuildId ?? "");
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [wclSaving, setWclSaving] = useState(false);
+  const [wclMsg, setWclMsg] = useState("");
+
+  // Appearance
+  const [imageUrl, setImageUrl] = useState(guild.imageUrl ?? "");
+  const [bannerUrl, setBannerUrl] = useState(guild.bannerUrl ?? "");
+  const [theme, setTheme] = useState(guild.theme ?? "default");
+  const [appearanceSaving, setAppearanceSaving] = useState(false);
+  const [appearanceMsg, setAppearanceMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+  async function saveAppearance() {
+    setAppearanceSaving(true);
+    setAppearanceMsg(null);
+    const res = await fetch(`/api/guilds/${guildSlug}/settings`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageUrl: imageUrl || null, bannerUrl: bannerUrl || null, theme }),
+    });
+    if (res.ok) {
+      setAppearanceMsg({ text: "✓ Saved", ok: true });
+      router.refresh();
+    } else {
+      const data = await res.json();
+      setAppearanceMsg({ text: data.error ?? "Failed to save", ok: false });
+    }
+    setAppearanceSaving(false);
+  }
 
   async function saveWcl(e: React.FormEvent) {
-    e.preventDefault(); setSaving(true); setMessage("");
-    const res = await fetch("/api/settings/wcl", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ guildId: guild.id, wclGuildId: wclId }),
+    e.preventDefault();
+    setWclSaving(true);
+    setWclMsg("");
+    const res = await fetch(`/api/guilds/${guildSlug}/settings`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wclGuildId: wclId || null }),
     });
-    setMessage(res.ok ? "Saved!" : "Failed to save.");
-    setSaving(false);
+    setWclMsg(res.ok ? "✓ Saved" : "Failed to save");
+    setWclSaving(false);
   }
 
   async function updateRole(memberId: string, role: GuildRole) {
@@ -37,91 +102,133 @@ export default function SettingsClient({ guild, members: initial, isGm }: {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ membershipId: memberId, role, guildId: guild.id }),
     });
-    if (res.ok) setMembers((prev) => prev.map((m) => m.id === memberId ? { ...m, role } : m));
+    if (res.ok) setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role } : m));
   }
 
   return (
-    <div className="p-8 max-w-2xl space-y-8">
-      <h1 className="wow-heading text-3xl font-bold" style={{ color: "#f0c040" }}>Settings</h1>
+    <div className="max-w-2xl space-y-8">
+      <h1 className="text-3xl wow-heading" style={{ color: "#f0c040" }}>Guild Settings</h1>
 
-      {/* Guild info */}
-      <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "0.5rem", padding: "1.25rem" }}>
-        <h2 style={{ color: "#e8dfc8", fontWeight: 600, marginBottom: "0.75rem" }}>Guild</h2>
-        <div style={{ color: "#8a8070", fontSize: "0.875rem" }} className="space-y-1">
-          <p><span style={{ color: "#5a5040" }}>Name:</span> {guild.name}</p>
-          <p><span style={{ color: "#5a5040" }}>Realm:</span> {guild.realm}</p>
-          <p><span style={{ color: "#5a5040" }}>Region:</span> {guild.region.toUpperCase()}</p>
+      {/* ── Guild info ── */}
+      <Section title="Guild">
+        <div className="space-y-1 text-sm" style={{ color: "#8a8070" }}>
+          <p><span style={{ color: "#5a5040" }}>Name: </span>{guild.name}</p>
+          <p><span style={{ color: "#5a5040" }}>Realm: </span>{guild.realm}</p>
+          <p><span style={{ color: "#5a5040" }}>Region: </span>{guild.region.toUpperCase()}</p>
         </div>
-      </div>
+      </Section>
 
-      {/* Warcraft Logs */}
-      <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "0.5rem", padding: "1.25rem" }}>
-        <div className="flex items-center gap-2 mb-1">
-          <h2 style={{ color: "#e8dfc8", fontWeight: 600 }}>Warcraft Logs</h2>
-          {guild.wclGuildId && (
-            <span style={{ fontSize: "0.75rem", background: "rgba(64,200,100,0.12)", color: "#40c864", border: "1px solid rgba(64,200,100,0.4)", borderRadius: "9999px", padding: "0.125rem 0.5rem" }}>Connected</span>
-          )}
+      {/* ── Appearance ── */}
+      <Section title="Appearance">
+        {/* Theme picker */}
+        <div>
+          <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#5a5040" }}>Theme</p>
+          <div className="grid grid-cols-3 gap-3">
+            {THEMES.map(t => (
+              <button key={t.id} onClick={() => setTheme(t.id)}
+                className="rounded-lg p-3 text-left transition-all"
+                style={{
+                  background: t.preview,
+                  border: theme === t.id ? `2px solid ${t.accent}` : "2px solid transparent",
+                  boxShadow: theme === t.id ? `0 0 16px ${t.accent}30` : "none",
+                }}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-lg">{t.icon}</span>
+                  {theme === t.id && (
+                    <span className="text-xs font-bold" style={{ color: t.accent }}>✓</span>
+                  )}
+                </div>
+                <p className="text-xs font-semibold" style={{ color: t.accent }}>{t.label}</p>
+                <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>{t.desc}</p>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Step-by-step instructions */}
-        <div className="mb-4 space-y-2" style={{ fontSize: "0.875rem", color: "#8a8070" }}>
+        {/* Guild image URL */}
+        <div>
+          <label className="block text-xs uppercase tracking-widest mb-1.5" style={{ color: "#5a5040" }}>
+            Guild Profile Image URL
+          </label>
+          <div className="flex gap-3 items-start">
+            {imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={imageUrl} alt="" className="w-10 h-10 rounded-full object-cover shrink-0 mt-0.5"
+                style={{ border: "1px solid rgba(200,169,106,0.3)" }} />
+            )}
+            <input value={imageUrl} onChange={e => setImageUrl(e.target.value)}
+              placeholder="https://example.com/guild-icon.png"
+              className="flex-1 rounded px-3 py-2 text-sm outline-none"
+              style={{ background: "#070a10", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8" }} />
+          </div>
+          <p className="text-xs mt-1" style={{ color: "#5a5040" }}>
+            Shown in the sidebar next to the guild name. Use an external image URL or a CDN link.
+          </p>
+        </div>
+
+        {/* Banner URL */}
+        <div>
+          <label className="block text-xs uppercase tracking-widest mb-1.5" style={{ color: "#5a5040" }}>
+            Guild Banner Image URL
+          </label>
+          <input value={bannerUrl} onChange={e => setBannerUrl(e.target.value)}
+            placeholder="https://example.com/guild-banner.png"
+            className="w-full rounded px-3 py-2 text-sm outline-none"
+            style={{ background: "#070a10", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8" }} />
+          <p className="text-xs mt-1" style={{ color: "#5a5040" }}>Wide banner shown on the overview page header.</p>
+        </div>
+
+        {appearanceMsg && (
+          <p className="text-sm" style={{ color: appearanceMsg.ok ? "#c8a96a" : "#e06060" }}>{appearanceMsg.text}</p>
+        )}
+        <button onClick={saveAppearance} disabled={appearanceSaving} className="wow-btn text-sm">
+          {appearanceSaving ? "Saving…" : "Save Appearance"}
+        </button>
+      </Section>
+
+      {/* ── Warcraft Logs ── */}
+      <Section title="Warcraft Logs">
+        <div className="space-y-2 text-sm mb-4" style={{ color: "#8a8070" }}>
           <p>To link your guild, find your guild name on Warcraft Logs:</p>
-          <ol className="list-decimal list-inside space-y-1.5 ml-1" style={{ color: "#8a8070" }}>
+          <ol className="list-decimal list-inside space-y-1.5 ml-1">
             <li>
               Go to{" "}
               <a href={`https://www.warcraftlogs.com/guild/eu/${guild.realm.toLowerCase().replace(/\s+/g, "-")}/${guild.name.toLowerCase().replace(/\s+/g, "-")}`}
-                target="_blank" rel="noopener noreferrer"
-                style={{ color: "#c8a96a", textDecoration: "underline", textUnderlineOffset: "0.125rem" }}>
+                target="_blank" rel="noopener noreferrer" style={{ color: "#c8a96a", textDecoration: "underline" }}>
                 your guild&apos;s WCL page ↗
-              </a>{" "}
-              (auto-linked for {guild.name}–{guild.realm})
+              </a>
             </li>
-            <li>
-              The URL will look like{" "}
-              <code style={{ color: "#e8dfc8", background: "#09090e", border: "1px solid rgba(200,169,106,0.15)", padding: "0.125rem 0.375rem", borderRadius: "0.25rem", fontSize: "0.75rem" }}>
-                warcraftlogs.com/guild/<span style={{ color: "#c8a96a" }}>eu</span>/<span style={{ color: "#c8a96a" }}>kazzak</span>/<span style={{ color: "#c8a96a" }}>your-guild-name</span>
-              </code>
-            </li>
-            <li>
-              Enter <strong style={{ color: "#e8dfc8" }}>exactly the guild name</strong> as it appears in that URL (lowercase, hyphens for spaces) in the field below
-            </li>
+            <li>Copy the guild name slug from the URL (lowercase, hyphens)</li>
+            <li>Paste it below</li>
           </ol>
-          <p style={{ color: "#5a5040", fontSize: "0.75rem", marginTop: "0.5rem" }}>
-            This is used to fetch reports and enable live log tracking. You also need{" "}
-            <code style={{ background: "#09090e", border: "1px solid rgba(200,169,106,0.15)", padding: "0 0.25rem", borderRadius: "0.25rem", color: "#c8a96a" }}>WCL_CLIENT_ID</code> and{" "}
-            <code style={{ background: "#09090e", border: "1px solid rgba(200,169,106,0.15)", padding: "0 0.25rem", borderRadius: "0.25rem", color: "#c8a96a" }}>WCL_CLIENT_SECRET</code> set in your <code style={{ background: "#09090e", border: "1px solid rgba(200,169,106,0.15)", padding: "0 0.25rem", borderRadius: "0.25rem", color: "#c8a96a" }}>.env.local</code> — get them at{" "}
-            <a href="https://www.warcraftlogs.com/api/clients/" target="_blank" rel="noopener noreferrer"
-              style={{ color: "#c8a96a" }}>warcraftlogs.com/api/clients ↗</a>.
-          </p>
         </div>
-
         <form onSubmit={saveWcl} className="flex gap-3">
-          <input value={wclId} onChange={(e) => setWclId(e.target.value)}
+          <input value={wclId} onChange={e => setWclId(e.target.value)}
             placeholder={`e.g. ${guild.name.toLowerCase().replace(/\s+/g, "-")}`}
-            style={{ flex: 1, background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", outline: "none", fontFamily: "monospace" }} />
-          <button type="submit" disabled={saving} className="wow-btn" style={{ opacity: saving ? 0.5 : 1 }}>
-            {saving ? "Saving…" : "Save"}
-          </button>
+            className="flex-1 rounded px-3 py-2 text-sm outline-none"
+            style={{ background: "#070a10", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", fontFamily: "monospace" }} />
+          <button type="submit" disabled={wclSaving} className="wow-btn">{wclSaving ? "Saving…" : "Save"}</button>
         </form>
         {guild.wclGuildId && (
-          <p style={{ color: "#5a5040", fontSize: "0.75rem", marginTop: "0.5rem" }}>
-            Currently linked to: <code style={{ color: "#c8a96a" }}>{guild.wclGuildId}</code>
+          <p className="text-xs mt-1" style={{ color: "#5a5040" }}>
+            Currently linked: <code style={{ color: "#c8a96a" }}>{guild.wclGuildId}</code>
+            {" "}<span style={{ color: "#40c864" }}>✓ Connected</span>
           </p>
         )}
-        {message && <p style={{ fontSize: "0.75rem", color: "#40c864", marginTop: "0.5rem" }}>{message}</p>}
-      </div>
+        {wclMsg && <p className="text-xs mt-1" style={{ color: "#40c864" }}>{wclMsg}</p>}
+      </Section>
 
-      {/* Member roles */}
-      <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "0.5rem", padding: "1.25rem" }}>
-        <h2 style={{ color: "#e8dfc8", fontWeight: 600, marginBottom: "1rem" }}>Member Roles</h2>
+      {/* ── Member roles ── */}
+      <Section title="Member Roles">
         <div className="space-y-2">
-          {members.map((m) => (
-            <div key={m.id} className="flex items-center justify-between">
-              <span style={{ color: "#e8dfc8", fontSize: "0.875rem" }}>{m.user.battletag ?? m.user.name ?? "Unknown"}</span>
+          {members.map(m => (
+            <div key={m.id} className="flex items-center justify-between py-1">
+              <span className="text-sm" style={{ color: "#e8dfc8" }}>{m.user.battletag ?? m.user.name ?? "Unknown"}</span>
               {isGm && m.role !== "GM" ? (
-                <select value={m.role} onChange={(e) => updateRole(m.id, e.target.value as GuildRole)}
-                  style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", fontSize: "0.75rem", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", outline: "none" }}>
-                  {ROLES.filter((r) => r !== "GM").map((r) => <option key={r} value={r}>{r}</option>)}
+                <select value={m.role} onChange={e => updateRole(m.id, e.target.value as GuildRole)}
+                  className="text-xs rounded px-2 py-1 outline-none"
+                  style={{ background: "#070a10", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8" }}>
+                  {ROLES.filter(r => r !== "GM").map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               ) : (
                 <span className="text-xs rounded-full px-2 py-0.5"
@@ -136,7 +243,7 @@ export default function SettingsClient({ guild, members: initial, isGm }: {
             </div>
           ))}
         </div>
-      </div>
+      </Section>
     </div>
   );
 }

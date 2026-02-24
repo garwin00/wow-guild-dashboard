@@ -22,5 +22,10 @@ export default async function SettingsPage({ params }: Props) {
     orderBy: { role: "asc" },
   });
 
-  return <SettingsClient guild={membership.guild} members={members} isGm={membership.role === "GM"} />;
+  return <SettingsClient
+    guild={membership.guild}
+    members={members}
+    isGm={membership.role === "GM"}
+    guildSlug={guildSlug}
+  />;
 }

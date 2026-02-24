@@ -83,6 +83,9 @@ model Guild {
   bnetGuildId  String?
   wclGuildId   String?
   wclGuildName String?
+  imageUrl     String?
+  bannerUrl    String?
+  theme        String   @default("default")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -44,12 +44,14 @@ export default async function DashboardLayout({ children, params }: Props) {
   );
 
   return (
-    <div className="min-h-screen flex" style={{ background: "#09090e" }}>
+    <div className="min-h-screen flex" style={{ background: "var(--wow-bg)" }} data-theme={guild.theme ?? "default"}>
       <SidebarNav
         navLinks={navLinks}
         guildName={guild.name}
         realm={guild.realm}
         region={guild.region}
+        guildImageUrl={guild.imageUrl ?? null}
+        theme={guild.theme ?? "default"}
         signOutForm={signOutForm}
       />
       {/* Main content — offset on mobile for top bar */}
