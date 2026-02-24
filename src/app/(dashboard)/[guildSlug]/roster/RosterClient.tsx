@@ -64,8 +64,18 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
   const [filter, setFilter] = useState<CharRole | "ALL">("ALL");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"rank" | "ilvl" | "name">("rank");
+  const [cooldownUntil, setCooldownUntil] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    return parseInt(localStorage.getItem(`roster-sync-cooldown-${guildSlug}`) ?? "0", 10);
+  });
+
+  const COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
+  const cooldownRemaining = Math.max(0, cooldownUntil - Date.now());
+  const cooldownMins = Math.ceil(cooldownRemaining / 60000);
+  const onCooldown = cooldownRemaining > 0;
 
   async function syncRoster() {
+    if (onCooldown) return;
     setSyncing(true); setSyncMsg("Syncing roster + fetching specs…");
     const res = await fetch("/api/roster/sync", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -74,7 +84,12 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
     const data = await res.json();
     setSyncMsg(res.ok ? `✓ Synced ${data.synced} characters` : `Error: ${data.error}`);
     setSyncing(false);
-    if (res.ok) window.location.reload();
+    if (res.ok) {
+      const until = Date.now() + COOLDOWN_MS;
+      localStorage.setItem(`roster-sync-cooldown-${guildSlug}`, String(until));
+      setCooldownUntil(until);
+      window.location.reload();
+    }
   }
 
   async function setRole(characterId: string, role: CharRole) {
@@ -115,15 +130,14 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
             {avgIlvl && <span className={`ml-2 font-medium ${iLvlColor(avgIlvl)}`}>avg {avgIlvl} iLvl</span>}
           </p>
         </div>
-        {isOfficer && (
-          <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
             {syncMsg && <span className="text-sm text-gray-400">{syncMsg}</span>}
-            <button onClick={syncRoster} disabled={syncing}
-              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-              {syncing ? "Syncing…" : "↻ Sync from Blizzard"}
+            <button onClick={syncRoster} disabled={syncing || onCooldown}
+              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              title={onCooldown ? `Available in ${cooldownMins}m` : "Sync roster from Blizzard"}>
+              {syncing ? "Syncing…" : onCooldown ? `↻ Sync (${cooldownMins}m)` : "↻ Sync from Blizzard"}
             </button>
           </div>
-        )}
       </div>
 
       {/* Role summary cards */}
