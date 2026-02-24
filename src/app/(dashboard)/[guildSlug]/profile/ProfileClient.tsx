@@ -201,6 +201,7 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
   const [settingMain, setSettingMain] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
   const [linkMsg, setLinkMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [linksOpen, setLinksOpen] = useState(false);
 
   // Account settings state
   const [showPwForm, setShowPwForm] = useState(false);
@@ -342,11 +343,44 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                 border: `2px solid ${classColor(mainChar.class)}50`,
                 boxShadow: `0 0 24px ${classColor(mainChar.class)}18`,
               }}>
-                {/* Unlink button */}
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                {/* Top-right controls: links dropdown + unlink */}
+                <div className="absolute top-3 right-3 flex items-center gap-1.5 z-20">
+                  {/* External links dropdown */}
+                  <div className="relative">
+                    <button onClick={() => setLinksOpen(o => !o)}
+                      className="w-7 h-7 rounded flex items-center justify-center text-sm transition-opacity"
+                      style={{ background: "rgba(0,0,0,0.55)", color: "var(--wow-text-muted)" }}
+                      title="View on external sites">
+                      ↗
+                    </button>
+                    {linksOpen && (() => {
+                      const links = externalLinks(mainChar.region, mainChar.realm, mainChar.name);
+                      return (
+                        <div className="absolute right-0 top-8 rounded-lg py-1 min-w-[160px] z-30"
+                          style={{ background: "var(--wow-surface-2)", border: "1px solid rgba(var(--wow-primary-rgb),0.25)", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                          {[
+                            { href: links.armory, label: "Armory" },
+                            { href: links.raiderio, label: "Raider.IO" },
+                            { href: links.wcl, label: "Warcraft Logs" },
+                          ].map(({ href, label }) => (
+                            <a key={label} href={href} target="_blank" rel="noopener noreferrer"
+                              onClick={() => setLinksOpen(false)}
+                              className="flex items-center justify-between px-3 py-2 text-xs transition-colors"
+                              style={{ color: "var(--wow-text-muted)" }}
+                              onMouseOver={e => (e.currentTarget.style.color = "var(--wow-gold-bright)")}
+                              onMouseOut={e => (e.currentTarget.style.color = "var(--wow-text-muted)")}>
+                              {label}
+                              <span style={{ color: "var(--wow-text-faint)" }}>↗</span>
+                            </a>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  {/* Unlink */}
                   <button onClick={() => unlinkChar(mainChar.id)} title="Unlink"
-                    className="w-7 h-7 rounded flex items-center justify-center text-sm"
-                    style={{ background: "rgba(0,0,0,0.7)", color: "#e06060" }}>✕</button>
+                    className="w-7 h-7 rounded flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ background: "rgba(0,0,0,0.55)", color: "#e06060" }}>✕</button>
                 </div>
 
                 {/* Two-column layout: portrait | data */}
@@ -391,31 +425,6 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                         <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-faint)" }}>Mythic+ Score</p>
                       </div>
                     </div>
-                    {/* External links */}
-                    {(() => {
-                      const links = externalLinks(mainChar.region, mainChar.realm, mainChar.name);
-                      return (
-                        <div className="flex items-center gap-2 mt-3 flex-wrap">
-                          {[
-                            { href: links.armory, label: "Armory" },
-                            { href: links.raiderio, label: "Raider.IO" },
-                            { href: links.wcl, label: "Warcraft Logs" },
-                          ].map(({ href, label }) => (
-                            <a key={label} href={href} target="_blank" rel="noopener noreferrer"
-                              className="text-xs px-2 py-1 rounded transition-colors"
-                              style={{
-                                background: "rgba(var(--wow-primary-rgb),0.08)",
-                                border: "1px solid rgba(var(--wow-primary-rgb),0.2)",
-                                color: "var(--wow-text-muted)",
-                              }}
-                              onMouseOver={e => (e.currentTarget.style.color = "var(--wow-gold-bright)")}
-                              onMouseOut={e => (e.currentTarget.style.color = "var(--wow-text-muted)")}>
-                              {label} ↗
-                            </a>
-                          ))}
-                        </div>
-                      );
-                    })()}
                   </div>
                 </div>
               </div>
