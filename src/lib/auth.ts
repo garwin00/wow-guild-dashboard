@@ -109,20 +109,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    async jwt({ token, user, account }) {
-      // On first sign-in, persist user.id and bnetId into the token
+    async jwt({ token, user, account, trigger }) {
+      // On first sign-in, persist user fields into the token
       if (user) {
         token.sub = user.id;
         token.bnetId = (user as { bnetId?: string }).bnetId;
+        token.isAdmin = (user as { isAdmin?: boolean }).isAdmin ?? false;
       }
       // After OAuth, store the access token for BNet API calls
       if (account?.provider === "battlenet") {
         token.bnetAccessToken = account.access_token;
       }
+      // Re-fetch isAdmin from DB on explicit update trigger (e.g. after bootstrap)
+      if (trigger === "update" && token.sub) {
+        const dbUser = await prisma.user.findUnique({ where: { id: token.sub }, select: { isAdmin: true } });
+        if (dbUser) token.isAdmin = dbUser.isAdmin;
+      }
       return token;
     },
     session({ session, token }) {
       session.user.id = token.sub!;
+      (session.user as { isAdmin?: boolean }).isAdmin = token.isAdmin as boolean | undefined;
       (session as { bnetAccessToken?: string }).bnetAccessToken = token.bnetAccessToken as string | undefined;
       return session;
     },

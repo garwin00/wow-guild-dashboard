@@ -6,11 +6,12 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const caller = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { isAdmin: true },
-  });
-  if (!caller?.isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // Check isAdmin from JWT (fast) — falls back to DB check for safety
+  const isAdminFromJwt = (session.user as { isAdmin?: boolean }).isAdmin;
+  if (!isAdminFromJwt) {
+    const caller = await prisma.user.findUnique({ where: { id: session.user.id }, select: { isAdmin: true } });
+    if (!caller?.isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const { userId, isAdmin } = await req.json();
   if (!userId || typeof isAdmin !== "boolean") {
