@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Fire-and-forget — don't fail registration if email errors
-    sendWelcomeEmail(email, name).catch(err => console.error("[register] welcome email failed:", err));
+    // Await the email but swallow errors — never block registration
+    try { await sendWelcomeEmail(email, name); } catch (err) { console.error("[register] welcome email failed:", err); }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
