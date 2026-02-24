@@ -60,6 +60,7 @@ function customAdapter() {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
+  trustHost: true, // Use actual request URL for callbacks — handles www vs non-www on Vercel
   adapter: customAdapter(),
   providers: [
     Credentials({
