@@ -54,12 +54,13 @@ export async function POST(req: Request) {
 
   let synced = 0;
 
-  await chunked(members, 10, async (member: { character?: { name?: string; realm?: { slug?: string }; playable_class?: { name?: string }; level?: number } }) => {
+  await chunked(members, 10, async (member: { rank?: number; character?: { name?: string; realm?: { slug?: string }; playable_class?: { name?: string }; level?: number } }) => {
     const char = member?.character;
     if (!char?.name) return;
 
     const realmSlug = char.realm?.slug ?? guild.realm;
     const className = char.playable_class?.name ?? "Unknown";
+    const guildRank: number | null = member?.rank ?? null;
 
     // Fetch individual profile for spec + item level
     let spec: string | null = null;
@@ -81,6 +82,7 @@ export async function POST(req: Request) {
         spec,
         role,
         itemLevel,
+        guildRank,
         guildId: guild.id,
       },
       create: {
@@ -91,6 +93,7 @@ export async function POST(req: Request) {
         spec,
         role,
         itemLevel,
+        guildRank,
         guildId: guild.id,
         userId: placeholder.id,
       },

@@ -6,6 +6,7 @@ type CharRole = "TANK" | "HEALER" | "DPS";
 interface Character {
   id: string; name: string; realm: string; class: string; spec: string | null;
   role: CharRole; itemLevel: number | null; isMain: boolean; avatarUrl: string | null;
+  guildRank: number | null;
 }
 
 const CLASS_COLORS: Record<string, string> = {
@@ -62,6 +63,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
   const [syncMsg, setSyncMsg] = useState("");
   const [filter, setFilter] = useState<CharRole | "ALL">("ALL");
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"rank" | "ilvl" | "name">("rank");
 
   async function syncRoster() {
     setSyncing(true); setSyncMsg("Syncing roster + fetching specs…");
@@ -85,7 +87,12 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
 
   const filtered = chars
     .filter((c) => filter === "ALL" || c.role === filter)
-    .filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.class.toLowerCase().includes(search.toLowerCase()) || (c.spec ?? "").toLowerCase().includes(search.toLowerCase()));
+    .filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.class.toLowerCase().includes(search.toLowerCase()) || (c.spec ?? "").toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (sortBy === "rank") return (a.guildRank ?? 99) - (b.guildRank ?? 99) || a.name.localeCompare(b.name);
+      if (sortBy === "ilvl") return (b.itemLevel ?? 0) - (a.itemLevel ?? 0);
+      return a.name.localeCompare(b.name);
+    });
 
   const counts = {
     TANK: chars.filter(c => c.role === "TANK").length,
@@ -131,11 +138,19 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
         ))}
       </div>
 
-      {/* Search */}
-      <div className="mb-4">
+      {/* Search + sort */}
+      <div className="mb-4 flex items-center gap-3 flex-wrap">
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, class or spec…"
           className="w-full max-w-xs bg-gray-900 border border-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-600" />
+        <div className="flex gap-1 ml-auto">
+          {(["rank", "ilvl", "name"] as const).map((s) => (
+            <button key={s} onClick={() => setSortBy(s)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${sortBy === s ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white"}`}>
+              {s === "rank" ? "Guild Rank" : s === "ilvl" ? "iLvl ↓" : "Name"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Table */}
@@ -150,6 +165,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-800 text-left text-xs text-gray-500 uppercase tracking-wide">
+                <th className="px-4 py-3 w-10 text-center">Rank</th>
                 <th className="px-4 py-3">Character</th>
                 <th className="px-4 py-3">Class · Spec</th>
                 <th className="px-4 py-3 text-right">iLvl</th>
@@ -159,6 +175,9 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
             <tbody>
               {filtered.map((char) => (
                 <tr key={char.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
+                  <td className="px-4 py-3 text-center text-xs text-gray-500 tabular-nums">
+                    {char.guildRank ?? "—"}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {char.avatarUrl ? (

@@ -17,21 +17,15 @@ export default async function RosterPage({ params }: Props) {
   if (!membership) redirect("/");
 
   const characters = await prisma.character.findMany({
-    where: { guildId: membership.guild.id, user: { bnetId: { not: "ROSTER_SYNC_PLACEHOLDER" } } },
-    include: { user: true },
-    orderBy: [{ role: "asc" }, { name: "asc" }],
-  });
-
-  const allChars = await prisma.character.findMany({
     where: { guildId: membership.guild.id },
-    orderBy: [{ role: "asc" }, { name: "asc" }],
+    orderBy: [{ guildRank: "asc" }, { name: "asc" }],
   });
 
   const isOfficer = ["GM", "OFFICER"].includes(membership.role);
 
   return (
     <RosterClient
-      characters={allChars}
+      characters={characters}
       guildSlug={guildSlug}
       isOfficer={isOfficer}
       guildName={membership.guild.name}

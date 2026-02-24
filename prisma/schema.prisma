@@ -103,6 +103,7 @@ model Character {
   role        CharacterRole @default(DPS)
   itemLevel   Int?
   isMain      Boolean       @default(false)
+  guildRank   Int?
   avatarUrl   String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
