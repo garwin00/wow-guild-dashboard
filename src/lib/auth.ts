@@ -8,12 +8,30 @@ import { authConfig } from "@/auth.config";
 
 const BNET_REGION = process.env.BLIZZARD_REGION ?? "eu";
 
-// Wrap PrismaAdapter to handle custom bnetId/battletag fields
+// Wrap PrismaAdapter to handle custom bnetId/battletag fields + email-based account merging
 function customAdapter() {
   const base = PrismaAdapter(prisma);
   return {
     ...base,
     createUser: async (data: AdapterUser & { bnetId?: string; battletag?: string }) => {
+      // If a user with this email already exists (registered via email/password),
+      // update their record with Battle.net details rather than creating a duplicate
+      if (data.email) {
+        const existing = await prisma.user.findUnique({ where: { email: data.email } });
+        if (existing) {
+          const updated = await prisma.user.update({
+            where: { id: existing.id },
+            data: {
+              bnetId: data.bnetId ?? existing.bnetId,
+              battletag: (data as { battletag?: string }).battletag ?? existing.battletag,
+              name: data.name ?? existing.name,
+              image: data.image ?? existing.image,
+            },
+          });
+          return { ...updated, email: updated.email ?? "" } as AdapterUser;
+        }
+      }
+
       const user = await prisma.user.create({
         data: {
           id: data.id,
@@ -22,10 +40,20 @@ function customAdapter() {
           emailVerified: data.emailVerified ?? null,
           image: data.image ?? null,
           bnetId: data.bnetId ?? data.id ?? "",
-          battletag: data.battletag ?? data.name ?? "",
+          battletag: (data as { battletag?: string }).battletag ?? data.name ?? "",
         },
       });
       return { ...user, email: user.email ?? "" } as AdapterUser;
+    },
+    // Override getUserByAccount so that merged accounts (where account.userId may point to
+    // the old id) still resolve correctly via the email-matched user
+    getUserByAccount: async (params: { providerAccountId: string; provider: string }) => {
+      const account = await prisma.account.findUnique({
+        where: { provider_providerAccountId: { provider: params.provider, providerAccountId: params.providerAccountId } },
+        include: { user: true },
+      });
+      if (!account) return null;
+      return { ...account.user, email: account.user.email ?? "" } as AdapterUser;
     },
   };
 }

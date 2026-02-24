@@ -5,6 +5,16 @@ import { useRouter } from "next/navigation";
 
 interface BnetGuild { name: string; realm: string; realmSlug: string; region: string; }
 
+const inputStyle = {
+  background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)",
+  color: "#e8dfc8", borderRadius: "0.375rem",
+  padding: "0.5rem 0.75rem", width: "100%", fontSize: "0.875rem", outline: "none",
+};
+const labelStyle = {
+  display: "block", fontSize: "0.75rem", marginBottom: "0.375rem",
+  textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "#5a5040",
+};
+
 export default function NewGuildPage() {
   const router = useRouter();
   const [guilds, setGuilds] = useState<BnetGuild[]>([]);
@@ -18,24 +28,24 @@ export default function NewGuildPage() {
 
   useEffect(() => {
     fetch("/api/guilds/from-bnet")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) setError(data.error);
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) { setError(data.error); setShowManual(true); }
         else {
           setGuilds(data.guilds ?? []);
           setRealms(data.realms ?? []);
           if (data.realms?.length) setManualRealm(data.realms[0]);
+          if (!data.guilds?.length) setShowManual(true);
         }
       })
-      .catch(() => setError("Failed to contact Battle.net"))
+      .catch(() => { setError("Failed to contact Battle.net"); setShowManual(true); })
       .finally(() => setLoading(false));
   }, []);
 
   async function selectGuild(guild: BnetGuild) {
     setCreating(guild.name);
     const res = await fetch("/api/guilds/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify(guild),
     });
     const data = await res.json();
@@ -51,103 +61,102 @@ export default function NewGuildPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "#09090e" }}>
-      <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "1rem", padding: "2rem", width: "100%", maxWidth: "32rem" }}>
-        <h1 className="wow-heading text-2xl font-bold mb-1" style={{ color: "#f0c040" }}>Set up your guild</h1>
-        <p style={{ color: "#8a8070", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
-          We found the following guilds across your Battle.net characters.
-        </p>
+    <div className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: "radial-gradient(ellipse at 50% 0%, #1a1208 0%, #09090e 60%)" }}>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-px"
+        style={{ background: "linear-gradient(to right, transparent, #c8a96a, transparent)" }} />
 
-        {loading && (
-          <div className="text-center py-10 text-gray-400">
-            <div className="animate-spin text-3xl mb-3">⚙️</div>
-            Fetching your guilds from Battle.net…
+      <div className="relative w-full max-w-md">
+        <div className="absolute -top-px -left-px w-6 h-6 border-t border-l" style={{ borderColor: "#c8a96a" }} />
+        <div className="absolute -top-px -right-px w-6 h-6 border-t border-r" style={{ borderColor: "#c8a96a" }} />
+        <div className="absolute -bottom-px -left-px w-6 h-6 border-b border-l" style={{ borderColor: "#c8a96a" }} />
+        <div className="absolute -bottom-px -right-px w-6 h-6 border-b border-r" style={{ borderColor: "#c8a96a" }} />
+
+        <div className="rounded-lg p-8 space-y-6"
+          style={{ background: "linear-gradient(160deg, #131520 0%, #0d0f1a 100%)", border: "1px solid rgba(200,169,106,0.2)" }}>
+
+          <div className="text-center space-y-2">
+            <span className="text-4xl">🏰</span>
+            <div className="wow-divider w-24 mx-auto" />
+            <h1 className="text-xl font-bold" style={{ color: "#f0c040" }}>Set Up Your Guild</h1>
+            <p className="text-sm" style={{ color: "#8a8070" }}>
+              Select a guild from Battle.net or enter details manually.
+            </p>
           </div>
-        )}
 
-        {error && (
-          <div className="bg-red-900/30 border border-red-700 text-red-300 rounded-lg p-4 text-sm mb-4">
-            {error}
-          </div>
-        )}
+          {loading && (
+            <div className="text-center py-6" style={{ color: "#8a8070" }}>
+              <div className="animate-spin text-2xl mb-2">⚙️</div>
+              <p className="text-sm">Fetching guilds from Battle.net…</p>
+            </div>
+          )}
 
-        {!loading && guilds.length > 0 && (
-          <ul className="space-y-3 mb-4">
-            {guilds.map((g) => {
-              const isCreating = creating === g.name;
-              return (
-                <li key={`${g.name}-${g.realmSlug}`}>
-                  <button
-                    onClick={() => selectGuild(g)}
-                    disabled={!!creating}
-                    className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl px-5 py-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
-                  >
-                    <div>
-                      <p className="text-white font-semibold">{g.name}</p>
-                      <p className="text-gray-400 text-sm">{g.realm} · {g.region.toUpperCase()}</p>
-                    </div>
-                    {isCreating
-                      ? <span className="text-blue-400 text-sm animate-pulse">Setting up…</span>
-                      : <span className="text-gray-500 text-sm">Select →</span>}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+          {error && (
+            <div className="rounded px-4 py-3 text-sm"
+              style={{ background: "rgba(200,50,50,0.1)", border: "1px solid rgba(200,50,50,0.3)", color: "#f08080" }}>
+              {error}
+            </div>
+          )}
 
-        {!loading && (
-          <div className="border-t border-gray-800 pt-4 mt-2">
-            <button
-              onClick={() => setShowManual(!showManual)}
-              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              {showManual ? "▲ Hide" : "▼ Enter guild manually"}
-            </button>
-
-            {showManual && (
-              <form onSubmit={submitManual} className="mt-4 space-y-3">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Guild Name</label>
-                  <input
-                    type="text"
-                    value={manualName}
-                    onChange={(e) => setManualName(e.target.value)}
-                    placeholder="e.g. Team Team"
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Realm (slug)</label>
-                  {realms.length > 0 ? (
-                    <select
-                      value={manualRealm}
-                      onChange={(e) => setManualRealm(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                    >
-                      {realms.map((r) => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={manualRealm}
-                      onChange={(e) => setManualRealm(e.target.value)}
-                      placeholder="e.g. kazzak"
-                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                    />
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  disabled={!!creating || !manualName || !manualRealm}
-                  className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium py-2 rounded-lg text-sm transition-colors"
-                >
-                  {creating ? "Setting up…" : "Create Guild"}
+          {!loading && guilds.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-widest" style={{ color: "#5a5040" }}>Your Guilds</p>
+              {guilds.map(g => (
+                <button key={`${g.name}-${g.realmSlug}`} onClick={() => selectGuild(g)}
+                  disabled={!!creating}
+                  className="w-full flex items-center justify-between rounded-lg px-4 py-3 transition-all text-left"
+                  style={{
+                    background: creating === g.name ? "rgba(200,169,106,0.1)" : "#0f1019",
+                    border: "1px solid rgba(200,169,106,0.2)",
+                    opacity: creating && creating !== g.name ? 0.5 : 1,
+                    cursor: creating ? "wait" : "pointer",
+                  }}>
+                  <div>
+                    <p className="font-semibold text-sm" style={{ color: "#e8dfc8" }}>{g.name}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>{g.realm} · {g.region.toUpperCase()}</p>
+                  </div>
+                  <span className="text-sm" style={{ color: creating === g.name ? "#c8a96a" : "#5a5040" }}>
+                    {creating === g.name ? "Setting up…" : "Select →"}
+                  </span>
                 </button>
-              </form>
-            )}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+
+          {!loading && (
+            <div style={{ borderTop: "1px solid rgba(200,169,106,0.1)", paddingTop: "1.25rem" }}>
+              <button onClick={() => setShowManual(!showManual)}
+                className="text-sm transition-colors" style={{ color: "#8a8070" }}>
+                {showManual ? "▲ Hide manual entry" : "▼ Enter guild manually"}
+              </button>
+
+              {showManual && (
+                <form onSubmit={submitManual} className="mt-4 space-y-3">
+                  <div>
+                    <label style={labelStyle}>Guild Name</label>
+                    <input type="text" value={manualName} onChange={e => setManualName(e.target.value)}
+                      style={inputStyle} placeholder="e.g. Team Team" required />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Realm</label>
+                    {realms.length > 0 ? (
+                      <select value={manualRealm} onChange={e => setManualRealm(e.target.value)}
+                        style={{ ...inputStyle, cursor: "pointer" }}>
+                        {realms.map(r => <option key={r} value={r} style={{ background: "#0f1019" }}>{r}</option>)}
+                      </select>
+                    ) : (
+                      <input type="text" value={manualRealm} onChange={e => setManualRealm(e.target.value)}
+                        style={inputStyle} placeholder="e.g. kazzak" required />
+                    )}
+                  </div>
+                  <button type="submit" disabled={!!creating || !manualName || !manualRealm} className="wow-btn w-full">
+                    {creating ? "Setting up…" : "Create Guild"}
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

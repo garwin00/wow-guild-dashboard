@@ -71,6 +71,11 @@ export default function SidebarNav({ navLinks, guildName, realm, region, signOut
           <NavLinks />
         </nav>
         <div className="p-3" style={{ borderTop: "1px solid rgba(200,169,106,0.1)" }}>
+          <Link href="/account/settings"
+            className="flex items-center gap-3 px-3 py-2 rounded text-sm transition-all text-[#8a8070] hover:text-[#e8dfc8] hover:bg-[rgba(200,169,106,0.06)] mb-1">
+            <span className="text-base">⚙️</span>
+            <span style={{ fontFamily: "inherit", fontSize: "0.75rem", letterSpacing: "0.05em" }}>Account</span>
+          </Link>
           {signOutForm}
         </div>
       </aside>
@@ -104,7 +109,15 @@ export default function SidebarNav({ navLinks, guildName, realm, region, signOut
             <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
               <NavLinks onClick={() => setMobileOpen(false)} />
             </nav>
-            <div className="p-3" style={{ borderTop: "1px solid rgba(200,169,106,0.1)" }}>{signOutForm}</div>
+            <div className="p-3" style={{ borderTop: "1px solid rgba(200,169,106,0.1)" }}>
+              <Link href="/account/settings"
+                className="flex items-center gap-3 px-3 py-2 rounded text-sm transition-all text-[#8a8070] hover:text-[#e8dfc8] hover:bg-[rgba(200,169,106,0.06)] mb-1"
+                onClick={() => setMobileOpen(false)}>
+                <span className="text-base">⚙️</span>
+                <span style={{ fontFamily: "inherit", fontSize: "0.75rem", letterSpacing: "0.05em" }}>Account</span>
+              </Link>
+              {signOutForm}
+            </div>
           </div>
           <div className="flex-1 bg-black/70" onClick={() => setMobileOpen(false)} />
         </div>
