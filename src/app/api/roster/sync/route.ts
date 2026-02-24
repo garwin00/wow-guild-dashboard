@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getGuildRoster, getCharacterProfile } from "@/lib/blizzard";
+import { fetchCharacterAvatar } from "@/lib/raiderio";
 
 // Map active spec name → CharacterRole
 const TANK_SPECS = new Set(["Blood", "Vengeance", "Guardian", "Brewmaster", "Protection"]);
@@ -64,16 +65,22 @@ export async function POST(req: Request) {
     const guildRank: number | null = member?.rank ?? null;
 
     // Fetch individual profile for class, spec, and item level
+    // Also fetch avatar from Raider.IO in parallel
     let className = rosterClass;
     let spec: string | null = null;
     let itemLevel: number | null = null;
+    let avatarUrl: string | null = null;
     try {
-      const profile = await getCharacterProfile(guild.region, realmSlug, char.name);
+      const [profile, avatar] = await Promise.all([
+        getCharacterProfile(guild.region, realmSlug, char.name),
+        fetchCharacterAvatar(guild.region, realmSlug, char.name),
+      ]);
       // profile.character_class.name is the authoritative class name
       className = profile?.character_class?.name ?? profile?.playable_class?.name ?? rosterClass;
       spec = profile?.active_spec?.name ?? null;
       itemLevel = profile?.equipped_item_level ?? profile?.average_item_level ?? null;
-      console.log(`[roster sync] ${char.name}: class=${className}, spec=${spec}, ilvl=${itemLevel}, rank=${guildRank}`);
+      avatarUrl = avatar;
+      console.log(`[roster sync] ${char.name}: class=${className}, spec=${spec}, ilvl=${itemLevel}, avatar=${!!avatarUrl}, rank=${guildRank}`);
     } catch (err) {
       console.warn(`[roster sync] profile fetch failed for ${char.name}:`, err);
     }
@@ -92,6 +99,7 @@ export async function POST(req: Request) {
         itemLevel,
         guildRank,
         guildId: guild.id,
+        ...(avatarUrl ? { avatarUrl } : {}),
       },
       create: {
         name: char.name,
@@ -103,6 +111,7 @@ export async function POST(req: Request) {
         itemLevel,
         guildRank,
         guildId: guild.id,
+        avatarUrl,
         userId: placeholder.id,
       },
     });

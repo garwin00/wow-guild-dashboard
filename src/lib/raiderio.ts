@@ -133,3 +133,44 @@ export function scoreColor(score: number): string {
   if (score >= 1000) return "#ffffff"; // common white
   return "#9d9d9d"; // poor grey
 }
+
+/**
+ * Fetch just the thumbnail_url for a character from Raider.IO.
+ * Returns the raw avatar URL (ends in -avatar.jpg) or null if not indexed.
+ */
+export async function fetchCharacterAvatar(
+  region: string,
+  realm: string,
+  name: string
+): Promise<string | null> {
+  try {
+    const params = new URLSearchParams({
+      region: region.toLowerCase(),
+      realm,
+      name,
+      fields: "thumbnail_url",
+    });
+    const res = await fetch(`${BASE}/characters/profile?${params}`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data.thumbnail_url as string) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Given an avatar URL (ending -avatar.jpg), return the bust/inset variant (230×116).
+ * Falls back to the original if the URL doesn't match the expected pattern.
+ */
+export function avatarToInset(avatarUrl: string): string {
+  // Strip query string, swap suffix
+  const base = avatarUrl.split("?")[0];
+  if (base.endsWith("-avatar.jpg")) {
+    return base.replace("-avatar.jpg", "-inset.jpg");
+  }
+  return base;
+}
