@@ -30,6 +30,7 @@ export default async function DashboardLayout({ children, params }: Props) {
     { href: `/${guildSlug}/logs`, label: "Logs", icon: "📊" },
     { href: `/${guildSlug}/logs/live`, label: "Live", icon: "🔴" },
     { href: `/${guildSlug}/mythic-plus`, label: "Mythic+", icon: "⚡" },
+    { href: `/${guildSlug}/profile`, label: "Profile", icon: "👤" },
     { href: `/${guildSlug}/settings`, label: "Settings", icon: "⚙️" },
   ];
 

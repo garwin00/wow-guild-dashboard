@@ -3,26 +3,36 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useRouter } from "next/navigation";
 
-function LoginForm() {
+export default function RegisterPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (password !== confirm) { setError("Passwords do not match"); return; }
     setLoading(true);
     try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error); return; }
+
+      // Auto sign-in then go to onboarding
       const result = await signIn("credentials", { email, password, redirect: false });
-      if (result?.error) { setError("Invalid email or password"); return; }
-      router.push(callbackUrl);
+      if (result?.error) { setError("Registration succeeded but sign-in failed. Please log in."); return; }
+      router.push("/onboarding/link-bnet");
+    } catch {
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -31,7 +41,8 @@ function LoginForm() {
   const inputStyle = {
     background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)",
     color: "#e8dfc8", borderRadius: "0.375rem",
-    padding: "0.5rem 0.75rem", width: "100%", fontSize: "0.875rem", outline: "none",
+    padding: "0.5rem 0.75rem", width: "100%", fontSize: "0.875rem",
+    outline: "none",
   };
 
   return (
@@ -46,17 +57,11 @@ function LoginForm() {
         <div className="absolute -bottom-px -left-px w-6 h-6 border-b border-l" style={{ borderColor: "#c8a96a" }} />
         <div className="absolute -bottom-px -right-px w-6 h-6 border-b border-r" style={{ borderColor: "#c8a96a" }} />
 
-        <div className="rounded-lg p-8 flex flex-col gap-5"
-          style={{ background: "linear-gradient(160deg, #131520 0%, #0d0f1a 100%)", border: "1px solid rgba(200,169,106,0.2)" }}>
+        <div className="rounded-lg p-8" style={{ background: "#0d0f18", border: "1px solid rgba(200,169,106,0.2)" }}>
+          <p className="text-center text-xs uppercase tracking-widest mb-1" style={{ color: "#5a5040" }}>Guild Dashboard</p>
+          <h1 className="text-xl font-bold text-center mb-6" style={{ color: "#f0c040" }}>Create Account</h1>
 
-          <div className="flex flex-col items-center gap-2 mb-1">
-            <span className="text-4xl">⚔️</span>
-            <div className="wow-divider w-24" />
-            <h1 className="text-xl wow-heading text-center" style={{ color: "#f0c040" }}>Guild Dashboard</h1>
-          </div>
-
-          {/* Email/password form */}
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs mb-1.5 uppercase tracking-widest" style={{ color: "#5a5040" }}>Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)}
@@ -65,46 +70,31 @@ function LoginForm() {
             <div>
               <label className="block text-xs mb-1.5 uppercase tracking-widest" style={{ color: "#5a5040" }}>Password</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                style={inputStyle} placeholder="Your password" required />
+                style={inputStyle} placeholder="Min. 8 characters" required />
             </div>
+            <div>
+              <label className="block text-xs mb-1.5 uppercase tracking-widest" style={{ color: "#5a5040" }}>Confirm Password</label>
+              <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
+                style={inputStyle} placeholder="Repeat password" required />
+            </div>
+
             {error && <p className="text-sm" style={{ color: "#c84040" }}>{error}</p>}
-            <button type="submit" disabled={loading} className="wow-btn w-full">
-              {loading ? "Signing in…" : "Sign In"}
+
+            <button type="submit" disabled={loading} className="wow-btn w-full mt-2">
+              {loading ? "Creating account…" : "Create Account"}
             </button>
           </form>
 
+          <div className="wow-divider my-5" />
+
           <p className="text-center text-xs" style={{ color: "#5a5040" }}>
-            No account?{" "}
-            <Link href="/register" style={{ color: "#c8a96a" }} className="hover:text-[#f0c040] transition-colors">
-              Create one
+            Already have an account?{" "}
+            <Link href="/login" style={{ color: "#c8a96a" }} className="hover:text-[#f0c040] transition-colors">
+              Sign in
             </Link>
           </p>
-
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px" style={{ background: "rgba(200,169,106,0.15)" }} />
-            <span className="text-xs" style={{ color: "#5a5040" }}>or</span>
-            <div className="flex-1 h-px" style={{ background: "rgba(200,169,106,0.15)" }} />
-          </div>
-
-          {/* Battle.net */}
-          <button onClick={() => signIn("battlenet", { callbackUrl })} className="wow-btn-ghost w-full flex items-center justify-center gap-3">
-            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0" aria-hidden>
-              <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 14.5h-9v-1.5l3-3-3-3V7.5h9V9h-6l2.5 2.5L10 14h6.5v1.5z"/>
-            </svg>
-            Continue with Battle.net
-          </button>
-
-          <p className="text-xs text-center" style={{ color: "#5a5040" }}>Azeroth awaits, champion.</p>
         </div>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
   );
 }
