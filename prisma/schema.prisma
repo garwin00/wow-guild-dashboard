@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  bnetId        String   @unique
+  battletag     String
+  bnetRegion    String   @default("eu")
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  memberships   GuildMembership[]
+  characters    Character[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Guild {
+  id           String   @id @default(cuid())
+  name         String
+  realm        String
+  region       String   @default("eu")
+  slug         String   @unique
+  bnetGuildId  String?
+  wclGuildId   String?
+  wclGuildName String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships  GuildMembership[]
+  characters   Character[]
+  raidEvents   RaidEvent[]
+  logReports   LogReport[]
+}
+
+model GuildMembership {
+  id        String      @id @default(cuid())
+  userId    String
+  guildId   String
+  role      GuildRole   @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guild     Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, guildId])
+}
+
+model Character {
+  id          String        @id @default(cuid())
+  userId      String
+  guildId     String?
+  name        String
+  realm       String
+  region      String        @default("eu")
+  class       String
+  spec        String?
+  role        CharacterRole @default(DPS)
+  itemLevel   Int?
+  isMain      Boolean       @default(false)
+  avatarUrl   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guild       Guild?        @relation(fields: [guildId], references: [id])
+  signups     Signup[]
+  rosters     RosterSlot[]
+  parses      CharacterParse[]
+
+  @@unique([name, realm, region])
+}
+
+model RaidEvent {
+  id           String      @id @default(cuid())
+  guildId      String
+  title        String
+  description  String?
+  raidZone     String
+  scheduledAt  DateTime
+  maxAttendees Int         @default(25)
+  status       EventStatus @default(OPEN)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  guild        Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  signups      Signup[]
+  roster       RosterSlot[]
+}
+
+model Signup {
+  id           String       @id @default(cuid())
+  raidEventId  String
+  characterId  String
+  status       SignupStatus @default(TENTATIVE)
+  role         CharacterRole?
+  note         String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  raidEvent    RaidEvent    @relation(fields: [raidEventId], references: [id], onDelete: Cascade)
+  character    Character    @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([raidEventId, characterId])
+}
+
+model RosterSlot {
+  id          String        @id @default(cuid())
+  raidEventId String
+  characterId String
+  groupNumber Int           @default(1)
+  slotIndex   Int
+
+  raidEvent   RaidEvent     @relation(fields: [raidEventId], references: [id], onDelete: Cascade)
+  character   Character     @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([raidEventId, slotIndex])
+}
+
+model LogReport {
+  id          String   @id @default(cuid())
+  guildId     String
+  wclCode     String   @unique
+  title       String
+  zone        String?
+  startTime   DateTime
+  fightCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  parses      CharacterParse[]
+}
+
+model CharacterParse {
+  id            String    @id @default(cuid())
+  logReportId   String
+  characterId   String
+  fightName     String
+  difficulty    String?
+  parsePercent  Float?
+  dps           Float?
+  hps           Float?
+  deaths        Int       @default(0)
+  rank          Int?
+  outOf         Int?
+
+  logReport     LogReport @relation(fields: [logReportId], references: [id], onDelete: Cascade)
+  character     Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([logReportId, characterId, fightName])
+}
+
+enum GuildRole {
+  GM
+  OFFICER
+  MEMBER
+  TRIALIST
+}
+
+enum CharacterRole {
+  TANK
+  HEALER
+  DPS
+}
+
+enum EventStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum SignupStatus {
+  ACCEPTED
+  TENTATIVE
+  DECLINED
+}
