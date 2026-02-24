@@ -124,30 +124,34 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
       {/* Header */}
       <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold text-white">Roster</h1>
-          <p className="text-gray-400 text-sm mt-1">
+          <h1 className="text-3xl wow-heading" style={{ color: "#f0c040" }}>Roster</h1>
+          <p className="text-sm mt-1" style={{ color: "#8a8070" }}>
             {chars.length} characters · {guildName}
             {avgIlvl && <span className={`ml-2 font-medium ${iLvlColor(avgIlvl)}`}>avg {avgIlvl} iLvl</span>}
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-            {syncMsg && <span className="text-sm text-gray-400">{syncMsg}</span>}
-            <button onClick={syncRoster} disabled={syncing || onCooldown}
-              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-              title={onCooldown ? `Available in ${cooldownMins}m` : "Sync roster from Blizzard"}>
-              {syncing ? "Syncing…" : onCooldown ? `↻ Sync (${cooldownMins}m)` : "↻ Sync from Blizzard"}
-            </button>
-          </div>
+          {syncMsg && <span className="text-sm" style={{ color: "#8a8070" }}>{syncMsg}</span>}
+          <button onClick={syncRoster} disabled={syncing || onCooldown}
+            className="wow-btn"
+            title={onCooldown ? `Available in ${cooldownMins}m` : "Sync roster from Blizzard"}>
+            {syncing ? "Syncing…" : onCooldown ? `↻ Sync (${cooldownMins}m)` : "↻ Sync Roster"}
+          </button>
+        </div>
       </div>
 
       {/* Role summary cards */}
       <div className="grid grid-cols-3 gap-3 mb-5">
         {(["TANK", "HEALER", "DPS"] as CharRole[]).map((r) => (
           <button key={r} onClick={() => setFilter(filter === r ? "ALL" : r)}
-            className={`rounded-xl p-4 border text-left transition-colors ${filter === r ? "bg-gray-700 border-gray-500" : "bg-gray-900 border-gray-800 hover:bg-gray-800"}`}>
+            className="rounded-lg p-4 text-left transition-all"
+            style={{
+              background: filter === r ? "rgba(200,169,106,0.12)" : "#0f1019",
+              border: filter === r ? "1px solid rgba(200,169,106,0.5)" : "1px solid rgba(200,169,106,0.15)",
+            }}>
             <span className="text-xl">{ROLE_ICON[r]}</span>
-            <p className="text-white font-bold text-xl mt-1">{counts[r]}</p>
-            <p className="text-gray-400 text-xs">{ROLE_LABEL[r]}</p>
+            <p className="font-bold text-xl mt-1" style={{ color: "#e8dfc8" }}>{counts[r]}</p>
+            <p className="text-xs" style={{ color: "#8a8070" }}>{ROLE_LABEL[r]}</p>
           </button>
         ))}
       </div>
@@ -156,12 +160,20 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
       <div className="mb-4 flex items-center gap-3 flex-wrap">
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, class or spec…"
-          className="w-full max-w-xs bg-gray-900 border border-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-600" />
+          className="w-full max-w-xs rounded px-3 py-2 text-sm focus:outline-none"
+          style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8" }} />
         <div className="flex gap-1 ml-auto">
           {(["rank", "ilvl", "name"] as const).map((s) => (
             <button key={s} onClick={() => setSortBy(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${sortBy === s ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white"}`}>
-              {s === "rank" ? "Guild Rank" : s === "ilvl" ? "iLvl ↓" : "Name"}
+              className="px-3 py-1.5 rounded text-xs transition-all"
+              style={{
+                fontFamily: "var(--font-cinzel), serif",
+                letterSpacing: "0.04em",
+                background: sortBy === s ? "rgba(200,169,106,0.15)" : "transparent",
+                color: sortBy === s ? "#f0c040" : "#5a5040",
+                border: sortBy === s ? "1px solid rgba(200,169,106,0.3)" : "1px solid transparent",
+              }}>
+              {s === "rank" ? "Rank" : s === "ilvl" ? "iLvl" : "Name"}
             </button>
           ))}
         </div>
@@ -169,16 +181,16 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 text-sm">
+        <div className="text-center py-12 text-sm" style={{ color: "#5a5040" }}>
           {chars.length === 0
-            ? isOfficer ? 'Click "Sync from Blizzard" to import your guild roster.' : "No roster data yet."
+            ? isOfficer ? 'Click "Sync Roster" to import your guild.' : "No roster data yet."
             : "No characters match your search."}
         </div>
       ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="rounded-lg overflow-hidden" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-800 text-left text-xs text-gray-500 uppercase tracking-wide">
+              <tr className="text-left text-xs uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", fontFamily: "var(--font-cinzel), serif", color: "#5a5040" }}>
                 <th className="px-4 py-3 w-10 text-center hidden sm:table-cell">Rank</th>
                 <th className="px-4 py-3">Character</th>
                 <th className="px-4 py-3 hidden md:table-cell">Class · Spec</th>
@@ -188,35 +200,36 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
             </thead>
             <tbody>
               {filtered.map((char) => (
-                <tr key={char.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
-                  <td className="px-4 py-3 text-center text-xs text-gray-500 tabular-nums hidden sm:table-cell">
+                <tr key={char.id} className="transition-colors"
+                  style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}
+                  onMouseOver={(e) => (e.currentTarget.style.background = "rgba(200,169,106,0.04)")}
+                  onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}>
+                  <td className="px-4 py-3 text-center text-xs tabular-nums hidden sm:table-cell" style={{ color: "#5a5040" }}>
                     {char.guildRank ?? "—"}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {char.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={char.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover ring-1 ring-gray-700" />
+                        <img src={char.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" style={{ boxShadow: `0 0 0 1px ${classColor(char.class)}40` }} />
                       ) : (
-                        <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ backgroundColor: classColorBg(char.class), color: classColor(char.class) }}
-                      >
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                          style={{ backgroundColor: classColorBg(char.class), color: classColor(char.class) }}>
                           {char.name[0].toUpperCase()}
                         </div>
                       )}
                       <div>
-                        <p className="text-white font-medium text-sm">{char.name}</p>
-                        <p className="text-gray-500 text-xs md:hidden" style={{ color: classColor(char.class) }}>
+                        <p className="font-medium text-sm" style={{ color: "#e8dfc8" }}>{char.name}</p>
+                        <p className="text-xs md:hidden" style={{ color: classColor(char.class) }}>
                           {char.spec ? `${char.spec} ` : ""}{char.class}
                         </p>
-                        <p className="text-gray-500 text-xs hidden md:block">{char.realm.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</p>
+                        <p className="text-xs hidden md:block" style={{ color: "#5a5040" }}>{char.realm.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <span className="text-sm font-medium" style={{ color: classColor(char.class) }}>
-                      {char.spec ? `${char.spec} ` : ""}{char.class && char.class !== "Unknown" ? char.class : <span className="text-gray-600 italic">Unknown</span>}
+                      {char.spec ? `${char.spec} ` : ""}{char.class && char.class !== "Unknown" ? char.class : <span className="italic" style={{ color: "#5a5040" }}>Unknown</span>}
                     </span>
                   </td>
                   <td className={`px-4 py-3 text-sm font-semibold text-right pr-8 tabular-nums hidden sm:table-cell ${iLvlColor(char.itemLevel)}`}>
@@ -225,13 +238,14 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                   <td className="px-4 py-3 pl-4 sm:pl-8">
                     {isOfficer ? (
                       <select value={char.role} onChange={(e) => setRole(char.id, e.target.value as CharRole)}
-                        className="bg-gray-800 border border-gray-700 text-white text-xs rounded px-2 py-1 focus:outline-none focus:border-blue-500">
+                        className="text-xs rounded px-2 py-1 focus:outline-none"
+                        style={{ background: "#161722", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8" }}>
                         <option value="TANK">🛡️ Tank</option>
                         <option value="HEALER">💚 Healer</option>
                         <option value="DPS">⚔️ DPS</option>
                       </select>
                     ) : (
-                      <span className="text-sm text-gray-300">{ROLE_ICON[char.role]}</span>
+                      <span className="text-sm">{ROLE_ICON[char.role]}</span>
                     )}
                   </td>
                 </tr>

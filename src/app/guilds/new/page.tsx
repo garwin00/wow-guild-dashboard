@@ -51,10 +51,10 @@ export default function NewGuildPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 w-full max-w-lg">
-        <h1 className="text-2xl font-bold text-white mb-1">Set up your guild</h1>
-        <p className="text-gray-400 text-sm mb-6">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "#09090e" }}>
+      <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "1rem", padding: "2rem", width: "100%", maxWidth: "32rem" }}>
+        <h1 className="wow-heading text-2xl font-bold mb-1" style={{ color: "#f0c040" }}>Set up your guild</h1>
+        <p style={{ color: "#8a8070", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
           We found the following guilds across your Battle.net characters.
         </p>
 

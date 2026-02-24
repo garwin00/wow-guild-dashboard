@@ -20,44 +20,71 @@ export default function SidebarNav({ navLinks, guildName, realm, region, signOut
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
+  const NavLinks = ({ onClick }: { onClick?: () => void }) => (
+    <>
+      {navLinks.map(({ href, label, icon }) => (
+        <Link
+          key={href}
+          href={href}
+          onClick={onClick}
+          className={`flex items-center gap-3 px-3 py-2 rounded text-sm transition-all ${
+            isActive(href)
+              ? "text-[#f0c040] bg-[rgba(200,169,106,0.12)] border-l-2 border-[#c8a96a] pl-[10px]"
+              : "text-[#8a8070] hover:text-[#e8dfc8] hover:bg-[rgba(200,169,106,0.06)]"
+          }`}
+        >
+          <span className="text-base">{icon}</span>
+          <span style={{ fontFamily: "var(--font-cinzel), serif", fontSize: "0.75rem", letterSpacing: "0.05em" }}>
+            {label}
+          </span>
+        </Link>
+      ))}
+    </>
+  );
+
+  const sidebarStyle = {
+    background: "linear-gradient(180deg, #0f1019 0%, #0a0b12 100%)",
+    borderRight: "1px solid rgba(200,169,106,0.15)",
+  };
+
+  const headerStyle = {
+    borderBottom: "1px solid rgba(200,169,106,0.15)",
+    background: "linear-gradient(to bottom, rgba(200,169,106,0.05), transparent)",
+  };
+
   return (
     <>
       {/* ── Desktop sidebar ── */}
-      <aside className="hidden md:flex w-56 bg-gray-900 border-r border-gray-800 flex-col shrink-0">
-        <div className="p-4 border-b border-gray-800">
-          <p className="text-white font-bold truncate">{guildName}</p>
-          <p className="text-gray-400 text-xs truncate">{realm} · {region.toUpperCase()}</p>
+      <aside className="hidden md:flex w-56 flex-col shrink-0" style={sidebarStyle}>
+        <div className="p-4" style={headerStyle}>
+          {/* Decorative top line */}
+          <div className="wow-divider mb-3" />
+          <p className="text-sm font-semibold truncate" style={{ fontFamily: "var(--font-cinzel), serif", color: "#f0c040", letterSpacing: "0.04em" }}>
+            {guildName}
+          </p>
+          <p className="text-xs truncate mt-0.5" style={{ color: "#5a5040" }}>
+            {realm} · {region.toUpperCase()}
+          </p>
+          <div className="wow-divider mt-3" />
         </div>
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {navLinks.map(({ href, label, icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                isActive(href)
-                  ? "bg-gray-800 text-white"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
-              }`}
-            >
-              <span>{icon}</span>
-              {label}
-            </Link>
-          ))}
+        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+          <NavLinks />
         </nav>
-        <div className="p-3 border-t border-gray-800">{signOutForm}</div>
+        <div className="p-3" style={{ borderTop: "1px solid rgba(200,169,106,0.1)" }}>
+          {signOutForm}
+        </div>
       </aside>
 
       {/* ── Mobile top bar ── */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 h-14">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 h-14"
+        style={{ background: "#0a0b12", borderBottom: "1px solid rgba(200,169,106,0.2)" }}>
         <div>
-          <p className="text-white font-bold text-sm truncate">{guildName}</p>
-          <p className="text-gray-400 text-xs">{realm} · {region.toUpperCase()}</p>
+          <p className="text-sm font-semibold truncate" style={{ fontFamily: "var(--font-cinzel), serif", color: "#f0c040" }}>
+            {guildName}
+          </p>
+          <p className="text-xs" style={{ color: "#5a5040" }}>{realm} · {region.toUpperCase()}</p>
         </div>
-        <button
-          onClick={() => setMobileOpen((o) => !o)}
-          className="p-2 text-gray-300 hover:text-white"
-          aria-label="Toggle menu"
-        >
+        <button onClick={() => setMobileOpen((o) => !o)} className="p-2" style={{ color: "#c8a96a" }} aria-label="Toggle menu">
           {mobileOpen ? (
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -73,28 +100,13 @@ export default function SidebarNav({ navLinks, guildName, realm, region, signOut
       {/* ── Mobile drawer ── */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-30 flex">
-          <div className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col pt-14">
-            <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-              {navLinks.map(({ href, label, icon }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    isActive(href)
-                      ? "bg-gray-800 text-white"
-                      : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                  }`}
-                >
-                  <span>{icon}</span>
-                  {label}
-                </Link>
-              ))}
+          <div className="w-64 flex flex-col pt-14" style={sidebarStyle}>
+            <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+              <NavLinks onClick={() => setMobileOpen(false)} />
             </nav>
-            <div className="p-3 border-t border-gray-800">{signOutForm}</div>
+            <div className="p-3" style={{ borderTop: "1px solid rgba(200,169,106,0.1)" }}>{signOutForm}</div>
           </div>
-          {/* Backdrop */}
-          <div className="flex-1 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className="flex-1 bg-black/70" onClick={() => setMobileOpen(false)} />
         </div>
       )}
     </>

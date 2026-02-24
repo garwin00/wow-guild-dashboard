@@ -33,7 +33,7 @@ export async function POST(req: Request) {
   const { guildSlug } = await req.json();
 
   const membership = await prisma.guildMembership.findFirst({
-    where: { userId: session.user.id, guild: { slug: guildSlug }, role: { in: ["GM", "OFFICER"] } },
+    where: { userId: session.user.id, guild: { slug: guildSlug } },
     include: { guild: true },
   });
   if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 });

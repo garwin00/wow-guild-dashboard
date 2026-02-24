@@ -38,35 +38,33 @@ export default function LogsClient({ reports, guild, guildSlug, isOfficer }: {
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-white">Logs</h1>
+        <h1 className="wow-heading text-3xl font-bold" style={{ color: "#f0c040" }}>Logs</h1>
         {isOfficer && hasWcl && (
-          <button onClick={syncReports} disabled={syncing}
-            className="bg-purple-700 hover:bg-purple-600 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+          <button onClick={syncReports} disabled={syncing} className="wow-btn" style={{ opacity: syncing ? 0.5 : 1 }}>
             {syncing ? "Syncing…" : "↺ Sync from WCL"}
           </button>
         )}
       </div>
 
-      {message && <p className="mb-4 text-sm text-blue-400">{message}</p>}
+      {message && <p className="mb-4 text-sm" style={{ color: "#c8a96a" }}>{message}</p>}
 
       {!hasWcl && isOfficer && (
-        <div className="bg-purple-900/20 border border-purple-700/50 rounded-xl p-5 mb-6">
-          <p className="text-purple-300 font-medium mb-1">Connect Warcraft Logs</p>
-          <p className="text-gray-400 text-sm mb-3">Link your guild&apos;s Warcraft Logs profile in Settings to enable automatic log syncing and parse tracking.</p>
-          <Link href={`/${guildSlug}/settings`}
-            className="inline-block bg-purple-700 hover:bg-purple-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+        <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", borderRadius: "0.5rem", padding: "1.25rem", marginBottom: "1.5rem" }}>
+          <p style={{ color: "#f0c040", fontWeight: 600, marginBottom: "0.25rem" }}>Connect Warcraft Logs</p>
+          <p style={{ color: "#8a8070", fontSize: "0.875rem", marginBottom: "0.75rem" }}>Link your guild&apos;s Warcraft Logs profile in Settings to enable automatic log syncing and parse tracking.</p>
+          <Link href={`/${guildSlug}/settings`} className="wow-btn inline-block">
             Go to Settings →
           </Link>
         </div>
       )}
 
       {reports.length === 0 ? (
-        <p className="text-gray-600 text-sm">{hasWcl ? "No reports synced yet. Click 'Sync from WCL' above." : "No reports yet."}</p>
+        <p style={{ color: "#5a5040", fontSize: "0.875rem" }}>{hasWcl ? "No reports synced yet. Click 'Sync from WCL' above." : "No reports yet."}</p>
       ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "0.5rem", overflow: "hidden" }}>
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-800 text-left text-xs text-gray-500 uppercase tracking-wide">
+              <tr style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", textAlign: "left", fontSize: "0.75rem", fontFamily: "var(--font-cinzel), serif", color: "#5a5040", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Zone</th>
                 <th className="px-4 py-3">Date</th>
@@ -77,20 +75,22 @@ export default function LogsClient({ reports, guild, guildSlug, isOfficer }: {
             </thead>
             <tbody>
               {reports.map((r) => (
-                <tr key={r.id} className="border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors">
+                <tr key={r.id} style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}
+                  onMouseOver={(e) => (e.currentTarget.style.background = "rgba(200,169,106,0.04)")}
+                  onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}>
                   <td className="px-4 py-3">
-                    <p className="text-white text-sm font-medium">{r.title}</p>
-                    <p className="text-gray-600 text-xs font-mono">{r.wclCode}</p>
+                    <p style={{ color: "#e8dfc8", fontSize: "0.875rem", fontWeight: 500 }}>{r.title}</p>
+                    <p style={{ color: "#5a5040", fontSize: "0.75rem", fontFamily: "monospace" }}>{r.wclCode}</p>
                   </td>
-                  <td className="px-4 py-3 text-gray-300 text-sm">{r.zone ?? <span className="text-gray-600 italic">Unknown</span>}</td>
-                  <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">
+                  <td className="px-4 py-3" style={{ color: "#e8dfc8", fontSize: "0.875rem" }}>{r.zone ?? <span style={{ color: "#5a5040", fontStyle: "italic" }}>Unknown</span>}</td>
+                  <td className="px-4 py-3" style={{ color: "#8a8070", fontSize: "0.875rem", whiteSpace: "nowrap" }}>
                     {new Date(r.startTime).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                   </td>
-                  <td className="px-4 py-3 text-gray-400 text-sm text-center">{r.fightCount}</td>
-                  <td className="px-4 py-3 text-gray-400 text-sm text-center">{r._count.parses}</td>
+                  <td className="px-4 py-3 text-center" style={{ color: "#8a8070", fontSize: "0.875rem" }}>{r.fightCount}</td>
+                  <td className="px-4 py-3 text-center" style={{ color: "#8a8070", fontSize: "0.875rem" }}>{r._count.parses}</td>
                   <td className="px-4 py-3 text-right">
                     <a href={`https://www.warcraftlogs.com/reports/${r.wclCode}`} target="_blank" rel="noopener noreferrer"
-                      className="text-purple-400 hover:text-purple-300 text-xs">View on WCL ↗</a>
+                      style={{ color: "#c8a96a", fontSize: "0.75rem" }}>View on WCL ↗</a>
                   </td>
                 </tr>
               ))}

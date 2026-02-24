@@ -35,14 +35,17 @@ export default async function DashboardLayout({ children, params }: Props) {
 
   const signOutForm = (
     <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
-      <button className="w-full text-left px-3 py-2 text-xs text-gray-500 hover:text-gray-300 transition-colors">
-        Sign out
+      <button className="w-full text-left px-3 py-2 text-xs transition-colors"
+        style={{ fontFamily: "var(--font-cinzel), serif", color: "#5a5040", letterSpacing: "0.04em" }}
+        onMouseOver={(e) => (e.currentTarget.style.color = "#c8a96a")}
+        onMouseOut={(e) => (e.currentTarget.style.color = "#5a5040")}>
+        Sign Out
       </button>
     </form>
   );
 
   return (
-    <div className="min-h-screen bg-gray-950 flex">
+    <div className="min-h-screen flex" style={{ background: "#09090e" }}>
       <SidebarNav
         navLinks={navLinks}
         guildName={guild.name}

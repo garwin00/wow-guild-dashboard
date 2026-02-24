@@ -81,16 +81,15 @@ export default function LiveLogsClient({ guildSlug, hasWcl }: { guildSlug: strin
   if (!hasWcl) {
     return (
       <div className="p-8">
-        <h1 className="text-3xl font-bold text-white mb-4">Live Logs</h1>
-        <div className="bg-purple-900/20 border border-purple-700/50 rounded-xl p-6">
-          <p className="text-purple-300 font-medium mb-2">Warcraft Logs not connected</p>
-          <p className="text-gray-400 text-sm mb-1">To enable live log tracking you need two things:</p>
-          <ol className="list-decimal list-inside text-sm text-gray-400 space-y-1 mb-4 ml-1">
-            <li><code className="bg-gray-800 px-1 rounded text-xs">WCL_CLIENT_ID</code> and <code className="bg-gray-800 px-1 rounded text-xs">WCL_CLIENT_SECRET</code> added to <code className="bg-gray-800 px-1 rounded text-xs">.env.local</code> — create a client at <a href="https://www.warcraftlogs.com/api/clients/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">warcraftlogs.com/api/clients ↗</a></li>
-            <li>Your guild name linked in <Link href={`/${guildSlug}/settings`} className="text-purple-400 hover:text-purple-300">Settings</Link></li>
+        <h1 className="wow-heading text-3xl font-bold" style={{ color: "#f0c040", marginBottom: "1rem" }}>Live Logs</h1>
+        <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", borderRadius: "0.5rem", padding: "1.5rem" }}>
+          <p style={{ color: "#f0c040", fontWeight: 600, marginBottom: "0.5rem" }}>Warcraft Logs not connected</p>
+          <p style={{ color: "#8a8070", fontSize: "0.875rem", marginBottom: "0.25rem" }}>To enable live log tracking you need two things:</p>
+          <ol className="list-decimal list-inside space-y-1 mb-4 ml-1" style={{ fontSize: "0.875rem", color: "#8a8070" }}>
+            <li><code style={{ background: "#09090e", border: "1px solid rgba(200,169,106,0.15)", padding: "0 0.25rem", borderRadius: "0.25rem", fontSize: "0.75rem", color: "#c8a96a" }}>WCL_CLIENT_ID</code> and <code style={{ background: "#09090e", border: "1px solid rgba(200,169,106,0.15)", padding: "0 0.25rem", borderRadius: "0.25rem", fontSize: "0.75rem", color: "#c8a96a" }}>WCL_CLIENT_SECRET</code> added to <code style={{ background: "#09090e", border: "1px solid rgba(200,169,106,0.15)", padding: "0 0.25rem", borderRadius: "0.25rem", fontSize: "0.75rem", color: "#c8a96a" }}>.env.local</code> — create a client at <a href="https://www.warcraftlogs.com/api/clients/" target="_blank" rel="noopener noreferrer" style={{ color: "#c8a96a" }}>warcraftlogs.com/api/clients ↗</a></li>
+            <li>Your guild name linked in <Link href={`/${guildSlug}/settings`} style={{ color: "#c8a96a" }}>Settings</Link></li>
           </ol>
-          <Link href={`/${guildSlug}/settings`}
-            className="inline-block bg-purple-700 hover:bg-purple-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+          <Link href={`/${guildSlug}/settings`} className="wow-btn inline-block">
             Go to Settings →
           </Link>
         </div>
@@ -114,63 +113,61 @@ export default function LiveLogsClient({ guildSlug, hasWcl }: { guildSlug: strin
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+          <h1 className="wow-heading text-3xl font-bold flex items-center gap-3" style={{ color: "#f0c040" }}>
             Live Logs
             {active && active.endTime === 0 && (
-              <span className="flex items-center gap-1.5 text-sm font-medium text-red-400 bg-red-900/30 border border-red-800 rounded-full px-3 py-1">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="flex items-center gap-1.5 text-sm font-medium rounded-full px-3 py-1" style={{ color: "#c84040", background: "rgba(200,64,64,0.15)", border: "1px solid rgba(200,64,64,0.4)" }}>
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#c84040" }} />
                 LIVE
               </span>
             )}
           </h1>
           {active && (
-            <p className="text-gray-400 text-sm mt-1">
+            <p style={{ color: "#8a8070", fontSize: "0.875rem", marginTop: "0.25rem" }}>
               {active.zone?.name ?? "Unknown Zone"} · Started {fmtTime(active.startTime)} ·{" "}
               <a href={`https://www.warcraftlogs.com/reports/${active.code}`} target="_blank" rel="noopener noreferrer"
-                className="text-purple-400 hover:text-purple-300">{active.code}</a>
+                style={{ color: "#c8a96a" }}>{active.code}</a>
             </p>
           )}
         </div>
         <div className="flex items-center gap-3">
           {lastRefresh && (
-            <p className="text-gray-600 text-xs">Updated {lastRefresh.toLocaleTimeString("en-GB")}</p>
+            <p style={{ color: "#5a5040", fontSize: "0.75rem" }}>Updated {lastRefresh.toLocaleTimeString("en-GB")}</p>
           )}
-          <button onClick={refresh} disabled={loading}
-            className="bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+          <button onClick={refresh} disabled={loading} className="wow-btn-ghost" style={{ opacity: loading ? 0.5 : 1 }}>
             {loading ? "Refreshing…" : "↺ Refresh"}
           </button>
         </div>
       </div>
 
       {!active ? (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-10 text-center">
+        <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "0.5rem", padding: "2.5rem", textAlign: "center" }}>
           <p className="text-4xl mb-3">🎮</p>
-          <p className="text-gray-300 font-medium">No active raid in progress</p>
-          <p className="text-gray-500 text-sm mt-1">Start the WarcraftLogs Uploader and begin logging to see live data here.</p>
-          <p className="text-gray-600 text-xs mt-3">This page auto-refreshes every 30s once a log is detected.</p>
+          <p style={{ color: "#e8dfc8", fontWeight: 500 }}>No active raid in progress</p>
+          <p style={{ color: "#5a5040", fontSize: "0.875rem", marginTop: "0.25rem" }}>Start the WarcraftLogs Uploader and begin logging to see live data here.</p>
+          <p style={{ color: "#5a5040", fontSize: "0.75rem", marginTop: "0.75rem" }}>This page auto-refreshes every 30s once a log is detected.</p>
         </div>
       ) : (
         <div className="space-y-6">
           {/* Current fight */}
           {currentFight && (
-            <div className="bg-red-900/20 border border-red-800/60 rounded-xl p-5">
+            <div style={{ background: "rgba(200,64,64,0.12)", border: "1px solid rgba(200,64,64,0.35)", borderRadius: "0.75rem", padding: "1.25rem" }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-red-400 uppercase tracking-widest mb-1">In Progress</p>
-                  <p className="text-white font-bold text-xl">{currentFight.name}</p>
-                  <p className="text-gray-400 text-sm">{DIFFICULTY[currentFight.difficulty ?? 0] ?? "Unknown"} · {playerCount} players</p>
+                  <p style={{ fontSize: "0.75rem", color: "#c84040", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.25rem", fontFamily: "var(--font-cinzel), serif" }}>In Progress</p>
+                  <p style={{ color: "#e8dfc8", fontWeight: 700, fontSize: "1.25rem" }}>{currentFight.name}</p>
+                  <p style={{ color: "#8a8070", fontSize: "0.875rem" }}>{DIFFICULTY[currentFight.difficulty ?? 0] ?? "Unknown"} · {playerCount} players</p>
                 </div>
                 {currentFight.bossPercentage != null && (
                   <div className="text-right">
-                    <p className="text-3xl font-bold text-red-400">{currentFight.bossPercentage.toFixed(1)}%</p>
-                    <p className="text-gray-500 text-xs">boss HP</p>
+                    <p style={{ fontSize: "1.875rem", fontWeight: 700, color: "#c84040" }}>{currentFight.bossPercentage.toFixed(1)}%</p>
+                    <p style={{ color: "#5a5040", fontSize: "0.75rem" }}>boss HP</p>
                   </div>
                 )}
               </div>
               {currentFight.bossPercentage != null && (
-                <div className="mt-3 bg-gray-800 rounded-full h-2">
-                  <div className="bg-red-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${currentFight.bossPercentage}%` }} />
+                <div className="mt-3 rounded-full h-2" style={{ background: "#09090e" }}>
+                  <div className="h-2 rounded-full transition-all duration-500" style={{ width: `${currentFight.bossPercentage}%`, background: "#c84040" }} />
                 </div>
               )}
             </div>
@@ -178,13 +175,13 @@ export default function LiveLogsClient({ guildSlug, hasWcl }: { guildSlug: strin
 
           {/* Boss attempt history */}
           {Object.keys(byBoss).length > 0 && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-800">
-                <h2 className="text-white font-semibold">Attempt History</h2>
+            <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "0.5rem", overflow: "hidden" }}>
+              <div className="px-5 py-3" style={{ borderBottom: "1px solid rgba(200,169,106,0.15)" }}>
+                <h2 style={{ color: "#e8dfc8", fontWeight: 600 }}>Attempt History</h2>
               </div>
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-800 text-left text-xs text-gray-500 uppercase tracking-wide">
+                  <tr style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", textAlign: "left", fontSize: "0.75rem", fontFamily: "var(--font-cinzel), serif", color: "#5a5040", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     <th className="px-4 py-3">Boss</th>
                     <th className="px-4 py-3">Difficulty</th>
                     <th className="px-4 py-3 text-center">Attempts</th>
@@ -199,19 +196,21 @@ export default function LiveLogsClient({ guildSlug, hasWcl }: { guildSlug: strin
                     const last = attempts[attempts.length - 1];
                     const duration = last.endTime - last.startTime;
                     return (
-                      <tr key={bossName} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                        <td className="px-4 py-3 text-white font-medium text-sm">{bossName}</td>
-                        <td className="px-4 py-3 text-gray-400 text-sm">{DIFFICULTY[last.difficulty ?? 0] ?? "?"}</td>
+                      <tr key={bossName} style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}
+                        onMouseOver={(e) => (e.currentTarget.style.background = "rgba(200,169,106,0.04)")}
+                        onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}>
+                        <td className="px-4 py-3" style={{ color: "#e8dfc8", fontWeight: 500, fontSize: "0.875rem" }}>{bossName}</td>
+                        <td className="px-4 py-3" style={{ color: "#8a8070", fontSize: "0.875rem" }}>{DIFFICULTY[last.difficulty ?? 0] ?? "?"}</td>
                         <td className="px-4 py-3 text-center">
-                          <span className="text-gray-300 text-sm">{attempts.length}</span>
+                          <span style={{ color: "#e8dfc8", fontSize: "0.875rem" }}>{attempts.length}</span>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className={`text-sm font-semibold ${(best.bossPercentage ?? 100) <= 5 ? "text-orange-400" : (best.bossPercentage ?? 100) <= 20 ? "text-yellow-400" : "text-gray-300"}`}>
+                          <span style={{ fontSize: "0.875rem", fontWeight: 600, color: (best.bossPercentage ?? 100) <= 5 ? "#f0c040" : (best.bossPercentage ?? 100) <= 20 ? "#c8a96a" : "#e8dfc8" }}>
                             {best.bossPercentage != null ? `${best.bossPercentage.toFixed(1)}%` : "—"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-gray-400 text-sm">{fmtTime(last.startTime)}</td>
-                        <td className="px-4 py-3 text-center text-gray-400 text-sm tabular-nums">{fmtDuration(duration)}</td>
+                        <td className="px-4 py-3" style={{ color: "#8a8070", fontSize: "0.875rem" }}>{fmtTime(last.startTime)}</td>
+                        <td className="px-4 py-3 text-center tabular-nums" style={{ color: "#8a8070", fontSize: "0.875rem" }}>{fmtDuration(duration)}</td>
                       </tr>
                     );
                   })}
@@ -222,11 +221,11 @@ export default function LiveLogsClient({ guildSlug, hasWcl }: { guildSlug: strin
 
           {/* Player list */}
           {report?.masterData?.actors && report.masterData.actors.length > 0 && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h2 className="text-white font-semibold mb-3">Raiders Online ({playerCount})</h2>
+            <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "0.5rem", padding: "1.25rem" }}>
+              <h2 style={{ color: "#e8dfc8", fontWeight: 600, marginBottom: "0.75rem" }}>Raiders Online ({playerCount})</h2>
               <div className="flex flex-wrap gap-2">
                 {report.masterData.actors.map((actor) => (
-                  <span key={actor.id} className="text-xs px-2 py-1 rounded bg-gray-800 text-gray-300">{actor.name}</span>
+                  <span key={actor.id} className="text-xs px-2 py-1 rounded" style={{ background: "#09090e", border: "1px solid rgba(200,169,106,0.15)", color: "#e8dfc8" }}>{actor.name}</span>
                 ))}
               </div>
             </div>
