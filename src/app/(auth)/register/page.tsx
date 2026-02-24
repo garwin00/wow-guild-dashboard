@@ -22,10 +22,18 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error); setLoading(false); return; }
-    } catch {
-      setError("Registration failed. Please try again.");
+      let data: { error?: string; ok?: boolean } = {};
+      try { data = await res.json(); } catch { /* non-JSON response */ }
+      if (!res.ok) {
+        // If account already exists, just fall through to sign in
+        if (res.status !== 409) {
+          setError(data.error ?? `Server error (${res.status}). Please try again.`);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch (err) {
+      setError(`Network error: ${err instanceof Error ? err.message : "Please try again."}`);
       setLoading(false);
       return;
     }
