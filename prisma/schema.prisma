@@ -29,6 +29,7 @@ model User {
   officerNotesAbout   OfficerNote[]       @relation("OfficerNoteTarget")
   officerNotesWritten OfficerNote[]       @relation("OfficerNoteAuthor")
   absenceNotices      AbsenceNotice[]
+  announcements       Announcement[]
 }
 
 model PasswordResetToken {
@@ -99,6 +100,7 @@ model Guild {
   mythicScores   MythicPlusScore[]
   officerNotes   OfficerNote[]
   absenceNotices AbsenceNotice[]
+  announcements  Announcement[]
 }
 
 model GuildMembership {
@@ -307,4 +309,19 @@ model AbsenceNotice {
 
   guild       Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Announcement {
+  id          String    @id @default(cuid())
+  guildId     String
+  authorId    String
+  title       String
+  body        String    @db.Text
+  pinned      Boolean   @default(false)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  guild       Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }

@@ -40,7 +40,7 @@ export default function RegisterPage() {
 
     // Sign in separately — NextAuth v5 signIn throws on failure
     try {
-      await signIn("credentials", { email, password, redirectTo: "/guilds/new" });
+      await signIn("credentials", { email, password, redirectTo: "/onboarding" });
     } catch (err) {
       // NextAuth v5 throws a redirect on success — that's expected
       if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) return;

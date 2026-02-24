@@ -34,6 +34,11 @@ interface RaidEvent {
   signups: Signup[];
 }
 interface MySignup { id: string; status: string; characterName: string | null; raidEventId: string; }
+interface Announcement {
+  id: string; title: string; body: string; pinned: boolean;
+  expiresAt: string | null; createdAt: string;
+  author: { name: string | null; email: string };
+}
 
 interface Props {
   guild: { name: string; realm: string; region: string; slug: string };
@@ -43,6 +48,8 @@ interface Props {
   mySignup: MySignup | null;
   upcomingRaids: RaidEvent[];
   progression: RioRaidTier[] | null;
+  announcements: Announcement[];
+  isOfficer: boolean;
 }
 
 function RoleBar({ signups }: { signups: Signup[] }) {
@@ -68,7 +75,7 @@ function RoleBar({ signups }: { signups: Signup[] }) {
   );
 }
 
-export default function OverviewClient({ guild, memberRole, rosterCount, myCharacters, mySignup, upcomingRaids, progression }: Props) {
+export default function OverviewClient({ guild, memberRole, rosterCount, myCharacters, mySignup, upcomingRaids, progression, announcements: initialAnnouncements, isOfficer }: Props) {
   const router = useRouter();
   const [modal, setModal] = useState<{ type: "signups"; raid: RaidEvent } | null>(null);
   const [linkStatus, setLinkStatus] = useState<string | null>(null);
@@ -81,6 +88,12 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
   const [absenceForm, setAbsenceForm] = useState({ startDate: "", endDate: "", reason: "" });
   const [absenceStatus, setAbsenceStatus] = useState<string | null>(null);
   const [submittingAbsence, setSubmittingAbsence] = useState(false);
+
+  // Announcements
+  const [announcements, setAnnouncements] = useState(initialAnnouncements);
+  const [showAnnForm, setShowAnnForm] = useState(false);
+  const [annForm, setAnnForm] = useState({ title: "", body: "", pinned: false, expiresAt: "" });
+  const [savingAnn, setSavingAnn] = useState(false);
 
   async function submitAbsence(e: React.FormEvent) {
     e.preventDefault();
@@ -98,6 +111,36 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
       setAbsenceStatus(d.error ?? "Failed to submit");
     }
     setSubmittingAbsence(false);
+  }
+
+  async function postAnnouncement(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingAnn(true);
+    const res = await fetch("/api/announcements", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guildSlug: guild.slug, ...annForm, expiresAt: annForm.expiresAt || null }),
+    });
+    if (res.ok) {
+      const ann = await res.json();
+      setAnnouncements(prev => [ann, ...prev].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      setAnnForm({ title: "", body: "", pinned: false, expiresAt: "" });
+      setShowAnnForm(false);
+    }
+    setSavingAnn(false);
+  }
+
+  async function deleteAnnouncement(id: string) {
+    await fetch(`/api/announcements?id=${id}`, { method: "DELETE" });
+    setAnnouncements(prev => prev.filter(a => a.id !== id));
+  }
+
+  async function togglePin(id: string, pinned: boolean) {
+    await fetch(`/api/announcements?id=${id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pinned: !pinned }),
+    });
+    setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, pinned: !pinned } : a)
+      .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
   }
 
   const nextRaid = upcomingRaids[0] ?? null;
@@ -180,6 +223,84 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
       {linkStatus && (
         <div className="mb-4 px-4 py-2 rounded text-sm" style={{ background: "rgba(var(--wow-primary-rgb),0.08)", border: "1px solid rgba(var(--wow-primary-rgb),0.25)", color: "var(--wow-gold)" }}>
           ✓ {linkStatus}
+        </div>
+      )}
+
+      {/* Announcements Bulletin Board */}
+      {(announcements.length > 0 || isOfficer) && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs uppercase tracking-widest" style={{ color: "var(--wow-text-faint)" }}>📢 Guild Announcements</p>
+            {isOfficer && (
+              <button onClick={() => setShowAnnForm(f => !f)} className="text-xs px-3 py-1 rounded transition-all"
+                style={{ background: "rgba(var(--wow-primary-rgb),0.08)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-gold)" }}>
+                {showAnnForm ? "Cancel" : "+ Post"}
+              </button>
+            )}
+          </div>
+
+          {showAnnForm && (
+            <form onSubmit={postAnnouncement} className="rounded-lg p-4 mb-3 space-y-3"
+              style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+              <input required value={annForm.title} onChange={e => setAnnForm(f => ({ ...f, title: e.target.value }))}
+                placeholder="Title…" className="w-full rounded px-3 py-2 text-sm focus:outline-none"
+                style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+              <textarea required value={annForm.body} onChange={e => setAnnForm(f => ({ ...f, body: e.target.value }))}
+                placeholder="Announcement body…" rows={3} className="w-full rounded px-3 py-2 text-sm focus:outline-none resize-none"
+                style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+              <div className="flex items-center gap-4 flex-wrap">
+                <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "var(--wow-text-muted)" }}>
+                  <input type="checkbox" checked={annForm.pinned} onChange={e => setAnnForm(f => ({ ...f, pinned: e.target.checked }))} />
+                  Pin to top
+                </label>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Expires:</label>
+                  <input type="date" value={annForm.expiresAt} onChange={e => setAnnForm(f => ({ ...f, expiresAt: e.target.value }))}
+                    className="rounded px-2 py-1 text-xs focus:outline-none"
+                    style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+                </div>
+                <button type="submit" disabled={savingAnn} className="wow-btn ml-auto" style={{ opacity: savingAnn ? 0.5 : 1 }}>
+                  {savingAnn ? "Posting…" : "Post"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {announcements.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--wow-text-faint)" }}>No announcements.</p>
+          ) : (
+            <div className="space-y-2">
+              {announcements.map(ann => (
+                <div key={ann.id} className="rounded-lg px-4 py-3"
+                  style={{
+                    background: ann.pinned ? "rgba(var(--wow-primary-rgb),0.08)" : "var(--wow-surface)",
+                    border: ann.pinned ? "1px solid rgba(var(--wow-primary-rgb),0.35)" : "1px solid rgba(var(--wow-primary-rgb),0.12)",
+                  }}>
+                  <div className="flex items-start gap-2">
+                    {ann.pinned && <span className="text-xs mt-0.5 shrink-0" style={{ color: "var(--wow-gold)" }}>📌</span>}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm" style={{ color: "var(--wow-text)" }}>{ann.title}</p>
+                      <p className="text-sm mt-0.5 whitespace-pre-wrap" style={{ color: "var(--wow-text-muted)" }}>{ann.body}</p>
+                      <p className="text-[11px] mt-1.5" style={{ color: "var(--wow-text-faint)" }}>
+                        {ann.author.name ?? ann.author.email} · {new Date(ann.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                        {ann.expiresAt && ` · expires ${new Date(ann.expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
+                      </p>
+                    </div>
+                    {isOfficer && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => togglePin(ann.id, ann.pinned)} title={ann.pinned ? "Unpin" : "Pin"}
+                          className="text-xs opacity-50 hover:opacity-100 transition-opacity" style={{ color: "var(--wow-gold)" }}>
+                          {ann.pinned ? "📌" : "📍"}
+                        </button>
+                        <button onClick={() => deleteAnnouncement(ann.id)} title="Delete"
+                          className="text-xs opacity-40 hover:opacity-100 transition-opacity" style={{ color: "#e53e3e" }}>✕</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -19,7 +19,7 @@ export default async function OverviewPage({ params }: Props) {
   });
   if (!membership) redirect("/");
 
-  const [upcomingRaids, rosterCount, myCharacters, progression] = await Promise.all([
+  const [upcomingRaids, rosterCount, myCharacters, progression, announcements] = await Promise.all([
     prisma.raidEvent.findMany({
       where: { guildId: membership.guild.id, status: "OPEN", scheduledAt: { gte: new Date() } },
       orderBy: { scheduledAt: "asc" },
@@ -39,6 +39,15 @@ export default async function OverviewPage({ params }: Props) {
       select: { id: true, name: true, class: true, spec: true, role: true, isMain: true },
     }),
     getGuildProgression(membership.guild.region, membership.guild.realm, membership.guild.name),
+    prisma.announcement.findMany({
+      where: {
+        guildId: membership.guild.id,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+      include: { author: { select: { name: true, email: true } } },
+      orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
+      take: 10,
+    }),
   ]);
 
   const nextRaid = upcomingRaids[0] ?? null;
@@ -82,6 +91,16 @@ export default async function OverviewPage({ params }: Props) {
         })),
       }))}
       progression={progression}
+      announcements={announcements.map(a => ({
+        id: a.id,
+        title: a.title,
+        body: a.body,
+        pinned: a.pinned,
+        expiresAt: a.expiresAt?.toISOString() ?? null,
+        createdAt: a.createdAt.toISOString(),
+        author: { name: a.author.name, email: a.author.email ?? "" },
+      }))}
+      isOfficer={["GM", "OFFICER"].includes(membership.role)}
     />
   );
 }
