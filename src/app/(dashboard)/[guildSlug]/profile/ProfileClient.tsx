@@ -121,7 +121,7 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
       </div>
 
       {/* Set as main — subtle link-style */}
-      {!isMain && !editing && (
+      {!isMain && (
         <button onClick={onSetMain} disabled={pending}
           className="w-full py-2 text-xs transition-colors"
           style={{
