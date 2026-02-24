@@ -10,6 +10,8 @@ function chunk<T>(arr: T[], n: number): T[][] {
   return out;
 }
 
+type CharRow = { id: string; name: string; realm: string; region: string };
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,14 +25,14 @@ export async function POST(req: NextRequest) {
   const characters = await prisma.character.findMany({
     where: { guildId: guild.id },
     select: { id: true, name: true, realm: true, region: true },
-  });
+  }) satisfies { id: string; name: string; realm: string; region: string }[];
 
   let synced = 0;
   let failed = 0;
 
-  for (const batch of chunk(characters, 10)) {
+  for (const batch of chunk<CharRow>(characters, 10)) {
     await Promise.all(
-      batch.map(async (char) => {
+      batch.map(async (char: CharRow) => {
         try {
           const profile = await getCharacterMythicPlus(char.region, char.realm, char.name);
           if (!profile) { failed++; return; }
