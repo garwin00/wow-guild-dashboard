@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,15 +21,19 @@ export async function POST(req: NextRequest) {
     }
 
     const hashed = await bcrypt.hash(password, 10); // 10 rounds — faster on serverless
+    const name = email.split("@")[0];
     await prisma.user.create({
       data: {
         email,
         password: hashed,
         bnetId: `email:${email}`,
-        battletag: email.split("@")[0],
-        name: email.split("@")[0],
+        battletag: name,
+        name,
       },
     });
+
+    // Fire-and-forget — don't fail registration if email errors
+    sendWelcomeEmail(email, name).catch(err => console.error("[register] welcome email failed:", err));
 
     return NextResponse.json({ ok: true });
   } catch (err) {
