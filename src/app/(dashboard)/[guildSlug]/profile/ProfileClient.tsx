@@ -88,39 +88,40 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
           style={{ background: "rgba(0,0,0,0.6)", color: "#e06060" }}>✕</button>
       </div>
 
-      {/* Avatar + name */}
-      <div className="flex items-center gap-3 p-3 pr-12">
+      {/* Two-column: avatar | data */}
+      <div className="flex items-start gap-3 p-3 pr-12">
+        {/* Col 1 — avatar */}
         {char.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={char.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover shrink-0"
+          <img src={char.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover shrink-0 mt-0.5"
             style={{ boxShadow: `0 0 0 2px ${color}60` }} />
         ) : (
-          <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
+          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 mt-0.5"
             style={{ background: `${color}20`, color }}>
             {char.name[0].toUpperCase()}
           </div>
         )}
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
+
+        {/* Col 2 — name, spec/class, stats */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 mb-0.5">
             <p className="font-semibold text-sm truncate" style={{ color }}>{char.name}</p>
             {isMain && <span className="text-xs px-1 py-0.5 rounded shrink-0" style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}>Main</span>}
           </div>
-          <p className="text-xs truncate" style={{ color: "var(--wow-text-muted)" }}>
+          <p className="text-xs truncate mb-1.5" style={{ color: "var(--wow-text-muted)" }}>
             {char.spec ? `${char.spec} ` : ""}{char.class}
           </p>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-bold tabular-nums" style={{ color: char.itemLevel ? "var(--wow-text)" : "var(--wow-text-faint)" }}>
+              {char.itemLevel ?? "—"}
+              <span className="text-xs font-normal ml-0.5" style={{ color: "var(--wow-text-muted)" }}>iLvl</span>
+            </span>
+            <span className="text-sm font-bold tabular-nums" style={{ color: (char.mythicScore && char.mythicScore > 0) ? scoreColor(char.mythicScore) : "var(--wow-text-faint)" }}>
+              {(char.mythicScore && char.mythicScore > 0) ? char.mythicScore.toFixed(0) : "—"}
+              <span className="text-xs font-normal ml-0.5" style={{ color: "var(--wow-text-muted)" }}>M+</span>
+            </span>
+          </div>
         </div>
-      </div>
-
-      {/* Stats — always visible */}
-      <div className="flex items-center gap-4 px-3 pb-3">
-        <span className="text-sm font-bold" style={{ color: char.itemLevel ? "var(--wow-text)" : "var(--wow-text-faint)" }}>
-          {char.itemLevel ?? "—"}
-          <span className="text-xs font-normal ml-0.5" style={{ color: "var(--wow-text-muted)" }}>iLvl</span>
-        </span>
-        <span className="text-sm font-bold" style={{ color: (char.mythicScore && char.mythicScore > 0) ? scoreColor(char.mythicScore) : "var(--wow-text-faint)" }}>
-          {(char.mythicScore && char.mythicScore > 0) ? char.mythicScore.toFixed(0) : "—"}
-          <span className="text-xs font-normal ml-0.5" style={{ color: "var(--wow-text-muted)" }}>M+</span>
-        </span>
       </div>
 
       {/* Edit inline form */}
