@@ -84,7 +84,11 @@ export default function LiveLogsClient({ guildSlug, hasWcl }: { guildSlug: strin
         <h1 className="text-3xl font-bold text-white mb-4">Live Logs</h1>
         <div className="bg-purple-900/20 border border-purple-700/50 rounded-xl p-6">
           <p className="text-purple-300 font-medium mb-2">Warcraft Logs not connected</p>
-          <p className="text-gray-400 text-sm mb-4">Link your guild's WCL profile in Settings to enable live log tracking.</p>
+          <p className="text-gray-400 text-sm mb-1">To enable live log tracking you need two things:</p>
+          <ol className="list-decimal list-inside text-sm text-gray-400 space-y-1 mb-4 ml-1">
+            <li><code className="bg-gray-800 px-1 rounded text-xs">WCL_CLIENT_ID</code> and <code className="bg-gray-800 px-1 rounded text-xs">WCL_CLIENT_SECRET</code> added to <code className="bg-gray-800 px-1 rounded text-xs">.env.local</code> — create a client at <a href="https://www.warcraftlogs.com/api/clients/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">warcraftlogs.com/api/clients ↗</a></li>
+            <li>Your guild name linked in <Link href={`/${guildSlug}/settings`} className="text-purple-400 hover:text-purple-300">Settings</Link></li>
+          </ol>
           <Link href={`/${guildSlug}/settings`}
             className="inline-block bg-purple-700 hover:bg-purple-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
             Go to Settings →

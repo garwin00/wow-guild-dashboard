@@ -56,15 +56,58 @@ export default function SettingsClient({ guild, members: initial, isGm }: {
 
       {/* Warcraft Logs */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <h2 className="text-white font-semibold mb-1">Warcraft Logs</h2>
-        <p className="text-gray-500 text-xs mb-4">Link your guild&apos;s WCL profile to enable automatic log syncing.</p>
+        <div className="flex items-center gap-2 mb-1">
+          <h2 className="text-white font-semibold">Warcraft Logs</h2>
+          {guild.wclGuildId && (
+            <span className="text-xs bg-green-900/40 text-green-400 border border-green-800 rounded-full px-2 py-0.5">Connected</span>
+          )}
+        </div>
+
+        {/* Step-by-step instructions */}
+        <div className="mb-4 space-y-2 text-sm text-gray-400">
+          <p>To link your guild, find your guild name on Warcraft Logs:</p>
+          <ol className="list-decimal list-inside space-y-1.5 text-gray-400 ml-1">
+            <li>
+              Go to{" "}
+              <a href={`https://www.warcraftlogs.com/guild/eu/${guild.realm.toLowerCase().replace(/\s+/g, "-")}/${guild.name.toLowerCase().replace(/\s+/g, "-")}`}
+                target="_blank" rel="noopener noreferrer"
+                className="text-purple-400 hover:text-purple-300 underline underline-offset-2">
+                your guild&apos;s WCL page ↗
+              </a>{" "}
+              (auto-linked for {guild.name}–{guild.realm})
+            </li>
+            <li>
+              The URL will look like{" "}
+              <code className="text-gray-300 bg-gray-800 px-1.5 py-0.5 rounded text-xs">
+                warcraftlogs.com/guild/<span className="text-purple-300">eu</span>/<span className="text-purple-300">kazzak</span>/<span className="text-purple-300">your-guild-name</span>
+              </code>
+            </li>
+            <li>
+              Enter <strong className="text-gray-200">exactly the guild name</strong> as it appears in that URL (lowercase, hyphens for spaces) in the field below
+            </li>
+          </ol>
+          <p className="text-gray-500 text-xs mt-2">
+            This is used to fetch reports and enable live log tracking. You also need{" "}
+            <code className="bg-gray-800 px-1 rounded">WCL_CLIENT_ID</code> and{" "}
+            <code className="bg-gray-800 px-1 rounded">WCL_CLIENT_SECRET</code> set in your <code className="bg-gray-800 px-1 rounded">.env.local</code> — get them at{" "}
+            <a href="https://www.warcraftlogs.com/api/clients/" target="_blank" rel="noopener noreferrer"
+              className="text-purple-400 hover:text-purple-300">warcraftlogs.com/api/clients ↗</a>.
+          </p>
+        </div>
+
         <form onSubmit={saveWcl} className="flex gap-3">
-          <input value={wclId} onChange={(e) => setWclId(e.target.value)} placeholder="WCL Guild ID or slug"
-            className="flex-1 bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500" />
+          <input value={wclId} onChange={(e) => setWclId(e.target.value)}
+            placeholder={`e.g. ${guild.name.toLowerCase().replace(/\s+/g, "-")}`}
+            className="flex-1 bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 font-mono" />
           <button type="submit" disabled={saving} className="bg-purple-700 hover:bg-purple-600 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
             {saving ? "Saving…" : "Save"}
           </button>
         </form>
+        {guild.wclGuildId && (
+          <p className="text-gray-500 text-xs mt-2">
+            Currently linked to: <code className="text-purple-400">{guild.wclGuildId}</code>
+          </p>
+        )}
         {message && <p className="text-xs text-green-400 mt-2">{message}</p>}
       </div>
 
