@@ -18,12 +18,12 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#09090e" }}>
-      <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "1rem", padding: "2.5rem", width: "100%", maxWidth: "28rem" }}>
-        <h1 className="wow-heading text-2xl font-bold" style={{ color: "#f0c040", marginBottom: "1.5rem" }}>Your Guilds</h1>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--wow-bg)" }}>
+      <div style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)", borderRadius: "1rem", padding: "2.5rem", width: "100%", maxWidth: "28rem" }}>
+        <h1 className="wow-heading text-2xl font-bold" style={{ color: "var(--wow-gold-bright)", marginBottom: "1.5rem" }}>Your Guilds</h1>
         {memberships.length === 0 ? (
           <div className="text-center py-8">
-            <p style={{ color: "#8a8070", marginBottom: "1rem" }}>You&apos;re not in any guilds yet.</p>
+            <p style={{ color: "var(--wow-text-muted)", marginBottom: "1rem" }}>You&apos;re not in any guilds yet.</p>
             <Link href="/guilds/new" className="wow-btn">
               Create a Guild
             </Link>
@@ -35,15 +35,15 @@ export default async function HomePage() {
                 <Link
                   href={`/${guild.slug}/overview`}
                   className="flex items-center justify-between rounded-lg px-4 py-3 transition-colors"
-                  style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "0.5rem" }}
-                  onMouseOver={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "rgba(200,169,106,0.04)"; }}
-                  onMouseOut={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "#0f1019"; }}
+                  style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)", borderRadius: "0.5rem" }}
+                  onMouseOver={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "rgba(var(--wow-primary-rgb),0.04)"; }}
+                  onMouseOut={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--wow-surface)"; }}
                 >
                   <div>
-                    <p style={{ color: "#e8dfc8", fontWeight: 500 }}>{guild.name}</p>
-                    <p style={{ color: "#8a8070", fontSize: "0.875rem" }}>{guild.realm} · {guild.region.toUpperCase()}</p>
+                    <p style={{ color: "var(--wow-text)", fontWeight: 500 }}>{guild.name}</p>
+                    <p style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem" }}>{guild.realm} · {guild.region.toUpperCase()}</p>
                   </div>
-                  <span style={{ fontSize: "0.75rem", color: "#5a5040", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "inherit" }}>{role}</span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--wow-text-faint)", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "inherit" }}>{role}</span>
                 </Link>
               </li>
             ))}
@@ -51,7 +51,7 @@ export default async function HomePage() {
               <Link
                 href="/guilds/new"
                 className="block text-center text-sm transition-colors"
-                style={{ color: "#c8a96a" }}
+                style={{ color: "var(--wow-gold)" }}
               >
                 + Create another guild
               </Link>

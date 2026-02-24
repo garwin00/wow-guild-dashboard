@@ -19,8 +19,8 @@ interface Props {
 const THEME_SIDEBAR: Record<string, { bg: string; border: string; headerBg: string }> = {
   default: {
     bg: "linear-gradient(180deg, #0f1019 0%, #0a0b12 100%)",
-    border: "1px solid rgba(200,169,106,0.15)",
-    headerBg: "linear-gradient(to bottom, rgba(200,169,106,0.05), transparent)",
+    border: "1px solid rgba(var(--wow-primary-rgb),0.15)",
+    headerBg: "linear-gradient(to bottom, rgba(var(--wow-primary-rgb),0.05), transparent)",
   },
   horde: {
     bg: "linear-gradient(180deg, #140808 0%, #0d0505 100%)",
@@ -41,9 +41,9 @@ export default function SidebarNav({ navLinks, guildName, realm, region, guildIm
   const t = THEME_SIDEBAR[theme] ?? THEME_SIDEBAR.default;
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
-  const activeColor = theme === "horde" ? "#ff4422" : theme === "alliance" ? "#7ab8f5" : "#f0c040";
-  const activeBg = theme === "horde" ? "rgba(139,26,26,0.15)" : theme === "alliance" ? "rgba(26,82,150,0.15)" : "rgba(200,169,106,0.12)";
-  const activeBorder = theme === "horde" ? "#8b1a1a" : theme === "alliance" ? "#1a5296" : "#c8a96a";
+  const activeColor = theme === "horde" ? "#ff4422" : theme === "alliance" ? "#7ab8f5" : "var(--wow-gold-bright)";
+  const activeBg = theme === "horde" ? "rgba(139,26,26,0.15)" : theme === "alliance" ? "rgba(26,82,150,0.15)" : "rgba(var(--wow-primary-rgb),0.12)";
+  const activeBorder = theme === "horde" ? "#8b1a1a" : theme === "alliance" ? "#1a5296" : "var(--wow-gold)";
 
   const GuildHeader = () => (
     <div className="p-4" style={{ borderBottom: t.border, background: t.headerBg }}>

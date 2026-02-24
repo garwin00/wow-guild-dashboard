@@ -17,7 +17,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
     to: email,
     subject: "Welcome to ZugZug Guild Dashboard",
     html: `
-      <div style="background:#09090e;color:#e8dfc8;font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid rgba(200,169,106,0.2);border-radius:8px;">
+      <div style="background:#09090e;color:#e8dfc8;font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid rgba(var(--wow-primary-rgb),0.2);border-radius:8px;">
         <h1 style="color:#f0c040;font-size:1.5rem;margin-bottom:8px;">⚔️ ZugZug Guild Dashboard</h1>
         <div style="height:1px;background:linear-gradient(to right,transparent,#c8a96a,transparent);margin-bottom:24px;"></div>
         <p style="margin-bottom:8px;">Welcome, <strong style="color:#c8a96a;">${name}</strong>!</p>
@@ -48,7 +48,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     to: email,
     subject: "Reset your ZugZug password",
     html: `
-      <div style="background:#09090e;color:#e8dfc8;font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid rgba(200,169,106,0.2);border-radius:8px;">
+      <div style="background:#09090e;color:#e8dfc8;font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid rgba(var(--wow-primary-rgb),0.2);border-radius:8px;">
         <h1 style="color:#f0c040;font-size:1.5rem;margin-bottom:8px;">⚔️ ZugZug Guild Dashboard</h1>
         <div style="height:1px;background:linear-gradient(to right,transparent,#c8a96a,transparent);margin-bottom:24px;"></div>
         <p style="margin-bottom:16px;">A password reset was requested for your account.</p>

@@ -9,17 +9,17 @@ export default function GlobalError({
 }) {
   return (
     <html lang="en">
-      <body style={{ background: "#09090e", color: "#e8dfc8", fontFamily: "system-ui, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", margin: 0 }}>
+      <body style={{ background: "var(--wow-bg)", color: "var(--wow-text)", fontFamily: "system-ui, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", margin: 0 }}>
         <div style={{ textAlign: "center", padding: "2rem", maxWidth: "32rem" }}>
           <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>⚠️</div>
-          <h2 style={{ color: "#f0c040", marginBottom: "0.5rem", fontSize: "1.25rem" }}>Something went wrong</h2>
+          <h2 style={{ color: "var(--wow-gold-bright)", marginBottom: "0.5rem", fontSize: "1.25rem" }}>Something went wrong</h2>
           {error?.message && (
-            <p style={{ color: "#8a8070", fontSize: "0.875rem", marginBottom: "1rem", wordBreak: "break-all" }}>
+            <p style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem", marginBottom: "1rem", wordBreak: "break-all" }}>
               {error.message}
             </p>
           )}
           {error?.digest && (
-            <p style={{ color: "#5a5040", fontSize: "0.75rem", marginBottom: "1rem" }}>Digest: {error.digest}</p>
+            <p style={{ color: "var(--wow-text-faint)", fontSize: "0.75rem", marginBottom: "1rem" }}>Digest: {error.digest}</p>
           )}
           <button
             onClick={reset}

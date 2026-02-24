@@ -12,20 +12,20 @@ interface Props {
 }
 
 const inputStyle = {
-  background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)",
-  color: "#e8dfc8", borderRadius: "0.375rem",
+  background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)",
+  color: "var(--wow-text)", borderRadius: "0.375rem",
   padding: "0.5rem 0.75rem", width: "100%", fontSize: "0.875rem", outline: "none",
 };
 const labelStyle = {
   display: "block", fontSize: "0.75rem", marginBottom: "0.375rem",
-  textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "#5a5040",
+  textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--wow-text-faint)",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-lg p-6 space-y-4"
-      style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
-      <h2 className="text-sm font-semibold uppercase tracking-widest" style={{ color: "#c8a96a" }}>{title}</h2>
+      style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+      <h2 className="text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--wow-gold)" }}>{title}</h2>
       {children}
     </div>
   );
@@ -84,11 +84,11 @@ export default function AccountSettingsClient({ user, hasBnet, hasPassword }: Pr
   }
 
   return (
-    <div className="min-h-screen p-8 max-w-2xl mx-auto space-y-6" style={{ color: "#e8dfc8" }}>
+    <div className="min-h-screen p-8 max-w-2xl mx-auto space-y-6" style={{ color: "var(--wow-text)" }}>
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold" style={{ color: "#f0c040" }}>Account Settings</h1>
-          <p className="text-sm mt-1" style={{ color: "#5a5040" }}>
+          <h1 className="text-3xl font-bold" style={{ color: "var(--wow-gold-bright)" }}>Account Settings</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--wow-text-faint)" }}>
             {user.email ?? user.battletag}
           </p>
         </div>
@@ -100,8 +100,8 @@ export default function AccountSettingsClient({ user, hasBnet, hasPassword }: Pr
         {hasBnet ? (
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium" style={{ color: "#e8dfc8" }}>🎮 {user.battletag}</p>
-              <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>Battle.net account linked</p>
+              <p className="text-sm font-medium" style={{ color: "var(--wow-text)" }}>🎮 {user.battletag}</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-faint)" }}>Battle.net account linked</p>
             </div>
             <span className="text-xs px-2 py-1 rounded"
               style={{ background: "rgba(50,200,100,0.1)", border: "1px solid rgba(50,200,100,0.3)", color: "#80f0a0" }}>
@@ -111,8 +111,8 @@ export default function AccountSettingsClient({ user, hasBnet, hasPassword }: Pr
         ) : (
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <p className="text-sm" style={{ color: "#8a8070" }}>No Battle.net account linked.</p>
-              <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>Link to import your characters and guild rank automatically.</p>
+              <p className="text-sm" style={{ color: "var(--wow-text-muted)" }}>No Battle.net account linked.</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-faint)" }}>Link to import your characters and guild rank automatically.</p>
             </div>
             <button onClick={() => { window.location.href = "/api/auth/link-battlenet?returnTo=/account/settings"; }} className="wow-btn text-sm shrink-0">
               🔗 Link Battle.net
@@ -139,7 +139,7 @@ export default function AccountSettingsClient({ user, hasBnet, hasPassword }: Pr
       {/* Password */}
       <Section title={hasPassword ? "Change Password" : "Set Password"}>
         {!hasPassword && (
-          <p className="text-sm" style={{ color: "#8a8070" }}>
+          <p className="text-sm" style={{ color: "var(--wow-text-muted)" }}>
             Your account uses Battle.net login. You can set a password to also sign in with email.
           </p>
         )}
@@ -172,8 +172,8 @@ export default function AccountSettingsClient({ user, hasBnet, hasPassword }: Pr
       {user.email && (
         <Section title="Email">
           <div className="flex items-center justify-between">
-            <p className="text-sm" style={{ color: "#e8dfc8" }}>{user.email}</p>
-            <span className="text-xs" style={{ color: "#5a5040" }}>Cannot be changed</span>
+            <p className="text-sm" style={{ color: "var(--wow-text)" }}>{user.email}</p>
+            <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Cannot be changed</span>
           </div>
         </Section>
       )}

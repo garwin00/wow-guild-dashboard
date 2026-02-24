@@ -124,14 +124,14 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
       {/* Header */}
       <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl wow-heading" style={{ color: "#f0c040" }}>Roster</h1>
-          <p className="text-sm mt-1" style={{ color: "#8a8070" }}>
+          <h1 className="text-3xl wow-heading" style={{ color: "var(--wow-gold-bright)" }}>Roster</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--wow-text-muted)" }}>
             {chars.length} characters · {guildName}
             {avgIlvl && <span className={`ml-2 font-medium ${iLvlColor(avgIlvl)}`}>avg {avgIlvl} iLvl</span>}
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          {syncMsg && <span className="text-sm" style={{ color: "#8a8070" }}>{syncMsg}</span>}
+          {syncMsg && <span className="text-sm" style={{ color: "var(--wow-text-muted)" }}>{syncMsg}</span>}
           <button onClick={syncRoster} disabled={syncing || onCooldown}
             className="wow-btn"
             title={onCooldown ? `Available in ${cooldownMins}m` : "Sync roster from Blizzard"}>
@@ -146,12 +146,12 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
           <button key={r} onClick={() => setFilter(filter === r ? "ALL" : r)}
             className="rounded-lg p-4 text-left transition-all"
             style={{
-              background: filter === r ? "rgba(200,169,106,0.12)" : "#0f1019",
-              border: filter === r ? "1px solid rgba(200,169,106,0.5)" : "1px solid rgba(200,169,106,0.15)",
+              background: filter === r ? "rgba(var(--wow-primary-rgb),0.12)" : "var(--wow-surface)",
+              border: filter === r ? "1px solid rgba(var(--wow-primary-rgb),0.5)" : "1px solid rgba(var(--wow-primary-rgb),0.15)",
             }}>
             <span className="text-xl">{ROLE_ICON[r]}</span>
-            <p className="font-bold text-xl mt-1" style={{ color: "#e8dfc8" }}>{counts[r]}</p>
-            <p className="text-xs" style={{ color: "#8a8070" }}>{ROLE_LABEL[r]}</p>
+            <p className="font-bold text-xl mt-1" style={{ color: "var(--wow-text)" }}>{counts[r]}</p>
+            <p className="text-xs" style={{ color: "var(--wow-text-muted)" }}>{ROLE_LABEL[r]}</p>
           </button>
         ))}
       </div>
@@ -161,7 +161,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, class or spec…"
           className="w-full max-w-xs rounded px-3 py-2 text-sm focus:outline-none"
-          style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8" }} />
+          style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
         <div className="flex gap-1 ml-auto">
           {(["rank", "ilvl", "name"] as const).map((s) => (
             <button key={s} onClick={() => setSortBy(s)}
@@ -169,9 +169,9 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
               style={{
                 fontFamily: "inherit",
                 letterSpacing: "0.04em",
-                background: sortBy === s ? "rgba(200,169,106,0.15)" : "transparent",
-                color: sortBy === s ? "#f0c040" : "#5a5040",
-                border: sortBy === s ? "1px solid rgba(200,169,106,0.3)" : "1px solid transparent",
+                background: sortBy === s ? "rgba(var(--wow-primary-rgb),0.15)" : "transparent",
+                color: sortBy === s ? "var(--wow-gold-bright)" : "var(--wow-text-faint)",
+                border: sortBy === s ? "1px solid rgba(var(--wow-primary-rgb),0.3)" : "1px solid transparent",
               }}>
               {s === "rank" ? "Rank" : s === "ilvl" ? "iLvl" : "Name"}
             </button>
@@ -181,16 +181,16 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-sm" style={{ color: "#5a5040" }}>
+        <div className="text-center py-12 text-sm" style={{ color: "var(--wow-text-faint)" }}>
           {chars.length === 0
             ? isOfficer ? 'Click "Sync Roster" to import your guild.' : "No roster data yet."
             : "No characters match your search."}
         </div>
       ) : (
-        <div className="rounded-lg overflow-hidden" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
+        <div className="rounded-lg overflow-hidden" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
           <table className="w-full">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", fontFamily: "inherit", color: "#5a5040" }}>
+              <tr className="text-left text-xs uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)", fontFamily: "inherit", color: "var(--wow-text-faint)" }}>
                 <th className="px-4 py-3 w-10 text-center hidden sm:table-cell">Rank</th>
                 <th className="px-4 py-3">Character</th>
                 <th className="px-4 py-3 hidden md:table-cell">Class · Spec</th>
@@ -202,9 +202,9 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
               {filtered.map((char) => (
                 <tr key={char.id} className="transition-colors"
                   style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}
-                  onMouseOver={(e) => (e.currentTarget.style.background = "rgba(200,169,106,0.04)")}
+                  onMouseOver={(e) => (e.currentTarget.style.background = "rgba(var(--wow-primary-rgb),0.04)")}
                   onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}>
-                  <td className="px-4 py-3 text-center text-xs tabular-nums hidden sm:table-cell" style={{ color: "#5a5040" }}>
+                  <td className="px-4 py-3 text-center text-xs tabular-nums hidden sm:table-cell" style={{ color: "var(--wow-text-faint)" }}>
                     {char.guildRank ?? "—"}
                   </td>
                   <td className="px-4 py-3">
@@ -219,17 +219,17 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-sm" style={{ color: "#e8dfc8" }}>{char.name}</p>
+                        <p className="font-medium text-sm" style={{ color: "var(--wow-text)" }}>{char.name}</p>
                         <p className="text-xs md:hidden" style={{ color: classColor(char.class) }}>
                           {char.spec ? `${char.spec} ` : ""}{char.class}
                         </p>
-                        <p className="text-xs hidden md:block" style={{ color: "#5a5040" }}>{char.realm.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</p>
+                        <p className="text-xs hidden md:block" style={{ color: "var(--wow-text-faint)" }}>{char.realm.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <span className="text-sm font-medium" style={{ color: classColor(char.class) }}>
-                      {char.spec ? `${char.spec} ` : ""}{char.class && char.class !== "Unknown" ? char.class : <span className="italic" style={{ color: "#5a5040" }}>Unknown</span>}
+                      {char.spec ? `${char.spec} ` : ""}{char.class && char.class !== "Unknown" ? char.class : <span className="italic" style={{ color: "var(--wow-text-faint)" }}>Unknown</span>}
                     </span>
                   </td>
                   <td className={`px-4 py-3 text-sm font-semibold text-right pr-8 tabular-nums hidden sm:table-cell ${iLvlColor(char.itemLevel)}`}>
@@ -239,7 +239,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                     {isOfficer ? (
                       <select value={char.role} onChange={(e) => setRole(char.id, e.target.value as CharRole)}
                         className="text-xs rounded px-2 py-1 focus:outline-none"
-                        style={{ background: "#161722", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8" }}>
+                        style={{ background: "var(--wow-surface-2)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }}>
                         <option value="TANK">🛡️ Tank</option>
                         <option value="HEALER">💚 Healer</option>
                         <option value="DPS">⚔️ DPS</option>

@@ -145,12 +145,12 @@ export default function MythicPlusClient({
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl wow-heading" style={{ color: "#f0c040" }}>Mythic+ Leaderboard</h1>
-          <p className="text-sm mt-0.5" style={{ color: "#8a8070" }}>{guildName} — Season scores from Raider.IO</p>
+          <h1 className="text-3xl wow-heading" style={{ color: "var(--wow-gold-bright)" }}>Mythic+ Leaderboard</h1>
+          <p className="text-sm mt-0.5" style={{ color: "var(--wow-text-muted)" }}>{guildName} — Season scores from Raider.IO</p>
         </div>
         <div className="flex items-center gap-3">
           {lastSync && (
-            <span className="text-xs" style={{ color: "#5a5040" }}>Last synced {timeSince(lastSync)}</span>
+            <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Last synced {timeSince(lastSync)}</span>
           )}
           <button onClick={handleSync} disabled={syncing} className="wow-btn">
             {syncing ? "Syncing…" : "⟳ Sync Scores"}
@@ -159,7 +159,7 @@ export default function MythicPlusClient({
       </div>
 
       {syncResult && (
-        <div className="rounded px-4 py-2 text-sm" style={{ background: "rgba(200,169,106,0.08)", border: "1px solid rgba(200,169,106,0.25)", color: "#e8dfc8" }}>
+        <div className="rounded px-4 py-2 text-sm" style={{ background: "rgba(var(--wow-primary-rgb),0.08)", border: "1px solid rgba(var(--wow-primary-rgb),0.25)", color: "var(--wow-text)" }}>
           {syncResult}
         </div>
       )}
@@ -168,7 +168,7 @@ export default function MythicPlusClient({
       {filtered.length >= 1 && filtered[0].mythicScore && (
         <div className="grid grid-cols-3 gap-4">
           {[
-            { pos: 1, medal: "🥇", borderColor: "rgba(240,192,64,0.5)", bgColor: "rgba(240,192,64,0.06)" },
+            { pos: 1, medal: "🥇", borderColor: "rgba(var(--wow-primary-rgb),0.5)", bgColor: "rgba(240,192,64,0.06)" },
             { pos: 2, medal: "🥈", borderColor: "rgba(160,160,160,0.3)", bgColor: "rgba(160,160,160,0.04)" },
             { pos: 3, medal: "🥉", borderColor: "rgba(176,116,78,0.3)", bgColor: "rgba(176,116,78,0.04)" },
           ].map(({ pos, medal, borderColor, bgColor }) => {
@@ -180,12 +180,12 @@ export default function MythicPlusClient({
                 style={{ background: bgColor, border: `1px solid ${borderColor}` }}>
                 <span className="text-2xl">{medal}</span>
                 <span className="font-bold text-base" style={{ color: classColor(char.class) }}>{char.name}</span>
-                <span className="text-xs" style={{ color: "#8a8070" }}>{char.spec ? `${char.spec} ` : ""}{char.class}</span>
+                <span className="text-xs" style={{ color: "var(--wow-text-muted)" }}>{char.spec ? `${char.spec} ` : ""}{char.class}</span>
                 <span className="text-2xl font-bold tabular-nums mt-1" style={{ color: scoreColor(score) }}>
                   {score > 0 ? score.toFixed(1) : "—"}
                 </span>
                 {char.mythicRuns[0] && (
-                  <span className="text-xs" style={{ color: "#5a5040" }}>Best: +{char.mythicRuns[0].level} {char.mythicRuns[0].shortName}</span>
+                  <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Best: +{char.mythicRuns[0].level} {char.mythicRuns[0].shortName}</span>
                 )}
               </div>
             );
@@ -195,19 +195,19 @@ export default function MythicPlusClient({
 
       {/* Current Affixes */}
       {affixes && affixes.affix_details.length > 0 && (
-        <div className="rounded-lg p-4" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
-          <p className="text-xs uppercase tracking-widest mb-3" style={{ fontFamily: "inherit", color: "#5a5040" }}>
+        <div className="rounded-lg p-4" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+          <p className="text-xs uppercase tracking-widest mb-3" style={{ fontFamily: "inherit", color: "var(--wow-text-faint)" }}>
             This Week&apos;s Affixes
           </p>
           <div className="flex flex-wrap gap-3">
             {affixes.affix_details.map((ad) => (
               <a key={ad.id} href={ad.wowhead_url} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded px-3 py-2 transition-all"
-                style={{ background: "rgba(200,169,106,0.06)", border: "1px solid rgba(200,169,106,0.15)" }}
+                style={{ background: "rgba(var(--wow-primary-rgb),0.06)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}
                 title={ad.description}>
                 <img src={ad.icon_url} alt={ad.name} className="w-6 h-6 rounded"
                   onError={(e) => (e.currentTarget.style.display = "none")} />
-                <span className="text-sm font-medium" style={{ color: "#e8dfc8" }}>{ad.name}</span>
+                <span className="text-sm font-medium" style={{ color: "var(--wow-text)" }}>{ad.name}</span>
               </a>
             ))}
           </div>
@@ -216,16 +216,16 @@ export default function MythicPlusClient({
 
       {/* Filters */}
       <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex rounded overflow-hidden" style={{ border: "1px solid rgba(200,169,106,0.2)" }}>
+        <div className="flex rounded overflow-hidden" style={{ border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
           {ROLE_TABS.map((tab) => (
             <button key={tab.key} onClick={() => setRoleTab(tab.key)}
               className="px-4 py-1.5 text-sm transition-all"
               style={{
                 fontFamily: "inherit",
                 letterSpacing: "0.04em",
-                background: roleTab === tab.key ? "rgba(200,169,106,0.15)" : "#0f1019",
-                color: roleTab === tab.key ? "#f0c040" : "#5a5040",
-                borderRight: "1px solid rgba(200,169,106,0.15)",
+                background: roleTab === tab.key ? "rgba(var(--wow-primary-rgb),0.15)" : "var(--wow-surface)",
+                color: roleTab === tab.key ? "var(--wow-gold-bright)" : "var(--wow-text-faint)",
+                borderRight: "1px solid rgba(var(--wow-primary-rgb),0.15)",
               }}>
               {tab.label}
             </button>
@@ -233,15 +233,15 @@ export default function MythicPlusClient({
         </div>
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search character…"
           className="flex-1 min-w-[180px] max-w-xs rounded px-3 py-1.5 text-sm focus:outline-none"
-          style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8" }} />
-        <span className="text-xs" style={{ color: "#5a5040" }}>{filtered.length} characters</span>
+          style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+        <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{filtered.length} characters</span>
       </div>
 
       {/* Leaderboard Table */}
-      <div className="rounded-lg overflow-hidden" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
+      <div className="rounded-lg overflow-hidden" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", fontFamily: "inherit", color: "#5a5040" }}>
+            <tr className="text-left text-xs uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)", fontFamily: "inherit", color: "var(--wow-text-faint)" }}>
               <th className="py-3 px-4 w-10">#</th>
               <th className="py-3 px-4">Character</th>
               <th className="py-3 px-4 hidden sm:table-cell">Role</th>
@@ -256,7 +256,7 @@ export default function MythicPlusClient({
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={9} className="text-center py-12 text-sm" style={{ color: "#5a5040" }}>
+                <td colSpan={9} className="text-center py-12 text-sm" style={{ color: "var(--wow-text-faint)" }}>
                   {characters.some((c) => c.mythicScore)
                     ? "No characters match your filter."
                     : 'No M+ scores yet. Click "Sync Scores" to fetch from Raider.IO.'}
@@ -272,40 +272,40 @@ export default function MythicPlusClient({
                 <>
                   <tr key={char.id} onClick={() => setExpanded(isExpanded ? null : char.id)}
                     className="cursor-pointer transition-colors"
-                    style={{ borderBottom: "1px solid rgba(200,169,106,0.07)", background: isExpanded ? "rgba(200,169,106,0.05)" : "transparent" }}
-                    onMouseOver={(e) => { if (!isExpanded) e.currentTarget.style.background = "rgba(200,169,106,0.04)"; }}
+                    style={{ borderBottom: "1px solid rgba(200,169,106,0.07)", background: isExpanded ? "rgba(var(--wow-primary-rgb),0.05)" : "transparent" }}
+                    onMouseOver={(e) => { if (!isExpanded) e.currentTarget.style.background = "rgba(var(--wow-primary-rgb),0.04)"; }}
                     onMouseOut={(e) => { if (!isExpanded) e.currentTarget.style.background = "transparent"; }}>
                     <td className="py-3 px-4">
-                      {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : <span style={{ color: "#5a5040" }}>{i + 1}</span>}
+                      {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : <span style={{ color: "var(--wow-text-faint)" }}>{i + 1}</span>}
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <div className="w-1.5 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: classColor(char.class) }} />
                         <div>
                           <span className="font-semibold" style={{ color: classColor(char.class) }}>{char.name}</span>
-                          <div className="text-xs" style={{ color: "#5a5040" }}>{char.spec ? `${char.spec} ` : ""}{char.class}</div>
+                          <div className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{char.spec ? `${char.spec} ` : ""}{char.class}</div>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 px-4 hidden sm:table-cell">
-                      <span className="text-xs" style={{ color: "#8a8070" }}>{char.role}</span>
+                      <span className="text-xs" style={{ color: "var(--wow-text-muted)" }}>{char.role}</span>
                     </td>
                     <td className="py-3 px-4 text-right"><ScoreBadge score={score?.all ?? 0} /></td>
                     <td className="py-3 px-4 text-right hidden md:table-cell"><ScoreBadge score={score?.tank ?? 0} /></td>
                     <td className="py-3 px-4 text-right hidden md:table-cell"><ScoreBadge score={score?.healer ?? 0} /></td>
                     <td className="py-3 px-4 text-right hidden md:table-cell"><ScoreBadge score={score?.dps ?? 0} /></td>
-                    <td className="py-3 px-4 text-right font-medium hidden sm:table-cell" style={{ color: "#e8dfc8" }}>
-                      {bestRun ? `+${bestRun.level}` : <span style={{ color: "#5a5040" }}>—</span>}
+                    <td className="py-3 px-4 text-right font-medium hidden sm:table-cell" style={{ color: "var(--wow-text)" }}>
+                      {bestRun ? `+${bestRun.level}` : <span style={{ color: "var(--wow-text-faint)" }}>—</span>}
                     </td>
-                    <td className="px-2" style={{ color: "#5a5040" }}>
+                    <td className="px-2" style={{ color: "var(--wow-text-faint)" }}>
                       {char.mythicRuns.length > 0 ? (isExpanded ? "▲" : "▼") : ""}
                     </td>
                   </tr>
 
                   {isExpanded && char.mythicRuns.length > 0 && (
-                    <tr key={`${char.id}-runs`} style={{ background: "rgba(200,169,106,0.03)" }}>
+                    <tr key={`${char.id}-runs`} style={{ background: "rgba(var(--wow-primary-rgb),0.03)" }}>
                       <td colSpan={9} className="px-6 py-4">
-                        <p className="text-xs uppercase tracking-widest mb-3" style={{ fontFamily: "inherit", color: "#5a5040" }}>
+                        <p className="text-xs uppercase tracking-widest mb-3" style={{ fontFamily: "inherit", color: "var(--wow-text-faint)" }}>
                           Best Runs
                         </p>
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
@@ -313,21 +313,21 @@ export default function MythicPlusClient({
                             <a key={run.id} href={run.url ?? "#"} target="_blank" rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
                               className="rounded p-3 block transition-all"
-                              style={{ background: "#161722", border: "1px solid rgba(200,169,106,0.12)" }}>
+                              style={{ background: "var(--wow-surface-2)", border: "1px solid rgba(200,169,106,0.12)" }}>
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs font-bold" style={{ color: "#e8dfc8" }}>{run.shortName}</span>
-                                <span className="text-xs font-bold" style={{ color: "#c8a96a" }}>+{run.level}</span>
+                                <span className="text-xs font-bold" style={{ color: "var(--wow-text)" }}>{run.shortName}</span>
+                                <span className="text-xs font-bold" style={{ color: "var(--wow-gold)" }}>+{run.level}</span>
                               </div>
                               <div className="flex items-center justify-between">
                                 <span className="text-sm font-bold" style={{ color: scoreColor(run.score) }}>{run.score.toFixed(1)}</span>
-                                <span className="text-xs" style={{ color: "#8a8070" }} title={run.upgrades > 0 ? "Timed" : "Overtime"}>
+                                <span className="text-xs" style={{ color: "var(--wow-text-muted)" }} title={run.upgrades > 0 ? "Timed" : "Overtime"}>
                                   {upgradeArrows(run.upgrades)}
                                 </span>
                               </div>
                               {run.affixes.length > 0 && (
                                 <div className="mt-1.5 flex flex-wrap gap-1">
                                   {run.affixes.slice(0, 3).map((a) => (
-                                    <span key={a} className="text-[10px]" style={{ color: "#5a5040" }}>{a.slice(0, 8)}</span>
+                                    <span key={a} className="text-[10px]" style={{ color: "var(--wow-text-faint)" }}>{a.slice(0, 8)}</span>
                                   ))}
                                 </div>
                               )}
@@ -345,10 +345,10 @@ export default function MythicPlusClient({
       </div>
 
       {/* Attribution */}
-      <p className="text-xs text-right" style={{ color: "#5a5040" }}>
+      <p className="text-xs text-right" style={{ color: "var(--wow-text-faint)" }}>
         M+ data provided by{" "}
         <a href="https://raider.io" target="_blank" rel="noopener noreferrer"
-          className="underline hover:text-[#c8a96a] transition-colors" style={{ color: "#8a8070" }}>
+          className="underline hover:text-[#c8a96a] transition-colors" style={{ color: "var(--wow-text-muted)" }}>
           Raider.IO
         </a>
       </p>

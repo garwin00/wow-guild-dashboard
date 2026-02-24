@@ -59,37 +59,37 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
     <div className="p-8 max-w-3xl">
       {/* Header */}
       <div className="mb-6">
-        <p style={{ color: "#8a8070", fontSize: "0.875rem", marginBottom: "0.25rem", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.05em" }}>{event.raidZone}</p>
-        <h1 className="wow-heading text-3xl font-bold" style={{ color: "#f0c040" }}>{event.title}</h1>
-        <p style={{ color: "#8a8070", marginTop: "0.25rem" }}>
+        <p style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem", marginBottom: "0.25rem", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.05em" }}>{event.raidZone}</p>
+        <h1 className="wow-heading text-3xl font-bold" style={{ color: "var(--wow-gold-bright)" }}>{event.title}</h1>
+        <p style={{ color: "var(--wow-text-muted)", marginTop: "0.25rem" }}>
           {date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
         </p>
-        {event.description && <p style={{ color: "#8a8070", fontSize: "0.875rem", marginTop: "0.5rem" }}>{event.description}</p>}
+        {event.description && <p style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem", marginTop: "0.5rem" }}>{event.description}</p>}
       </div>
 
       {/* Sign-up form (for members with characters) */}
       {userCharacters.length > 0 && event.status === "OPEN" && (
-        <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "0.5rem", padding: "1.25rem", marginBottom: "1.5rem" }}>
-          <h2 style={{ color: "#e8dfc8", fontWeight: 600, marginBottom: "0.75rem" }}>Your Sign-up</h2>
+        <div style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)", borderRadius: "0.5rem", padding: "1.25rem", marginBottom: "1.5rem" }}>
+          <h2 style={{ color: "var(--wow-text)", fontWeight: 600, marginBottom: "0.75rem" }}>Your Sign-up</h2>
           <div className="flex gap-3 mb-3 flex-wrap">
             {userCharacters.length > 1 && (
               <select value={selectedChar} onChange={(e) => setSelectedChar(e.target.value)}
-                style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", outline: "none" }}>
+                style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", outline: "none" }}>
                 {userCharacters.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.class})</option>)}
               </select>
             )}
             {userCharacters.length === 1 && (
-              <span style={{ color: "#e8dfc8", fontSize: "0.875rem", alignSelf: "center" }}>{userCharacters[0].name} ({userCharacters[0].class})</span>
+              <span style={{ color: "var(--wow-text)", fontSize: "0.875rem", alignSelf: "center" }}>{userCharacters[0].name} ({userCharacters[0].class})</span>
             )}
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional note…"
-              style={{ flex: 1, minWidth: "140px", background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", outline: "none" }} />
+              style={{ flex: 1, minWidth: "140px", background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", outline: "none" }} />
           </div>
           <div className="flex gap-2">
             {(["ACCEPTED", "TENTATIVE", "DECLINED"] as SignupStatus[]).map((s) => {
               const btnStyle: React.CSSProperties = s === "ACCEPTED"
                 ? { background: "rgba(64,200,100,0.12)", border: "1px solid rgba(64,200,100,0.4)", color: "#40c864" }
                 : s === "TENTATIVE"
-                ? { background: "rgba(200,169,106,0.12)", border: "1px solid rgba(200,169,106,0.4)", color: "#c8a96a" }
+                ? { background: "rgba(var(--wow-primary-rgb),0.12)", border: "1px solid rgba(var(--wow-primary-rgb),0.4)", color: "var(--wow-gold)" }
                 : { background: "rgba(200,64,64,0.12)", border: "1px solid rgba(200,64,64,0.4)", color: "#c84040" };
               return (
                 <button key={s} disabled={submitting} onClick={() => submitSignup(s)}
@@ -110,22 +110,22 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
             <button key={t} onClick={() => setActiveTab(t)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
               style={activeTab === t
-                ? { background: "rgba(200,169,106,0.12)", border: "1px solid rgba(200,169,106,0.4)", color: "#f0c040" }
-                : { color: "#8a8070" }}>
+                ? { background: "rgba(var(--wow-primary-rgb),0.12)", border: "1px solid rgba(var(--wow-primary-rgb),0.4)", color: "var(--wow-gold-bright)" }
+                : { color: "var(--wow-text-muted)" }}>
               {t === "ALL" ? `All (${signups.length})` : `${t.charAt(0)+t.slice(1).toLowerCase()} (${counts[t]})`}
             </button>
           ))}
         </div>
-        <span style={{ fontSize: "0.75rem", color: "#5a5040" }}>{counts.ACCEPTED}/{event.maxAttendees} confirmed</span>
+        <span style={{ fontSize: "0.75rem", color: "var(--wow-text-faint)" }}>{counts.ACCEPTED}/{event.maxAttendees} confirmed</span>
       </div>
 
-      <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "0.5rem", overflow: "hidden" }}>
+      <div style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)", borderRadius: "0.5rem", overflow: "hidden" }}>
         {displayed.length === 0 ? (
-          <p className="text-center py-8" style={{ color: "#5a5040", fontSize: "0.875rem" }}>No sign-ups yet.</p>
+          <p className="text-center py-8" style={{ color: "var(--wow-text-faint)", fontSize: "0.875rem" }}>No sign-ups yet.</p>
         ) : (
           <table className="w-full">
             <thead>
-              <tr style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", textAlign: "left", fontSize: "0.75rem", fontFamily: "inherit", color: "#5a5040", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <tr style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)", textAlign: "left", fontSize: "0.75rem", fontFamily: "inherit", color: "var(--wow-text-faint)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <th className="px-4 py-3">Character</th>
                 <th className="px-4 py-3">Role</th>
                 <th className="px-4 py-3">Status</th>
@@ -135,14 +135,14 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
             <tbody>
               {displayed.map((signup) => (
                 <tr key={signup.id} style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}
-                  onMouseOver={(e) => (e.currentTarget.style.background = "rgba(200,169,106,0.04)")}
+                  onMouseOver={(e) => (e.currentTarget.style.background = "rgba(var(--wow-primary-rgb),0.04)")}
                   onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}>
-                  <td className="px-4 py-3" style={{ color: "#e8dfc8", fontSize: "0.875rem", fontWeight: 500 }}>{signup.character.name}</td>
-                  <td className="px-4 py-3" style={{ color: "#8a8070", fontSize: "0.875rem" }}>{signup.character.role}</td>
+                  <td className="px-4 py-3" style={{ color: "var(--wow-text)", fontSize: "0.875rem", fontWeight: 500 }}>{signup.character.name}</td>
+                  <td className="px-4 py-3" style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem" }}>{signup.character.role}</td>
                   <td className="px-4 py-3">
                     {isOfficer ? (
                       <select value={signup.status} onChange={(e) => officerUpdate(signup.id, e.target.value as SignupStatus)}
-                        style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", fontSize: "0.75rem", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", outline: "none" }}>
+                        style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)", fontSize: "0.75rem", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", outline: "none" }}>
                         <option value="ACCEPTED">✓ Accepted</option>
                         <option value="TENTATIVE">? Tentative</option>
                         <option value="DECLINED">✗ Declined</option>
@@ -152,13 +152,13 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
                         style={signup.status === "ACCEPTED"
                           ? { background: "rgba(64,200,100,0.12)", border: "1px solid rgba(64,200,100,0.4)", color: "#40c864" }
                           : signup.status === "TENTATIVE"
-                          ? { background: "rgba(200,169,106,0.12)", border: "1px solid rgba(200,169,106,0.4)", color: "#c8a96a" }
+                          ? { background: "rgba(var(--wow-primary-rgb),0.12)", border: "1px solid rgba(var(--wow-primary-rgb),0.4)", color: "var(--wow-gold)" }
                           : { background: "rgba(200,64,64,0.12)", border: "1px solid rgba(200,64,64,0.4)", color: "#c84040" }}>
                         {STATUS_ICON[signup.status]} {signup.status}
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3" style={{ color: "#5a5040", fontSize: "0.875rem" }}>{signup.note ?? "—"}</td>
+                  <td className="px-4 py-3" style={{ color: "var(--wow-text-faint)", fontSize: "0.875rem" }}>{signup.note ?? "—"}</td>
                 </tr>
               ))}
             </tbody>

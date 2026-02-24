@@ -39,7 +39,10 @@
   --wow-gold-dim:    #7a6438;
   --wow-text:        #e8dfc8;
   --wow-text-muted:  #8a8070;
+  --wow-text-faint:  #5a5040;
   --wow-red:         #8b1a1a;
+  /* RGB triplet for theme-aware rgba() usage */
+  --wow-primary-rgb: 200, 169, 106;
 
   /* shadcn compat */
   --background: var(--wow-bg);
@@ -106,23 +109,22 @@
 
 /* Gold gradient button */
 .wow-btn {
-  background: linear-gradient(135deg, #c8a96a 0%, #f0c040 50%, #c8a96a 100%);
+  background: linear-gradient(135deg, var(--wow-gold) 0%, var(--wow-gold-bright) 50%, var(--wow-gold) 100%);
   color: #0d0d0d;
-  
   font-weight: 600;
   font-size: 0.8125rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 0.5rem 1.25rem;
   border-radius: 0.375rem;
-  border: 1px solid rgba(240, 192, 64, 0.4);
-  box-shadow: 0 0 12px rgba(200, 169, 106, 0.15), inset 0 1px 0 rgba(255,255,255,0.15);
+  border: 1px solid rgba(var(--wow-primary-rgb), 0.4);
+  box-shadow: 0 0 12px rgba(var(--wow-primary-rgb), 0.15), inset 0 1px 0 rgba(255,255,255,0.15);
   transition: all 0.2s;
   cursor: pointer;
 }
 .wow-btn:hover {
-  background: linear-gradient(135deg, #d4b87a 0%, #f8d060 50%, #d4b87a 100%);
-  box-shadow: 0 0 20px rgba(200, 169, 106, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  box-shadow: 0 0 20px rgba(var(--wow-primary-rgb), 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  filter: brightness(1.1);
 }
 .wow-btn:disabled {
   opacity: 0.5;
@@ -133,7 +135,6 @@
 .wow-btn-ghost {
   background: transparent;
   color: var(--wow-gold);
-  
   font-weight: 600;
   font-size: 0.8125rem;
   letter-spacing: 0.04em;
@@ -145,22 +146,21 @@
   cursor: pointer;
 }
 .wow-btn-ghost:hover {
-  background: rgba(200, 169, 106, 0.1);
+  background: rgba(var(--wow-primary-rgb), 0.1);
   border-color: var(--wow-gold);
 }
 
 /* Sign out button in sidebar */
 .wow-signout-btn {
-  color: #5a5040;
+  color: var(--wow-text-faint);
   transition: color 0.15s;
 }
 .wow-signout-btn:hover {
-  color: #c8a96a;
+  color: var(--wow-gold);
 }
 
 /* Section heading with gold underline */
 .wow-heading {
-  
   color: var(--wow-gold-bright);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -185,30 +185,10 @@
   --wow-gold-dim:     #6b1a1a;
   --wow-text:         #f0dcd8;
   --wow-text-muted:   #8a5050;
+  --wow-text-faint:   #6b3030;
+  --wow-primary-rgb:  200, 50, 50;
 }
-[data-theme="horde"] .wow-btn {
-  background: linear-gradient(135deg, #8b1a1a 0%, #cc2200 50%, #8b1a1a 100%);
-  border-color: rgba(200, 50, 50, 0.5);
-  box-shadow: 0 0 12px rgba(150, 30, 30, 0.25), inset 0 1px 0 rgba(255,255,255,0.1);
-}
-[data-theme="horde"] .wow-btn:hover {
-  background: linear-gradient(135deg, #a02020 0%, #dd3311 50%, #a02020 100%);
-  box-shadow: 0 0 20px rgba(180, 40, 40, 0.4), inset 0 1px 0 rgba(255,255,255,0.15);
-}
-[data-theme="horde"] .wow-btn-ghost {
-  color: #cc3333;
-  border-color: rgba(200, 50, 50, 0.4);
-}
-[data-theme="horde"] .wow-btn-ghost:hover {
-  background: rgba(150, 30, 30, 0.15);
-  border-color: #cc3333;
-}
-[data-theme="horde"] .wow-divider {
-  background: linear-gradient(to right, transparent, #8b1a1a, transparent);
-}
-[data-theme="horde"] .wow-heading {
-  color: #ff4422;
-}
+[data-theme="horde"] .wow-btn { color: #fff; }
 
 /* ── Theme: Alliance (blue/gold) ── */
 [data-theme="alliance"] {
@@ -222,28 +202,7 @@
   --wow-gold-dim:     #1a4070;
   --wow-text:         #d8e8f0;
   --wow-text-muted:   #506080;
+  --wow-text-faint:   #304060;
+  --wow-primary-rgb:  74, 143, 212;
 }
-[data-theme="alliance"] .wow-btn {
-  background: linear-gradient(135deg, #1a5296 0%, #4a8fd4 50%, #1a5296 100%);
-  border-color: rgba(74, 143, 212, 0.5);
-  box-shadow: 0 0 12px rgba(30, 80, 180, 0.25), inset 0 1px 0 rgba(255,255,255,0.15);
-  color: #ffffff;
-}
-[data-theme="alliance"] .wow-btn:hover {
-  background: linear-gradient(135deg, #2060aa 0%, #5a9fe4 50%, #2060aa 100%);
-  box-shadow: 0 0 20px rgba(74, 143, 212, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
-}
-[data-theme="alliance"] .wow-btn-ghost {
-  color: #4a8fd4;
-  border-color: rgba(74, 143, 212, 0.4);
-}
-[data-theme="alliance"] .wow-btn-ghost:hover {
-  background: rgba(30, 80, 180, 0.15);
-  border-color: #4a8fd4;
-}
-[data-theme="alliance"] .wow-divider {
-  background: linear-gradient(to right, transparent, #1a5296, transparent);
-}
-[data-theme="alliance"] .wow-heading {
-  color: #7ab8f5;
-}
+[data-theme="alliance"] .wow-btn { color: #fff; }

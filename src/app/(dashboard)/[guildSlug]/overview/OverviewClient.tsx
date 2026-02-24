@@ -13,7 +13,7 @@ const CLASS_COLORS: Record<string, string> = {
 function classColor(cls: string | null) { return CLASS_COLORS[cls?.toLowerCase() ?? ""] ?? "#9d9d9d"; }
 
 const STATUS_LABEL: Record<string, string> = { ACCEPTED: "✓ In", DECLINED: "✗ Out", TENTATIVE: "? Maybe" };
-const STATUS_COLOR: Record<string, string> = { ACCEPTED: "#6dbf6d", DECLINED: "#c84040", TENTATIVE: "#c8a96a" };
+const STATUS_COLOR: Record<string, string> = { ACCEPTED: "#6dbf6d", DECLINED: "#c84040", TENTATIVE: "var(--wow-gold)" };
 const ROLE_ICON: Record<string, string> = { TANK: "🛡️", HEALER: "💚", DPS: "⚔️" };
 
 interface Character { id: string; name: string; class: string | null; spec: string | null; role: string; isMain: boolean; }
@@ -148,12 +148,12 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl wow-heading" style={{ color: "#f0c040" }}>{guild.name}</h1>
-        <p className="mt-1" style={{ color: "#8a8070" }}>{guild.realm} · {guild.region.toUpperCase()}</p>
+        <h1 className="text-3xl wow-heading" style={{ color: "var(--wow-gold-bright)" }}>{guild.name}</h1>
+        <p className="mt-1" style={{ color: "var(--wow-text-muted)" }}>{guild.realm} · {guild.region.toUpperCase()}</p>
       </div>
 
       {linkStatus && (
-        <div className="mb-4 px-4 py-2 rounded text-sm" style={{ background: "rgba(200,169,106,0.08)", border: "1px solid rgba(200,169,106,0.25)", color: "#c8a96a" }}>
+        <div className="mb-4 px-4 py-2 rounded text-sm" style={{ background: "rgba(var(--wow-primary-rgb),0.08)", border: "1px solid rgba(var(--wow-primary-rgb),0.25)", color: "var(--wow-gold)" }}>
           ✓ {linkStatus}
         </div>
       )}
@@ -161,9 +161,9 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map(({ label, value }) => (
-          <div key={label} className="rounded-lg p-5" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
-            <p className="text-xs uppercase tracking-widest" style={{ color: "#5a5040" }}>{label}</p>
-            <p className="text-xl font-semibold mt-2" style={{ color: "#e8dfc8" }}>{value}</p>
+          <div key={label} className="rounded-lg p-5" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+            <p className="text-xs uppercase tracking-widest" style={{ color: "var(--wow-text-faint)" }}>{label}</p>
+            <p className="text-xl font-semibold mt-2" style={{ color: "var(--wow-text)" }}>{value}</p>
           </div>
         ))}
       </div>
@@ -172,19 +172,19 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
 
         {/* ── Next Raid + Quick Signup ── */}
         {nextRaid ? (
-          <div className="rounded-lg p-6" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)" }}>
+          <div className="rounded-lg p-6" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
             <div className="flex items-start justify-between mb-3">
               <div>
-                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#c8a96a" }}>Next Raid</p>
-                <p className="font-semibold" style={{ color: "#e8dfc8" }}>{nextRaid.title}</p>
-                <p className="text-sm mt-0.5" style={{ color: "#8a8070" }}>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-gold)" }}>Next Raid</p>
+                <p className="font-semibold" style={{ color: "var(--wow-text)" }}>{nextRaid.title}</p>
+                <p className="text-sm mt-0.5" style={{ color: "var(--wow-text-muted)" }}>
                   {new Date(nextRaid.scheduledAt).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                 </p>
-                <p className="text-xs mt-1" style={{ color: "#5a5040" }}>{nextRaid.raidZone}</p>
+                <p className="text-xs mt-1" style={{ color: "var(--wow-text-faint)" }}>{nextRaid.raidZone}</p>
               </div>
               <button onClick={() => setModal({ type: "signups", raid: nextRaid })}
                 className="text-xs px-3 py-1 rounded transition-all shrink-0"
-                style={{ background: "rgba(200,169,106,0.08)", border: "1px solid rgba(200,169,106,0.2)", color: "#c8a96a" }}>
+                style={{ background: "rgba(var(--wow-primary-rgb),0.08)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-gold)" }}>
                 {nextRaid.signupCount}/{nextRaid.maxAttendees} signups →
               </button>
             </div>
@@ -196,13 +196,13 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
             {/* My signup status */}
             {localMySignup ? (
               <div>
-                <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#5a5040" }}>Your Status</p>
+                <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--wow-text-faint)" }}>Your Status</p>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-sm font-medium px-2 py-0.5 rounded" style={{ background: "rgba(200,169,106,0.08)", color: STATUS_COLOR[localMySignup.status] }}>
+                  <span className="text-sm font-medium px-2 py-0.5 rounded" style={{ background: "rgba(var(--wow-primary-rgb),0.08)", color: STATUS_COLOR[localMySignup.status] }}>
                     {STATUS_LABEL[localMySignup.status]}
                   </span>
                   {localMySignup.characterName && (
-                    <span className="text-xs" style={{ color: "#8a8070" }}>as {localMySignup.characterName}</span>
+                    <span className="text-xs" style={{ color: "var(--wow-text-muted)" }}>as {localMySignup.characterName}</span>
                   )}
                 </div>
                 <div className="flex gap-2">
@@ -210,9 +210,9 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
                     <button key={s} onClick={() => handleUpdateSignup(s)} disabled={signingUp || localMySignup.status === s}
                       className="text-xs px-3 py-1 rounded transition-all"
                       style={{
-                        background: localMySignup.status === s ? "rgba(200,169,106,0.15)" : "rgba(200,169,106,0.05)",
-                        border: `1px solid ${localMySignup.status === s ? "rgba(200,169,106,0.4)" : "rgba(200,169,106,0.15)"}`,
-                        color: localMySignup.status === s ? STATUS_COLOR[s] : "#5a5040",
+                        background: localMySignup.status === s ? "rgba(var(--wow-primary-rgb),0.15)" : "rgba(var(--wow-primary-rgb),0.05)",
+                        border: `1px solid ${localMySignup.status === s ? "rgba(var(--wow-primary-rgb),0.4)" : "rgba(var(--wow-primary-rgb),0.15)"}`,
+                        color: localMySignup.status === s ? STATUS_COLOR[s] : "var(--wow-text-faint)",
                         opacity: signingUp ? 0.5 : 1,
                       }}>
                       {STATUS_LABEL[s]}
@@ -222,13 +222,13 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
               </div>
             ) : (
               <div>
-                <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#5a5040" }}>Sign Up</p>
+                <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--wow-text-faint)" }}>Sign Up</p>
                 {myCharacters.length > 0 ? (
                   <>
                     {myCharacters.length > 1 && (
                       <select value={selectedCharId} onChange={e => setSelectedCharId(e.target.value)}
                         className="w-full rounded px-3 py-2 text-sm mb-3"
-                        style={{ background: "#0a0b12", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", outline: "none" }}>
+                        style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)", outline: "none" }}>
                         {myCharacters.map(c => (
                           <option key={c.id} value={c.id}>{c.name} ({c.spec} {c.class}){c.isMain ? " ★" : ""}</option>
                         ))}
@@ -239,9 +239,9 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
                         <button key={s} onClick={() => handleSignup(s)} disabled={signingUp}
                           className="text-xs px-3 py-1.5 rounded transition-all"
                           style={{
-                            background: "rgba(200,169,106,0.06)",
-                            border: "1px solid rgba(200,169,106,0.2)",
-                            color: s === "ACCEPTED" ? "#6dbf6d" : s === "DECLINED" ? "#c84040" : "#c8a96a",
+                            background: "rgba(var(--wow-primary-rgb),0.06)",
+                            border: "1px solid rgba(var(--wow-primary-rgb),0.2)",
+                            color: s === "ACCEPTED" ? "#6dbf6d" : s === "DECLINED" ? "#c84040" : "var(--wow-gold)",
                             opacity: signingUp ? 0.5 : 1,
                             cursor: signingUp ? "wait" : "pointer",
                           }}>
@@ -252,48 +252,48 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
                     {signupStatus && <p className="text-xs mt-2" style={{ color: "#c84040" }}>{signupStatus}</p>}
                   </>
                 ) : (
-                  <p className="text-sm" style={{ color: "#8a8070" }}>
-                    No characters linked. <Link href={`/${guild.slug}/profile`} style={{ color: "#c8a96a" }}>Set up your profile →</Link>
+                  <p className="text-sm" style={{ color: "var(--wow-text-muted)" }}>
+                    No characters linked. <Link href={`/${guild.slug}/profile`} style={{ color: "var(--wow-gold)" }}>Set up your profile →</Link>
                   </p>
                 )}
               </div>
             )}
           </div>
         ) : (
-          <div className="rounded-lg p-6 flex items-center justify-center" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.1)" }}>
+          <div className="rounded-lg p-6 flex items-center justify-center" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.1)" }}>
             <div className="text-center">
-              <p className="text-sm mb-2" style={{ color: "#5a5040" }}>No raids scheduled.</p>
+              <p className="text-sm mb-2" style={{ color: "var(--wow-text-faint)" }}>No raids scheduled.</p>
               {["GM", "OFFICER"].includes(memberRole) && (
-                <Link href={`/${guild.slug}/raids`} className="text-xs" style={{ color: "#c8a96a" }}>Schedule a raid →</Link>
+                <Link href={`/${guild.slug}/raids`} className="text-xs" style={{ color: "var(--wow-gold)" }}>Schedule a raid →</Link>
               )}
             </div>
           </div>
         )}
 
         {/* ── Upcoming Raids ── */}
-        <div className="rounded-lg p-6" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)" }}>
-          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "#c8a96a" }}>Upcoming Raids</p>
+        <div className="rounded-lg p-6" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--wow-gold)" }}>Upcoming Raids</p>
           {upcomingRaids.length === 0 ? (
-            <p className="text-sm" style={{ color: "#5a5040" }}>No upcoming raids.</p>
+            <p className="text-sm" style={{ color: "var(--wow-text-faint)" }}>No upcoming raids.</p>
           ) : (
             <div className="space-y-3">
               {upcomingRaids.map((raid, i) => (
                 <div key={raid.id} className="flex items-center justify-between py-2"
-                  style={{ borderBottom: i < upcomingRaids.length - 1 ? "1px solid rgba(200,169,106,0.08)" : "none" }}>
+                  style={{ borderBottom: i < upcomingRaids.length - 1 ? "1px solid rgba(var(--wow-primary-rgb),0.08)" : "none" }}>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: i === 0 ? "#f0c040" : "#e8dfc8" }}>{raid.title}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>
+                    <p className="text-sm font-medium truncate" style={{ color: i === 0 ? "var(--wow-gold-bright)" : "var(--wow-text)" }}>{raid.title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-faint)" }}>
                       {new Date(raid.scheduledAt).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
                       {" · "}{raid.raidZone}
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-4">
-                    <p className="text-xs" style={{ color: "#8a8070" }}>{raid.signupCount}/{raid.maxAttendees}</p>
+                    <p className="text-xs" style={{ color: "var(--wow-text-muted)" }}>{raid.signupCount}/{raid.maxAttendees}</p>
                     <button onClick={() => setModal({ type: "signups", raid })}
                       className="text-xs mt-0.5 transition-colors"
-                      style={{ color: "#5a5040" }}
-                      onMouseOver={e => e.currentTarget.style.color = "#c8a96a"}
-                      onMouseOut={e => e.currentTarget.style.color = "#5a5040"}>
+                      style={{ color: "var(--wow-text-faint)" }}
+                      onMouseOver={e => e.currentTarget.style.color = "var(--wow-gold)"}
+                      onMouseOut={e => e.currentTarget.style.color = "var(--wow-text-faint)"}>
                       signups →
                     </button>
                   </div>
@@ -304,9 +304,9 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
           {upcomingRaids.length > 0 && (
             <Link href={`/${guild.slug}/raids`}
               className="block text-center text-xs mt-4 pt-3 transition-colors"
-              style={{ borderTop: "1px solid rgba(200,169,106,0.08)", color: "#5a5040" }}
-              onMouseOver={e => e.currentTarget.style.color = "#c8a96a"}
-              onMouseOut={e => e.currentTarget.style.color = "#5a5040"}>
+              style={{ borderTop: "1px solid rgba(var(--wow-primary-rgb),0.08)", color: "var(--wow-text-faint)" }}
+              onMouseOver={e => e.currentTarget.style.color = "var(--wow-gold)"}
+              onMouseOut={e => e.currentTarget.style.color = "var(--wow-text-faint)"}>
               View all raids →
             </Link>
           )}
@@ -319,16 +319,16 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
           style={{ background: "rgba(0,0,0,0.75)" }}
           onClick={() => setModal(null)}>
           <div className="w-full max-w-lg rounded-lg overflow-hidden"
-            style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.3)", maxHeight: "80vh", overflowY: "auto" }}
+            style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.3)", maxHeight: "80vh", overflowY: "auto" }}
             onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5" style={{ borderBottom: "1px solid rgba(200,169,106,0.15)" }}>
+            <div className="flex items-center justify-between p-5" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
               <div>
-                <h2 className="font-semibold" style={{ color: "#f0c040" }}>{modal.raid.title}</h2>
-                <p className="text-xs mt-0.5" style={{ color: "#8a8070" }}>
+                <h2 className="font-semibold" style={{ color: "var(--wow-gold-bright)" }}>{modal.raid.title}</h2>
+                <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-muted)" }}>
                   {new Date(modal.raid.scheduledAt).toLocaleString("en-GB")} · {modal.raid.signupCount}/{modal.raid.maxAttendees}
                 </p>
               </div>
-              <button onClick={() => setModal(null)} className="text-xl leading-none" style={{ color: "#5a5040" }}>✕</button>
+              <button onClick={() => setModal(null)} className="text-xl leading-none" style={{ color: "var(--wow-text-faint)" }}>✕</button>
             </div>
             <div className="p-5">
               <RoleBar signups={modal.raid.signups} />
@@ -340,17 +340,17 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
                 { label: "Declined", list: declined },
               ].map(({ label, list }) => list.length > 0 && (
                 <div key={label}>
-                  <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#5a5040" }}>{label} ({list.length})</p>
+                  <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--wow-text-faint)" }}>{label} ({list.length})</p>
                   <div className="space-y-1">
                     {list.map(s => (
                       <div key={s.id} className="flex items-center justify-between px-3 py-2 rounded"
-                        style={{ background: "rgba(200,169,106,0.04)", border: "1px solid rgba(200,169,106,0.08)" }}>
+                        style={{ background: "rgba(var(--wow-primary-rgb),0.04)", border: "1px solid rgba(var(--wow-primary-rgb),0.08)" }}>
                         <div className="flex items-center gap-2">
                           <span>{ROLE_ICON[s.character?.role ?? "DPS"]}</span>
                           <span className="text-sm font-medium" style={{ color: classColor(s.character?.class ?? null) }}>
                             {s.character?.name ?? "Unknown"}
                           </span>
-                          <span className="text-xs" style={{ color: "#5a5040" }}>
+                          <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>
                             {s.character?.spec ? `${s.character.spec} ` : ""}{s.character?.class}
                           </span>
                         </div>
@@ -363,7 +363,7 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
                 </div>
               ))}
               {modal.raid.signups.length === 0 && (
-                <p className="text-center text-sm py-4" style={{ color: "#5a5040" }}>No signups yet.</p>
+                <p className="text-center text-sm py-4" style={{ color: "var(--wow-text-faint)" }}>No signups yet.</p>
               )}
             </div>
           </div>

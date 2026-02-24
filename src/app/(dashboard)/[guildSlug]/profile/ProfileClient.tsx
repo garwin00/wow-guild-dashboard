@@ -74,15 +74,15 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
 
   return (
     <div className="rounded-lg p-4 transition-all relative group" style={{
-      background: isMain ? "rgba(200,169,106,0.08)" : "#0f1019",
-      border: isMain ? `2px solid ${color}60` : "1px solid rgba(200,169,106,0.15)",
+      background: isMain ? "rgba(var(--wow-primary-rgb),0.08)" : "var(--wow-surface)",
+      border: isMain ? `2px solid ${color}60` : "1px solid rgba(var(--wow-primary-rgb),0.15)",
       boxShadow: isMain ? `0 0 20px ${color}20` : "none",
     }}>
       {/* Action buttons — top right */}
       <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button onClick={() => setEditing(e => !e)} title="Edit role/spec"
           className="w-6 h-6 rounded flex items-center justify-center text-xs transition-colors"
-          style={{ background: "rgba(200,169,106,0.1)", color: "#c8a96a" }}>✏</button>
+          style={{ background: "rgba(var(--wow-primary-rgb),0.1)", color: "var(--wow-gold)" }}>✏</button>
         <button onClick={onUnlink} title="Unlink character"
           className="w-6 h-6 rounded flex items-center justify-center text-xs transition-colors"
           style={{ background: "rgba(200,60,60,0.15)", color: "#e06060" }}>✕</button>
@@ -105,7 +105,7 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
             <p className="font-semibold text-sm truncate" style={{ color }}>{char.name}</p>
             {isMain && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}>Main</span>}
           </div>
-          <p className="text-xs truncate" style={{ color: "#8a8070" }}>
+          <p className="text-xs truncate" style={{ color: "var(--wow-text-muted)" }}>
             {char.spec ? `${char.spec} ` : ""}{char.class}
           </p>
         </div>
@@ -114,22 +114,22 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
 
       {/* Edit inline form */}
       {editing && (
-        <div className="mb-3 space-y-2 p-2 rounded" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(200,169,106,0.2)" }}>
+        <div className="mb-3 space-y-2 p-2 rounded" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
           <div className="flex gap-2">
             <div className="flex-1">
-              <p className="text-xs mb-1" style={{ color: "#5a5040" }}>Role</p>
+              <p className="text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Role</p>
               <select value={editRole} onChange={e => setEditRole(e.target.value)}
                 className="w-full text-xs rounded px-2 py-1"
-                style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.3)", color: "#e8dfc8" }}>
+                style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.3)", color: "var(--wow-text)" }}>
                 {ROLES.map(r => <option key={r} value={r}>{ROLE_ICON[r]} {r}</option>)}
               </select>
             </div>
             {specs.length > 0 && (
               <div className="flex-1">
-                <p className="text-xs mb-1" style={{ color: "#5a5040" }}>Spec</p>
+                <p className="text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Spec</p>
                 <select value={editSpec} onChange={e => setEditSpec(e.target.value)}
                   className="w-full text-xs rounded px-2 py-1"
-                  style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.3)", color: "#e8dfc8" }}>
+                  style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.3)", color: "var(--wow-text)" }}>
                   <option value="">—</option>
                   {specs.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -138,11 +138,11 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
           </div>
           <div className="flex gap-2">
             <button onClick={saveEdit} className="flex-1 text-xs py-1 rounded font-medium"
-              style={{ background: "rgba(200,169,106,0.2)", color: "#c8a96a", border: "1px solid rgba(200,169,106,0.3)" }}>
+              style={{ background: "rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-gold)", border: "1px solid rgba(var(--wow-primary-rgb),0.3)" }}>
               Save
             </button>
             <button onClick={() => setEditing(false)} className="flex-1 text-xs py-1 rounded"
-              style={{ background: "rgba(200,169,106,0.05)", color: "#5a5040", border: "1px solid rgba(200,169,106,0.1)" }}>
+              style={{ background: "rgba(var(--wow-primary-rgb),0.05)", color: "var(--wow-text-faint)", border: "1px solid rgba(var(--wow-primary-rgb),0.1)" }}>
               Cancel
             </button>
           </div>
@@ -150,9 +150,9 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
       )}
 
       <div className="flex items-center justify-between text-xs">
-        <span style={{ color: "#5a5040" }}>{char.realm}</span>
+        <span style={{ color: "var(--wow-text-faint)" }}>{char.realm}</span>
         <div className="flex items-center gap-2">
-          {char.itemLevel && <span style={{ color: "#e8dfc8" }}>{char.itemLevel} iLvl</span>}
+          {char.itemLevel && <span style={{ color: "var(--wow-text)" }}>{char.itemLevel} iLvl</span>}
           {char.mythicScore && (
             <span className="font-bold" style={{ color: scoreColor(char.mythicScore) }}>{char.mythicScore.toFixed(0)}</span>
           )}
@@ -160,13 +160,13 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
       </div>
 
       {char.guildName && (
-        <p className="text-xs mt-1.5" style={{ color: "#5a5040" }}>&lt;{char.guildName}&gt;</p>
+        <p className="text-xs mt-1.5" style={{ color: "var(--wow-text-faint)" }}>&lt;{char.guildName}&gt;</p>
       )}
 
       {!isMain && !editing && (
         <button onClick={onSetMain} disabled={pending}
           className="w-full mt-2 text-xs py-1 rounded transition-colors"
-          style={{ background: "rgba(200,169,106,0.08)", color: pending ? "#5a5040" : "#c8a96a", border: "1px solid rgba(200,169,106,0.15)" }}>
+          style={{ background: "rgba(var(--wow-primary-rgb),0.08)", color: pending ? "var(--wow-text-faint)" : "var(--wow-gold)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
           {pending ? "Setting…" : "Set as main"}
         </button>
       )}
@@ -263,15 +263,15 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl wow-heading" style={{ color: "#f0c040" }}>Profile</h1>
+          <h1 className="text-3xl wow-heading" style={{ color: "var(--wow-gold-bright)" }}>Profile</h1>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
             {hasBnet ? (
-              <p className="text-sm font-medium" style={{ color: "#e8dfc8" }}>{user.battletag}</p>
+              <p className="text-sm font-medium" style={{ color: "var(--wow-text)" }}>{user.battletag}</p>
             ) : (
-              <p className="text-sm" style={{ color: "#8a8070" }}>{user.email}</p>
+              <p className="text-sm" style={{ color: "var(--wow-text-muted)" }}>{user.email}</p>
             )}
             <span className="text-xs px-2 py-0.5 rounded"
-              style={{ background: "rgba(200,169,106,0.1)", border: "1px solid rgba(200,169,106,0.2)", color: "#c8a96a" }}>
+              style={{ background: "rgba(var(--wow-primary-rgb),0.1)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-gold)" }}>
               {ROLE_BADGE[memberRole] ?? memberRole}
             </span>
           </div>
@@ -290,9 +290,9 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
 
       {linkMsg && (
         <div className="px-4 py-2 rounded text-sm" style={{
-          background: linkMsg.ok ? "rgba(200,169,106,0.08)" : "rgba(200,60,60,0.08)",
-          border: `1px solid ${linkMsg.ok ? "rgba(200,169,106,0.25)" : "rgba(200,60,60,0.25)"}`,
-          color: linkMsg.ok ? "#c8a96a" : "#e06060",
+          background: linkMsg.ok ? "rgba(var(--wow-primary-rgb),0.08)" : "rgba(200,60,60,0.08)",
+          border: `1px solid ${linkMsg.ok ? "rgba(var(--wow-primary-rgb),0.25)" : "rgba(200,60,60,0.25)"}`,
+          color: linkMsg.ok ? "var(--wow-gold)" : "#e06060",
         }}>
           {linkMsg.text}
         </div>
@@ -300,8 +300,8 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
 
       {/* Characters */}
       {chars.length === 0 ? (
-        <div className="rounded-lg p-8 text-center" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
-          <p className="text-sm mb-3" style={{ color: "#8a8070" }}>No characters linked yet.</p>
+        <div className="rounded-lg p-8 text-center" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+          <p className="text-sm mb-3" style={{ color: "var(--wow-text-muted)" }}>No characters linked yet.</p>
           {!hasBnet ? (
             <button onClick={() => signIn("battlenet")} className="wow-btn">
               🔗 Link Battle.net to import characters
@@ -316,9 +316,9 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
         <>
           {mainChar && (
             <div>
-              <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#5a5040" }}>Main Character</p>
+              <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--wow-text-faint)" }}>Main Character</p>
               <div className="rounded-lg p-6 relative group" style={{
-                background: "rgba(200,169,106,0.05)",
+                background: "rgba(var(--wow-primary-rgb),0.05)",
                 border: `2px solid ${classColor(mainChar.class)}50`,
                 boxShadow: `0 0 30px ${classColor(mainChar.class)}15`,
               }}>
@@ -335,11 +335,11 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                   )}
                   <div className="flex-1">
                     <p className="text-2xl font-bold" style={{ color: classColor(mainChar.class) }}>{mainChar.name}</p>
-                    <p className="text-sm mt-0.5" style={{ color: "#8a8070" }}>
+                    <p className="text-sm mt-0.5" style={{ color: "var(--wow-text-muted)" }}>
                       {mainChar.spec ? `${mainChar.spec} ` : ""}{mainChar.class} · {mainChar.realm}
                     </p>
                     <div className="flex items-center gap-4 mt-2">
-                      {mainChar.itemLevel && <span className="text-sm font-medium" style={{ color: "#e8dfc8" }}>{mainChar.itemLevel} iLvl</span>}
+                      {mainChar.itemLevel && <span className="text-sm font-medium" style={{ color: "var(--wow-text)" }}>{mainChar.itemLevel} iLvl</span>}
                       {mainChar.mythicScore && (
                         <span className="text-sm font-bold" style={{ color: scoreColor(mainChar.mythicScore) }}>
                           {mainChar.mythicScore.toFixed(1)} M+
@@ -347,7 +347,7 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                       )}
                       <span>{ROLE_ICON[mainChar.role] ?? "⚔️"}</span>
                     </div>
-                    {mainChar.guildName && <p className="text-xs mt-1" style={{ color: "#5a5040" }}>&lt;{mainChar.guildName}&gt;</p>}
+                    {mainChar.guildName && <p className="text-xs mt-1" style={{ color: "var(--wow-text-faint)" }}>&lt;{mainChar.guildName}&gt;</p>}
                   </div>
                   {/* Edit/unlink for main */}
                   <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -362,7 +362,7 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
 
           {alts.length > 0 && (
             <div>
-              <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#5a5040" }}>
+              <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--wow-text-faint)" }}>
                 Alts ({alts.length})
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -384,14 +384,14 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
       )}
 
       {/* Account Settings */}
-      <div className="rounded-lg p-6 space-y-4" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
-        <h2 className="text-sm uppercase tracking-widest font-semibold" style={{ color: "#5a5040" }}>Account Settings</h2>
+      <div className="rounded-lg p-6 space-y-4" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+        <h2 className="text-sm uppercase tracking-widest font-semibold" style={{ color: "var(--wow-text-faint)" }}>Account Settings</h2>
 
         {/* BNet status */}
-        <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid rgba(200,169,106,0.1)" }}>
+        <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.1)" }}>
           <div>
-            <p className="text-sm font-medium" style={{ color: "#e8dfc8" }}>Battle.net</p>
-            <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>
+            <p className="text-sm font-medium" style={{ color: "var(--wow-text)" }}>Battle.net</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-faint)" }}>
               {hasBnet ? user.battletag : "Not linked"}
             </p>
           </div>
@@ -407,10 +407,10 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
         </div>
 
         {/* Email */}
-        <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid rgba(200,169,106,0.1)" }}>
+        <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.1)" }}>
           <div>
-            <p className="text-sm font-medium" style={{ color: "#e8dfc8" }}>Email</p>
-            <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>{user.email ?? "—"}</p>
+            <p className="text-sm font-medium" style={{ color: "var(--wow-text)" }}>Email</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-faint)" }}>{user.email ?? "—"}</p>
           </div>
         </div>
 
@@ -419,8 +419,8 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
           <div>
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="text-sm font-medium" style={{ color: "#e8dfc8" }}>Password</p>
-                <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>Change your login password</p>
+                <p className="text-sm font-medium" style={{ color: "var(--wow-text)" }}>Password</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-faint)" }}>Change your login password</p>
               </div>
               <button onClick={() => { setShowPwForm(f => !f); setPwMsg(null); }}
                 className="wow-btn-ghost text-xs">
@@ -436,19 +436,19 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                   { label: "Confirm new password", key: "confirm" as const, placeholder: "••••••••" },
                 ].map(({ label, key, placeholder }) => (
                   <div key={key}>
-                    <label className="block text-xs mb-1" style={{ color: "#8a8070" }}>{label}</label>
+                    <label className="block text-xs mb-1" style={{ color: "var(--wow-text-muted)" }}>{label}</label>
                     <input
                       type="password"
                       value={pwForm[key]}
                       placeholder={placeholder}
                       onChange={e => setPwForm(f => ({ ...f, [key]: e.target.value }))}
                       className="w-full rounded px-3 py-2 text-sm outline-none"
-                      style={{ background: "#070a10", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8" }}
+                      style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }}
                     />
                   </div>
                 ))}
                 {pwMsg && (
-                  <p className="text-xs" style={{ color: pwMsg.ok ? "#c8a96a" : "#e06060" }}>{pwMsg.text}</p>
+                  <p className="text-xs" style={{ color: pwMsg.ok ? "var(--wow-gold)" : "#e06060" }}>{pwMsg.text}</p>
                 )}
                 <button onClick={changePassword} disabled={pwSaving} className="wow-btn text-sm w-full">
                   {pwSaving ? "Saving…" : "Update Password"}
@@ -456,7 +456,7 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
               </div>
             )}
             {pwMsg && !showPwForm && (
-              <p className="text-xs mt-2" style={{ color: pwMsg.ok ? "#c8a96a" : "#e06060" }}>{pwMsg.text}</p>
+              <p className="text-xs mt-2" style={{ color: pwMsg.ok ? "var(--wow-gold)" : "#e06060" }}>{pwMsg.text}</p>
             )}
           </div>
         )}

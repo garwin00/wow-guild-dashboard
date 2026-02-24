@@ -9,8 +9,8 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
 
   const inputStyle = {
-    background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)",
-    color: "#e8dfc8", borderRadius: "0.375rem",
+    background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)",
+    color: "var(--wow-text)", borderRadius: "0.375rem",
     padding: "0.5rem 0.75rem", width: "100%", fontSize: "0.875rem", outline: "none",
   };
 
@@ -33,27 +33,27 @@ export default function ForgotPasswordPage() {
         style={{ background: "linear-gradient(to right, transparent, #c8a96a, transparent)" }} />
 
       <div className="relative w-full max-w-sm mx-4">
-        <div className="absolute -top-px -left-px w-6 h-6 border-t border-l" style={{ borderColor: "#c8a96a" }} />
-        <div className="absolute -top-px -right-px w-6 h-6 border-t border-r" style={{ borderColor: "#c8a96a" }} />
-        <div className="absolute -bottom-px -left-px w-6 h-6 border-b border-l" style={{ borderColor: "#c8a96a" }} />
-        <div className="absolute -bottom-px -right-px w-6 h-6 border-b border-r" style={{ borderColor: "#c8a96a" }} />
+        <div className="absolute -top-px -left-px w-6 h-6 border-t border-l" style={{ borderColor: "var(--wow-gold)" }} />
+        <div className="absolute -top-px -right-px w-6 h-6 border-t border-r" style={{ borderColor: "var(--wow-gold)" }} />
+        <div className="absolute -bottom-px -left-px w-6 h-6 border-b border-l" style={{ borderColor: "var(--wow-gold)" }} />
+        <div className="absolute -bottom-px -right-px w-6 h-6 border-b border-r" style={{ borderColor: "var(--wow-gold)" }} />
 
         <div className="rounded-lg p-8 flex flex-col gap-5"
-          style={{ background: "linear-gradient(160deg, #131520 0%, #0d0f1a 100%)", border: "1px solid rgba(200,169,106,0.2)" }}>
+          style={{ background: "linear-gradient(160deg, #131520 0%, #0d0f1a 100%)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
 
           <div className="flex flex-col items-center gap-2 mb-1">
             <span className="text-4xl">🔑</span>
             <div className="wow-divider w-24" />
-            <h1 className="text-xl wow-heading text-center" style={{ color: "#f0c040" }}>Reset Password</h1>
+            <h1 className="text-xl wow-heading text-center" style={{ color: "var(--wow-gold-bright)" }}>Reset Password</h1>
           </div>
 
           {submitted ? (
             <div className="text-center space-y-4">
-              <p className="text-sm" style={{ color: "#e8dfc8" }}>
+              <p className="text-sm" style={{ color: "var(--wow-text)" }}>
                 If an account with that email exists, a reset link has been sent.
               </p>
-              <p className="text-xs" style={{ color: "#8a8070" }}>Check your inbox (and spam folder).</p>
-              <Link href="/login" className="block text-sm" style={{ color: "#c8a96a" }}>
+              <p className="text-xs" style={{ color: "var(--wow-text-muted)" }}>Check your inbox (and spam folder).</p>
+              <Link href="/login" className="block text-sm" style={{ color: "var(--wow-gold)" }}>
                 ← Back to sign in
               </Link>
             </div>
@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
             <>
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                  <label className="block text-xs mb-1.5 uppercase tracking-widest" style={{ color: "#5a5040" }}>Email</label>
+                  <label className="block text-xs mb-1.5 uppercase tracking-widest" style={{ color: "var(--wow-text-faint)" }}>Email</label>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                     style={inputStyle} placeholder="you@example.com" required />
                 </div>
@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
                   {loading ? "Sending…" : "Send Reset Link"}
                 </button>
               </form>
-              <Link href="/login" className="text-sm text-center" style={{ color: "#5a5040" }}>
+              <Link href="/login" className="text-sm text-center" style={{ color: "var(--wow-text-faint)" }}>
                 ← Back to sign in
               </Link>
             </>
