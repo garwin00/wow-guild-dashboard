@@ -109,9 +109,24 @@ function LoginForm() {
   );
 }
 
+function LoginSkeleton() {
+  return (
+    <div className="min-h-screen flex items-center justify-center"
+      style={{ background: "radial-gradient(ellipse at 50% 0%, #1a1208 0%, #09090e 60%)" }}>
+      <div className="w-full max-w-sm mx-4 rounded-lg p-8"
+        style={{ background: "linear-gradient(160deg, #131520 0%, #0d0f1a 100%)", border: "1px solid rgba(200,169,106,0.2)" }}>
+        <div className="flex flex-col items-center gap-2 mb-4">
+          <span className="text-4xl">⚔️</span>
+          <h1 className="text-xl text-center" style={{ color: "#f0c040" }}>Guild Dashboard</h1>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<LoginSkeleton />}>
       <LoginForm />
     </Suspense>
   );
