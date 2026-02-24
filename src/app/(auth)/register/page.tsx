@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -25,15 +23,20 @@ export default function RegisterPage() {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error); return; }
-
-      // Auto sign-in then go to onboarding
-      const result = await signIn("credentials", { email, password, redirect: false });
-      if (result?.error) { setError("Registration succeeded but sign-in failed. Please log in."); return; }
-      router.push("/guilds/new");
+      if (!res.ok) { setError(data.error); setLoading(false); return; }
     } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
+      setError("Registration failed. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    // Sign in separately — NextAuth v5 signIn throws on failure
+    try {
+      await signIn("credentials", { email, password, redirectTo: "/guilds/new" });
+    } catch (err) {
+      // NextAuth v5 throws a redirect on success — that's expected
+      if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) return;
+      setError("Account created but sign-in failed. Please sign in manually.");
       setLoading(false);
     }
   }
