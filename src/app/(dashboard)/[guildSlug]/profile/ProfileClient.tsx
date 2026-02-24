@@ -33,6 +33,19 @@ function classColor(cls: string | null) { return CLASS_COLORS[cls?.toLowerCase()
 const ROLE_ICON: Record<string, string> = { TANK: "🛡️", HEALER: "💚", DPS: "⚔️" };
 const ROLE_BADGE: Record<string, string> = { GM: "👑 GM", OFFICER: "⭐ Officer", MEMBER: "🗡️ Member" };
 
+const ARMORY_LOCALE: Record<string, string> = { eu: "en-gb", us: "en-us", kr: "ko-kr", tw: "zh-tw" };
+function externalLinks(region: string, realm: string, name: string) {
+  const locale = ARMORY_LOCALE[region.toLowerCase()] ?? "en-gb";
+  const r = region.toLowerCase();
+  const rlm = realm.toLowerCase();
+  const n = encodeURIComponent(name);
+  return {
+    armory: `https://worldofwarcraft.blizzard.com/${locale}/character/${r}/${rlm}/${n}`,
+    raiderio: `https://raider.io/characters/${r}/${rlm}/${name}`,
+    wcl: `https://www.warcraftlogs.com/character/${r}/${rlm}/${n}`,
+  };
+}
+
 interface Character {
   id: string;
   name: string;
@@ -378,6 +391,31 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
                         <p className="text-xs mt-0.5" style={{ color: "var(--wow-text-faint)" }}>Mythic+ Score</p>
                       </div>
                     </div>
+                    {/* External links */}
+                    {(() => {
+                      const links = externalLinks(mainChar.region, mainChar.realm, mainChar.name);
+                      return (
+                        <div className="flex items-center gap-2 mt-3 flex-wrap">
+                          {[
+                            { href: links.armory, label: "Armory" },
+                            { href: links.raiderio, label: "Raider.IO" },
+                            { href: links.wcl, label: "Warcraft Logs" },
+                          ].map(({ href, label }) => (
+                            <a key={label} href={href} target="_blank" rel="noopener noreferrer"
+                              className="text-xs px-2 py-1 rounded transition-colors"
+                              style={{
+                                background: "rgba(var(--wow-primary-rgb),0.08)",
+                                border: "1px solid rgba(var(--wow-primary-rgb),0.2)",
+                                color: "var(--wow-text-muted)",
+                              }}
+                              onMouseOver={e => (e.currentTarget.style.color = "var(--wow-gold-bright)")}
+                              onMouseOut={e => (e.currentTarget.style.color = "var(--wow-text-muted)")}>
+                              {label} ↗
+                            </a>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
