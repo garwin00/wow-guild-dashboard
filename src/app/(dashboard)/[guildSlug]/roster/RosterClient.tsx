@@ -43,12 +43,15 @@ const CLASS_BG: Record<string, string> = {
 const ROLE_ICON: Record<CharRole, string> = { TANK: "🛡️", HEALER: "💚", DPS: "⚔️" };
 const ROLE_LABEL: Record<CharRole, string> = { TANK: "Tanks", HEALER: "Healers", DPS: "DPS" };
 
+// Midnight-era squished item levels (100–300 range)
+// ~Raid Finder ≈ 160, Normal ≈ 180, Heroic ≈ 200, Mythic ≈ 220+
 function iLvlColor(ilvl: number | null): string {
   if (!ilvl) return "text-gray-500";
-  if (ilvl >= 650) return "text-orange-400";
-  if (ilvl >= 630) return "text-purple-400";
-  if (ilvl >= 610) return "text-blue-400";
-  return "text-green-400";
+  if (ilvl >= 220) return "text-orange-400"; // Mythic / BiS
+  if (ilvl >= 200) return "text-purple-400"; // Heroic
+  if (ilvl >= 180) return "text-blue-400";   // Normal
+  if (ilvl >= 160) return "text-green-400";  // Raid Finder / world gear
+  return "text-gray-400";
 }
 
 export default function RosterClient({ characters, guildSlug, isOfficer, guildName }: {
