@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -73,7 +72,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--wow-border);
   }
   body {
     background-color: var(--wow-bg);
