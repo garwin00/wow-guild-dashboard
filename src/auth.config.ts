@@ -30,8 +30,8 @@ export const authConfig = {
       if (isPublicAsset || isNextAuthRoute) return true;
 
       if (isAuthPage) {
-        // Redirect logged-in users away from auth pages
-        if (isLoggedIn) return Response.redirect(new URL("/", nextUrl));
+        // Let auth pages render regardless — they handle their own redirect-if-logged-in logic
+        // Don't redirect here as JWT may be stale (e.g. user deleted from DB)
         return true;
       }
 
