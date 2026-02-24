@@ -125,3 +125,76 @@ export async function getCharacterParses(
     zoneID: zoneId,
   });
 }
+
+export async function getActiveReport(guildName: string, serverSlug: string, serverRegion: string) {
+  const query = `
+    query ActiveReport($guildName: String!, $serverSlug: String!, $serverRegion: String!) {
+      reportData {
+        reports(guildName: $guildName, serverSlug: $serverSlug, serverRegion: $serverRegion, limit: 1) {
+          data {
+            code
+            title
+            startTime
+            endTime
+            zone { name id }
+          }
+        }
+      }
+    }
+  `;
+  type Rpt = { code: string; title: string; startTime: number; endTime: number; zone: { name: string; id: number } | null };
+  type R = { reportData: { reports: { data: Rpt[] } } };
+  const data = await wclQuery<R>(query, { guildName, serverSlug, serverRegion });
+  const reports = data?.reportData?.reports?.data ?? [];
+  return reports.find((r) => r.endTime === 0) ?? null;
+}
+
+export async function getLiveFights(reportCode: string) {
+  const query = `
+    query LiveFights($code: String!) {
+      reportData {
+        report(code: $code) {
+          title
+          startTime
+          endTime
+          zone { name }
+          fights {
+            id
+            name
+            difficulty
+            bossPercentage
+            fightPercentage
+            startTime
+            endTime
+            friendlyPlayers
+          }
+          masterData {
+            actors(type: "Player") {
+              id
+              name
+              subType
+            }
+          }
+        }
+      }
+    }
+  `;
+  type Fight = {
+    id: number; name: string; difficulty: number | null;
+    bossPercentage: number | null; fightPercentage: number | null;
+    startTime: number; endTime: number; friendlyPlayers: number[];
+  };
+  type Actor = { id: number; name: string; subType: string };
+  type R = {
+    reportData: {
+      report: {
+        title: string; startTime: number; endTime: number;
+        zone: { name: string } | null;
+        fights: Fight[];
+        masterData: { actors: Actor[] };
+      };
+    };
+  };
+  const data = await wclQuery<R>(query, { code: reportCode });
+  return data?.reportData?.report ?? null;
+}

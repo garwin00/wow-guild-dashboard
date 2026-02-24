@@ -28,6 +28,7 @@ export default async function DashboardLayout({ children, params }: Props) {
     { href: `/${guildSlug}/roster`, label: "Roster", icon: "👥" },
     { href: `/${guildSlug}/raids`, label: "Raids", icon: "📅" },
     { href: `/${guildSlug}/logs`, label: "Logs", icon: "📊" },
+    { href: `/${guildSlug}/logs/live`, label: "Live", icon: "🔴" },
     { href: `/${guildSlug}/settings`, label: "Settings", icon: "⚙️" },
   ];
 
