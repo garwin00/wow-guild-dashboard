@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import type { AdapterUser } from "next-auth/adapters";
 import bcrypt from "bcryptjs";
+import { authConfig } from "@/auth.config";
 
 const BNET_REGION = process.env.BLIZZARD_REGION ?? "eu";
 
@@ -30,6 +31,7 @@ function customAdapter() {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   adapter: customAdapter(),
   providers: [
     Credentials({
@@ -83,7 +85,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
   },
-  pages: {
-    signIn: "/login",
-  },
 });
+
