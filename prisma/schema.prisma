@@ -26,6 +26,9 @@ model User {
   accounts            Account[]
   sessions            Session[]
   passwordResetTokens PasswordResetToken[]
+  officerNotesAbout   OfficerNote[]       @relation("OfficerNoteTarget")
+  officerNotesWritten OfficerNote[]       @relation("OfficerNoteAuthor")
+  absenceNotices      AbsenceNotice[]
 }
 
 model PasswordResetToken {
@@ -89,11 +92,13 @@ model Guild {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships  GuildMembership[]
-  characters   Character[]
-  raidEvents   RaidEvent[]
-  logReports   LogReport[]
-  mythicScores MythicPlusScore[]
+  memberships    GuildMembership[]
+  characters     Character[]
+  raidEvents     RaidEvent[]
+  logReports     LogReport[]
+  mythicScores   MythicPlusScore[]
+  officerNotes   OfficerNote[]
+  absenceNotices AbsenceNotice[]
 }
 
 model GuildMembership {
@@ -146,6 +151,7 @@ model RaidEvent {
   raidZone     String
   scheduledAt  DateTime
   maxAttendees Int         @default(25)
+  minItemLevel Int?
   status       EventStatus @default(OPEN)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
@@ -274,4 +280,31 @@ model MythicPlusRun {
   character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@unique([characterId, dungeon, level, completedAt])
+}
+
+model OfficerNote {
+  id           String          @id @default(cuid())
+  guildId      String
+  targetUserId String          // the member being noted
+  authorId     String          // officer who wrote it
+  content      String          @db.Text
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  guild        Guild           @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  targetUser   User            @relation("OfficerNoteTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  author       User            @relation("OfficerNoteAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model AbsenceNotice {
+  id          String    @id @default(cuid())
+  guildId     String
+  userId      String
+  startDate   DateTime
+  endDate     DateTime
+  reason      String?   @db.Text
+  createdAt   DateTime  @default(now())
+
+  guild       Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -3,9 +3,25 @@
 import { useState } from "react";
 
 type SignupStatus = "ACCEPTED" | "TENTATIVE" | "DECLINED";
-interface Character { id: string; name: string; class: string; role: string; }
+interface Character { id: string; name: string; class: string; role: string; itemLevel: number | null; }
 interface Signup { id: string; status: SignupStatus; note: string | null; character: Character; }
-interface RaidEvent { id: string; title: string; raidZone: string; scheduledAt: string | Date; maxAttendees: number; status: string; description: string | null; _count: { signups: number }; }
+interface RaidEvent { id: string; title: string; raidZone: string; scheduledAt: string | Date; maxAttendees: number; minItemLevel: number | null; status: string; description: string | null; _count: { signups: number }; }
+
+const CLASS_COLOR_HEX: Record<string, string> = {
+  "death knight": "#C41E3A", "demon hunter": "#A330C9", "druid": "#FF7C0A",
+  "evoker": "#33937F", "hunter": "#AAD372", "mage": "#3FC7EB", "monk": "#00FF98",
+  "paladin": "#F48CBA", "priest": "#FFFFFF", "rogue": "#FFF468",
+  "shaman": "#0070DD", "warlock": "#8788EE", "warrior": "#C69B3A",
+};
+function classColor(cls: string) { return CLASS_COLOR_HEX[cls.toLowerCase()] ?? "#9ca3af"; }
+
+function ReadinessBadge({ ilvl, min }: { ilvl: number | null; min: number }) {
+  if (!ilvl) return <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>—</span>;
+  const diff = ilvl - min;
+  if (diff >= 0) return <span className="text-xs font-semibold tabular-nums" style={{ color: "#1eff00" }}>✓ {ilvl}</span>;
+  if (diff >= -5) return <span className="text-xs font-semibold tabular-nums" style={{ color: "#ff8000" }}>⚠ {ilvl}</span>;
+  return <span className="text-xs font-semibold tabular-nums" style={{ color: "#e53e3e" }}>✗ {ilvl}</span>;
+}
 
 const STATUS_COLORS: Record<SignupStatus, string> = {
   ACCEPTED: "bg-green-900/40 border-green-700 text-green-300",
@@ -65,6 +81,21 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
           {date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
         </p>
         {event.description && <p style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem", marginTop: "0.5rem" }}>{event.description}</p>}
+        {event.minItemLevel && (() => {
+          const accepted = signups.filter(s => s.status === "ACCEPTED");
+          const ready = accepted.filter(s => (s.character.itemLevel ?? 0) >= event.minItemLevel!).length;
+          const readyPct = accepted.length ? Math.round((ready / accepted.length) * 100) : 0;
+          return (
+            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm"
+              style={{ background: "rgba(var(--wow-primary-rgb),0.08)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+              <span style={{ color: "var(--wow-text-faint)" }}>Min iLvl: <span style={{ color: "var(--wow-gold)" }}>{event.minItemLevel}</span></span>
+              <span style={{ color: "var(--wow-text-faint)" }}>·</span>
+              <span style={{ color: readyPct === 100 ? "#1eff00" : readyPct >= 80 ? "#ff8000" : "#e53e3e" }}>
+                {ready}/{accepted.length} ready ({readyPct}%)
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Sign-up form (for members with characters) */}
@@ -128,6 +159,7 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
               <tr style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)", textAlign: "left", fontSize: "0.75rem", fontFamily: "inherit", color: "var(--wow-text-faint)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <th className="px-4 py-3">Character</th>
                 <th className="px-4 py-3">Role</th>
+                {event.minItemLevel && <th className="px-4 py-3 text-right">iLvl</th>}
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Note</th>
               </tr>
@@ -137,8 +169,15 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
                 <tr key={signup.id} style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}
                   onMouseOver={(e) => (e.currentTarget.style.background = "rgba(var(--wow-primary-rgb),0.04)")}
                   onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}>
-                  <td className="px-4 py-3" style={{ color: "var(--wow-text)", fontSize: "0.875rem", fontWeight: 500 }}>{signup.character.name}</td>
+                  <td className="px-4 py-3" style={{ color: "var(--wow-text)", fontSize: "0.875rem", fontWeight: 500 }}>
+                    <span style={{ color: classColor(signup.character.class) }}>{signup.character.name}</span>
+                  </td>
                   <td className="px-4 py-3" style={{ color: "var(--wow-text-muted)", fontSize: "0.875rem" }}>{signup.character.role}</td>
+                  {event.minItemLevel && (
+                    <td className="px-4 py-3 text-right">
+                      <ReadinessBadge ilvl={signup.character.itemLevel} min={event.minItemLevel} />
+                    </td>
+                  )}
                   <td className="px-4 py-3">
                     {isOfficer ? (
                       <select value={signup.status} onChange={(e) => officerUpdate(signup.id, e.target.value as SignupStatus)}

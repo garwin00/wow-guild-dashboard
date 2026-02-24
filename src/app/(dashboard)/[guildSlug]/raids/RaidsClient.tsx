@@ -19,7 +19,7 @@ export default function RaidsClient({ events: initial, guildSlug, isOfficer, use
 }) {
   const [events, setEvents] = useState(initial);
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ title: "", raidZone: "", scheduledAt: "", maxAttendees: "25", description: "" });
+  const [form, setForm] = useState({ title: "", raidZone: "", scheduledAt: "", maxAttendees: "25", minItemLevel: "", description: "" });
   const [saving, setSaving] = useState(false);
 
   async function createEvent(e: React.FormEvent) {
@@ -27,7 +27,7 @@ export default function RaidsClient({ events: initial, guildSlug, isOfficer, use
     setSaving(true);
     const res = await fetch("/api/raids/create", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, maxAttendees: parseInt(form.maxAttendees), guildSlug }),
+      body: JSON.stringify({ ...form, maxAttendees: parseInt(form.maxAttendees), minItemLevel: form.minItemLevel ? parseInt(form.minItemLevel) : null, guildSlug }),
     });
     const data = await res.json();
     if (res.ok) {
@@ -35,7 +35,7 @@ export default function RaidsClient({ events: initial, guildSlug, isOfficer, use
         (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
       ));
       setShowCreate(false);
-      setForm({ title: "", raidZone: "", scheduledAt: "", maxAttendees: "25", description: "" });
+      setForm({ title: "", raidZone: "", scheduledAt: "", maxAttendees: "25", minItemLevel: "", description: "" });
     }
     setSaving(false);
   }
@@ -79,6 +79,11 @@ export default function RaidsClient({ events: initial, guildSlug, isOfficer, use
             <div>
               <label className="block text-xs mb-1" style={{ fontFamily: "inherit", color: "var(--wow-text-faint)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Max Attendees</label>
               <input type="number" min="1" max="40" value={form.maxAttendees} onChange={(e) => setForm({ ...form, maxAttendees: e.target.value })}
+                style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", width: "100%", outline: "none" }} />
+            </div>
+            <div>
+              <label className="block text-xs mb-1" style={{ fontFamily: "inherit", color: "var(--wow-text-faint)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Min iLvl (optional)</label>
+              <input type="number" min="0" max="999" placeholder="e.g. 619" value={form.minItemLevel} onChange={(e) => setForm({ ...form, minItemLevel: e.target.value })}
                 style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", width: "100%", outline: "none" }} />
             </div>
           </div>

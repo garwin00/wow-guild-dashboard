@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 type CharRole = "TANK" | "HEALER" | "DPS";
 interface Character {
   id: string; name: string; realm: string; class: string; spec: string | null;
   role: CharRole; itemLevel: number | null; level: number | null; isMain: boolean; avatarUrl: string | null;
-  guildRank: number | null;
+  guildRank: number | null; userId: string | null;
 }
 
 // Official Blizzard WoW class colours
@@ -55,19 +55,64 @@ function iLvlColor(ilvl: number | null): string {
   return "text-gray-400";
 }
 
-export default function RosterClient({ characters, guildSlug, isOfficer, guildName }: {
+function attendanceColor(pct: number): string {
+  if (pct >= 80) return "#1eff00";   // green — reliable
+  if (pct >= 60) return "#ff8000";   // orange — ok
+  if (pct >= 40) return "#ff6020";   // amber — poor
+  return "#e53e3e";                  // red — absent
+}
+
+export default function RosterClient({ characters, guildSlug, isOfficer, guildName, attendanceMap, absencesByUser, currentUserId }: {
   characters: Character[]; guildSlug: string; isOfficer: boolean; guildName: string;
+  attendanceMap: Record<string, { attended: number; total: number }>;
+  absencesByUser: Record<string, { startDate: Date | string; endDate: Date | string; reason: string | null }[]>;
+  currentUserId: string;
 }) {
   const [chars, setChars] = useState(characters);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState("");
   const [filter, setFilter] = useState<CharRole | "ALL">("ALL");
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"rank" | "ilvl" | "name">("rank");
+  const [sortBy, setSortBy] = useState<"rank" | "ilvl" | "name" | "attendance">("rank");
   const [cooldownUntil, setCooldownUntil] = useState<number>(() => {
     if (typeof window === "undefined") return 0;
     return parseInt(localStorage.getItem(`roster-sync-cooldown-${guildSlug}`) ?? "0", 10);
   });
+
+  // Officer notes panel
+  const [notePanel, setNotePanel] = useState<{ char: Character } | null>(null);
+  const [notes, setNotes] = useState<{ id: string; content: string; createdAt: string; author: { name: string | null; email: string } }[]>([]);
+  const [noteInput, setNoteInput] = useState("");
+  const [noteLoading, setNoteLoading] = useState(false);
+
+  const openNotePanel = useCallback(async (char: Character) => {
+    if (!char.userId) return;
+    setNotePanel({ char });
+    setNotes([]);
+    setNoteInput("");
+    setNoteLoading(true);
+    const res = await fetch(`/api/officer-notes?guildSlug=${encodeURIComponent(guildSlug)}&targetUserId=${char.userId}`);
+    if (res.ok) setNotes(await res.json());
+    setNoteLoading(false);
+  }, [guildSlug]);
+
+  async function addNote() {
+    if (!notePanel?.char.userId || !noteInput.trim()) return;
+    const res = await fetch("/api/officer-notes", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guildSlug, targetUserId: notePanel.char.userId, content: noteInput.trim() }),
+    });
+    if (res.ok) {
+      const note = await res.json();
+      setNotes((prev) => [note, ...prev]);
+      setNoteInput("");
+    }
+  }
+
+  async function deleteNote(id: string) {
+    await fetch(`/api/officer-notes?id=${id}`, { method: "DELETE" });
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  }
 
   const COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
   const cooldownRemaining = Math.max(0, cooldownUntil - Date.now());
@@ -106,6 +151,11 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
     .sort((a, b) => {
       if (sortBy === "rank") return (a.guildRank ?? 99) - (b.guildRank ?? 99) || a.name.localeCompare(b.name);
       if (sortBy === "ilvl") return (b.itemLevel ?? 0) - (a.itemLevel ?? 0);
+      if (sortBy === "attendance") {
+        const aPct = attendanceMap[a.id]?.total ? (attendanceMap[a.id].attended / attendanceMap[a.id].total) * 100 : -1;
+        const bPct = attendanceMap[b.id]?.total ? (attendanceMap[b.id].attended / attendanceMap[b.id].total) * 100 : -1;
+        return bPct - aPct;
+      }
       return a.name.localeCompare(b.name);
     });
 
@@ -163,7 +213,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
           className="w-full max-w-xs rounded px-3 py-2 text-sm focus:outline-none"
           style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
         <div className="flex gap-1 ml-auto">
-          {(["rank", "ilvl", "name"] as const).map((s) => (
+          {(["rank", "ilvl", "name", "attendance"] as const).map((s) => (
             <button key={s} onClick={() => setSortBy(s)}
               className="px-3 py-1.5 rounded text-xs transition-all"
               style={{
@@ -173,7 +223,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                 color: sortBy === s ? "var(--wow-gold-bright)" : "var(--wow-text-faint)",
                 border: sortBy === s ? "1px solid rgba(var(--wow-primary-rgb),0.3)" : "1px solid transparent",
               }}>
-              {s === "rank" ? "Rank" : s === "ilvl" ? "iLvl" : "Name"}
+              {s === "rank" ? "Rank" : s === "ilvl" ? "iLvl" : s === "attendance" ? "Attendance" : "Name"}
             </button>
           ))}
         </div>
@@ -196,6 +246,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                 <th className="px-4 py-3 hidden md:table-cell">Class · Spec</th>
                 <th className="px-4 py-3 text-right hidden sm:table-cell">Level</th>
                 <th className="px-4 py-3 text-right pr-8 hidden sm:table-cell">iLvl</th>
+                <th className="px-4 py-3 text-right hidden lg:table-cell">Attend.</th>
                 <th className="px-4 py-3 pl-8">Role</th>
               </tr>
             </thead>
@@ -220,7 +271,12 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-sm" style={{ color: classColor(char.class) }}>{char.name}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-medium text-sm" style={{ color: classColor(char.class) }}>{char.name}</p>
+                          {char.userId && absencesByUser[char.userId]?.length > 0 && (
+                            <span title={`${absencesByUser[char.userId].length} absence notice(s)`} className="text-xs" style={{ color: "#ff8000" }}>🏖</span>
+                          )}
+                        </div>
                         <p className="text-xs md:hidden" style={{ color: classColor(char.class) }}>
                           {char.spec ? `${char.spec} ` : ""}{char.class}
                         </p>
@@ -239,23 +295,85 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                   <td className={`px-4 py-3 text-sm font-semibold text-right pr-8 tabular-nums hidden sm:table-cell ${iLvlColor(char.itemLevel)}`}>
                     {char.itemLevel ?? "—"}
                   </td>
+                  <td className="px-4 py-3 text-right hidden lg:table-cell">
+                    {(() => {
+                      const att = attendanceMap[char.id];
+                      if (!att || att.total === 0) return <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>—</span>;
+                      const pct = Math.round((att.attended / att.total) * 100);
+                      return (
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span className="text-xs font-semibold tabular-nums" style={{ color: attendanceColor(pct) }}>{pct}%</span>
+                          <div className="w-12 h-1 rounded-full overflow-hidden" style={{ background: "rgba(var(--wow-primary-rgb),0.1)" }}>
+                            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: attendanceColor(pct) }} />
+                          </div>
+                          <span className="text-[10px]" style={{ color: "var(--wow-text-faint)" }}>{att.attended}/{att.total}</span>
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td className="px-4 py-3 pl-4 sm:pl-8">
-                    {isOfficer ? (
-                      <select value={char.role} onChange={(e) => setRole(char.id, e.target.value as CharRole)}
-                        className="text-xs rounded px-2 py-1 focus:outline-none"
-                        style={{ background: "var(--wow-surface-2)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }}>
-                        <option value="TANK">🛡️ Tank</option>
-                        <option value="HEALER">💚 Healer</option>
-                        <option value="DPS">⚔️ DPS</option>
-                      </select>
-                    ) : (
-                      <span className="text-sm">{ROLE_ICON[char.role]}</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {isOfficer ? (
+                        <select value={char.role} onChange={(e) => setRole(char.id, e.target.value as CharRole)}
+                          className="text-xs rounded px-2 py-1 focus:outline-none"
+                          style={{ background: "var(--wow-surface-2)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }}>
+                          <option value="TANK">🛡️ Tank</option>
+                          <option value="HEALER">💚 Healer</option>
+                          <option value="DPS">⚔️ DPS</option>
+                        </select>
+                      ) : (
+                        <span className="text-sm">{ROLE_ICON[char.role]}</span>
+                      )}
+                      {isOfficer && char.userId && (
+                        <button onClick={() => openNotePanel(char)} title="Officer notes"
+                          className="text-sm opacity-40 hover:opacity-100 transition-opacity">📝</button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Officer Notes slide panel */}
+      {notePanel && (
+        <div className="fixed inset-0 z-50 flex">
+          <div className="flex-1" onClick={() => setNotePanel(null)} style={{ background: "rgba(0,0,0,0.5)" }} />
+          <div className="w-full max-w-sm flex flex-col" style={{ background: "var(--wow-bg)", borderLeft: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+            <div className="flex items-center justify-between p-4" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+              <div>
+                <p className="text-xs uppercase tracking-widest mb-0.5" style={{ color: "var(--wow-text-faint)" }}>Officer Notes</p>
+                <p className="font-semibold" style={{ color: classColor(notePanel.char.class) }}>{notePanel.char.name}</p>
+              </div>
+              <button onClick={() => setNotePanel(null)} className="text-lg opacity-60 hover:opacity-100" style={{ color: "var(--wow-text)" }}>✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {noteLoading ? (
+                <p className="text-sm text-center py-8" style={{ color: "var(--wow-text-faint)" }}>Loading…</p>
+              ) : notes.length === 0 ? (
+                <p className="text-sm text-center py-8" style={{ color: "var(--wow-text-faint)" }}>No notes yet.</p>
+              ) : notes.map((n) => (
+                <div key={n.id} className="rounded-lg p-3" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.12)" }}>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm flex-1" style={{ color: "var(--wow-text)" }}>{n.content}</p>
+                    <button onClick={() => deleteNote(n.id)} className="text-xs opacity-40 hover:opacity-100 shrink-0" style={{ color: "#e53e3e" }}>✕</button>
+                  </div>
+                  <p className="text-[10px] mt-1.5" style={{ color: "var(--wow-text-faint)" }}>
+                    {n.author.name ?? n.author.email} · {new Date(n.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="p-4" style={{ borderTop: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+              <textarea value={noteInput} onChange={(e) => setNoteInput(e.target.value)} rows={3}
+                placeholder="Add a note… (officer-only, not visible to member)"
+                className="w-full rounded-lg p-3 text-sm focus:outline-none resize-none"
+                style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+              <button onClick={addNote} disabled={!noteInput.trim()} className="wow-btn w-full mt-2" style={{ opacity: noteInput.trim() ? 1 : 0.4 }}>Add Note</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

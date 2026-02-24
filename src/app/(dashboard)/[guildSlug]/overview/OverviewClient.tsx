@@ -77,6 +77,29 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
   const [selectedCharId, setSelectedCharId] = useState<string>(myCharacters[0]?.id ?? "");
   const [localMySignup, setLocalMySignup] = useState<MySignup | null>(mySignup);
 
+  // Absence notices
+  const [absenceForm, setAbsenceForm] = useState({ startDate: "", endDate: "", reason: "" });
+  const [absenceStatus, setAbsenceStatus] = useState<string | null>(null);
+  const [submittingAbsence, setSubmittingAbsence] = useState(false);
+
+  async function submitAbsence(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmittingAbsence(true);
+    setAbsenceStatus(null);
+    const res = await fetch("/api/absences", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guildSlug: guild.slug, ...absenceForm }),
+    });
+    if (res.ok) {
+      setAbsenceStatus("✓ Absence notice submitted");
+      setAbsenceForm({ startDate: "", endDate: "", reason: "" });
+    } else {
+      const d = await res.json();
+      setAbsenceStatus(d.error ?? "Failed to submit");
+    }
+    setSubmittingAbsence(false);
+  }
+
   const nextRaid = upcomingRaids[0] ?? null;
 
   useEffect(() => {
@@ -353,6 +376,38 @@ export default function OverviewClient({ guild, memberRole, rosterCount, myChara
             </Link>
           )}
         </div>
+      </div>
+
+      {/* ── Absence Notice ── */}
+      <div className="rounded-lg p-6 mb-6" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+        <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--wow-text-faint)" }}>Submit Absence Notice</p>
+        <form onSubmit={submitAbsence} className="flex flex-wrap gap-3 items-end">
+          <div>
+            <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>From</label>
+            <input required type="date" value={absenceForm.startDate} onChange={e => setAbsenceForm(f => ({ ...f, startDate: e.target.value }))}
+              className="rounded px-3 py-2 text-sm focus:outline-none"
+              style={{ background: "var(--wow-surface-2,var(--wow-bg))", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+          </div>
+          <div>
+            <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>To</label>
+            <input required type="date" value={absenceForm.endDate} onChange={e => setAbsenceForm(f => ({ ...f, endDate: e.target.value }))}
+              className="rounded px-3 py-2 text-sm focus:outline-none"
+              style={{ background: "var(--wow-surface-2,var(--wow-bg))", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+          </div>
+          <div className="flex-1 min-w-[180px]">
+            <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Reason (optional)</label>
+            <input type="text" value={absenceForm.reason} onChange={e => setAbsenceForm(f => ({ ...f, reason: e.target.value }))}
+              placeholder="Holiday, work, illness…"
+              className="w-full rounded px-3 py-2 text-sm focus:outline-none"
+              style={{ background: "var(--wow-surface-2,var(--wow-bg))", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+          </div>
+          <button type="submit" disabled={submittingAbsence} className="wow-btn shrink-0" style={{ opacity: submittingAbsence ? 0.5 : 1 }}>
+            {submittingAbsence ? "Submitting…" : "Submit"}
+          </button>
+        </form>
+        {absenceStatus && (
+          <p className="text-sm mt-2" style={{ color: absenceStatus.startsWith("✓") ? "#1eff00" : "#e53e3e" }}>{absenceStatus}</p>
+        )}
       </div>
 
       {/* ── Signup Modal ── */}
