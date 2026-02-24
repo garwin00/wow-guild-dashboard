@@ -168,8 +168,8 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                 <th className="px-4 py-3 w-10 text-center">Rank</th>
                 <th className="px-4 py-3">Character</th>
                 <th className="px-4 py-3">Class · Spec</th>
-                <th className="px-4 py-3 text-right">iLvl</th>
-                <th className="px-4 py-3">Role</th>
+                <th className="px-4 py-3 text-right pr-8">iLvl</th>
+                <th className="px-4 py-3 pl-8">Role</th>
               </tr>
             </thead>
             <tbody>
@@ -202,10 +202,10 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                       {char.spec ? `${char.spec} ` : ""}{char.class && char.class !== "Unknown" ? char.class : <span className="text-gray-600 italic">Unknown</span>}
                     </span>
                   </td>
-                  <td className={`px-4 py-3 text-sm font-semibold text-right tabular-nums ${iLvlColor(char.itemLevel)}`}>
+                  <td className={`px-4 py-3 text-sm font-semibold text-right pr-8 tabular-nums ${iLvlColor(char.itemLevel)}`}>
                     {char.itemLevel ?? "—"}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 pl-8">
                     {isOfficer ? (
                       <select value={char.role} onChange={(e) => setRole(char.id, e.target.value as CharRole)}
                         className="bg-gray-800 border border-gray-700 text-white text-xs rounded px-2 py-1 focus:outline-none focus:border-blue-500">
