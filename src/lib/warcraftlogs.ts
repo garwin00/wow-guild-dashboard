@@ -2,6 +2,9 @@ const WCL_TOKEN_URL = "https://www.warcraftlogs.com/oauth/token";
 const WCL_API_URL = "https://www.warcraftlogs.com/api/v2/client";
 
 async function getWclToken(): Promise<string> {
+  if (!process.env.WCL_CLIENT_ID || !process.env.WCL_CLIENT_SECRET) {
+    throw new Error("WCL_CLIENT_ID and WCL_CLIENT_SECRET are not configured");
+  }
   const res = await fetch(WCL_TOKEN_URL, {
     method: "POST",
     headers: {
@@ -13,7 +16,9 @@ async function getWclToken(): Promise<string> {
     body: "grant_type=client_credentials",
     next: { revalidate: 3600 },
   });
+  if (!res.ok) throw new Error(`WCL token request failed: ${res.status} ${res.statusText}`);
   const data = await res.json();
+  if (!data.access_token) throw new Error("WCL token response missing access_token");
   return data.access_token as string;
 }
 

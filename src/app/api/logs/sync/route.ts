@@ -16,8 +16,22 @@ export async function POST(req: Request) {
   const guild = membership.guild;
   if (!guild.wclGuildId) return NextResponse.json({ error: "No WCL guild linked" }, { status: 400 });
 
-  // wclGuildId is stored as "GuildName/serverSlug/region" or just guild name — use guild data
-  const reports = await getGuildReports(guild.wclGuildId, guild.realm.toLowerCase().replace(/\s+/g, "-"), guild.region);
+  if (!process.env.WCL_CLIENT_ID || !process.env.WCL_CLIENT_SECRET) {
+    return NextResponse.json({ error: "WCL_CLIENT_ID and WCL_CLIENT_SECRET are not set in .env.local" }, { status: 503 });
+  }
+
+  let reports;
+  try {
+    const result = await getGuildReports(guild.wclGuildId, guild.realm.toLowerCase().replace(/\s+/g, "-"), guild.region);
+    // getGuildReports returns the full GQL response — unwrap to the data array
+    type GqlResult = { reportData?: { reports?: { data?: unknown[] } } };
+    const typed = result as GqlResult;
+    reports = typed?.reportData?.reports?.data ?? (Array.isArray(result) ? result : []);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "WCL API error";
+    return NextResponse.json({ error: msg }, { status: 502 });
+  }
+
   const data = (reports as Array<{ code: string; title: string; zone?: { name: string }; startTime: number; fights?: unknown[] }>);
   let count = 0;
   for (const r of data) {

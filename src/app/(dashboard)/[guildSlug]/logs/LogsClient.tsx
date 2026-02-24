@@ -15,9 +15,14 @@ export default function LogsClient({ reports: initial, guild, guildSlug, isOffic
 
   async function syncReports() {
     setSyncing(true); setMessage("");
-    const res = await fetch(`/api/logs/sync?guildSlug=${guildSlug}`, { method: "POST" });
-    const data = await res.json();
-    setMessage(res.ok ? `Synced ${data.count} reports.` : data.error ?? "Sync failed");
+    try {
+      const res = await fetch(`/api/logs/sync?guildSlug=${guildSlug}`, { method: "POST" });
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      setMessage(res.ok ? `Synced ${data.count} reports.` : `Error: ${data.error ?? "Sync failed"}`);
+    } catch (err) {
+      setMessage(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
+    }
     setSyncing(false);
   }
 
