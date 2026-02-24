@@ -220,7 +220,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-sm" style={{ color: "var(--wow-text)" }}>{char.name}</p>
+                        <p className="font-medium text-sm" style={{ color: classColor(char.class) }}>{char.name}</p>
                         <p className="text-xs md:hidden" style={{ color: classColor(char.class) }}>
                           {char.spec ? `${char.spec} ` : ""}{char.class}
                         </p>
