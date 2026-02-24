@@ -29,7 +29,7 @@ export async function getUserWowProfile(region: string, userAccessToken: string)
   return res.json();
 }
 
-
+export async function getGuildRoster(
   region: string,
   realm: string,
   guildName: string

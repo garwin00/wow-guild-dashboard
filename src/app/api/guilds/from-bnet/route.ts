@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getUserWowProfile } from "@/lib/blizzard";
+import { getUserWowProfile, getCharacterProfile } from "@/lib/blizzard";
 
-// GET /api/guilds/from-bnet
-// Returns deduplicated list of guilds found across all the user's characters
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,26 +19,55 @@ export async function GET() {
 
   try {
     const profile = await getUserWowProfile(region, account.access_token);
-
-    const guildsMap = new Map<string, { name: string; realm: string; realmSlug: string; region: string }>();
+    const allChars: { name: string; realmSlug: string; level: number }[] = [];
 
     for (const wowAccount of profile?.wow_accounts ?? []) {
       for (const character of wowAccount?.characters ?? []) {
-        const guild = character?.guild;
-        if (!guild) continue;
-        const key = `${guild.name}-${character.realm?.slug}`;
-        if (!guildsMap.has(key)) {
-          guildsMap.set(key, {
-            name: guild.name,
-            realm: character.realm?.name ?? character.realm?.slug ?? "",
-            realmSlug: character.realm?.slug ?? "",
-            region,
-          });
-        }
+        allChars.push({
+          name: character.name,
+          realmSlug: character.realm?.slug,
+          level: character.level ?? 0,
+        });
       }
     }
 
-    return NextResponse.json({ guilds: Array.from(guildsMap.values()) });
+    // Sort by level desc, take top 8 to limit API calls
+    const topChars = allChars
+      .filter((c) => c.level >= 60 && c.realmSlug)
+      .sort((a, b) => b.level - a.level)
+      .slice(0, 8);
+
+    // Fetch individual profiles in parallel
+    const profiles = await Promise.allSettled(
+      topChars.map((c) =>
+        getCharacterProfile(region, c.realmSlug, c.name, account.access_token!)
+      )
+    );
+
+    // Deduplicate guilds
+    const guildsMap = new Map<string, { name: string; realm: string; realmSlug: string; region: string }>();
+    for (const result of profiles) {
+      if (result.status !== "fulfilled") continue;
+      const guild = result.value?.guild;
+      if (!guild) continue;
+      const key = `${guild.name}-${guild.realm?.slug}`;
+      if (!guildsMap.has(key)) {
+        guildsMap.set(key, {
+          name: guild.name,
+          realm: guild.realm?.name ?? guild.realm?.slug,
+          realmSlug: guild.realm?.slug,
+          region,
+        });
+      }
+    }
+
+    // Also return character realms for manual entry fallback
+    const realms = [...new Set(topChars.map((c) => c.realmSlug))];
+
+    return NextResponse.json({
+      guilds: Array.from(guildsMap.values()),
+      realms,
+    });
   } catch (err) {
     console.error("Blizzard API error:", err);
     return NextResponse.json({ error: "Failed to fetch from Battle.net" }, { status: 500 });
