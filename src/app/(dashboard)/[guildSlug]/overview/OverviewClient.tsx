@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const CLASS_COLORS: Record<string, string> = {
   "death knight": "#C41E3A", "demon hunter": "#A330C9", druid: "#FF7C0A",
@@ -30,7 +31,7 @@ interface NextRaid {
 }
 
 interface Props {
-  guild: { name: string; realm: string; region: string };
+  guild: { name: string; realm: string; region: string; slug: string };
   memberRole: string;
   rosterCount: number;
   signupCount: number;
@@ -38,11 +39,30 @@ interface Props {
 }
 
 export default function OverviewClient({ guild, memberRole, rosterCount, signupCount, nextRaid }: Props) {
+  const router = useRouter();
   const [modal, setModal] = useState<"signups" | null>(null);
+  const [linkStatus, setLinkStatus] = useState<string | null>(null);
+
+  // Auto-link characters on first load (once per session per guild)
+  useEffect(() => {
+    const key = `chars-linked-${guild.slug}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    fetch("/api/roster/link-characters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guildSlug: guild.slug }),
+    }).then(r => r.json()).then(data => {
+      if (data.linked > 0 || data.role) {
+        setLinkStatus(`Linked ${data.linked} character(s) · Role: ${data.role}`);
+        router.refresh();
+      }
+    }).catch(() => {});
+  }, [guild.slug, router]);
 
   const stats = [
     { label: "Roster Size", value: rosterCount, onClick: undefined },
-    { label: "Total Signups", value: signupCount, onClick: nextRaid ? () => setModal("signups") : undefined },
+    { label: "Next Raid Signups", value: nextRaid ? `${nextRaid.signupCount} / ${nextRaid.maxAttendees}` : "—", onClick: nextRaid ? () => setModal("signups") : undefined },
     { label: "Next Raid", value: nextRaid ? new Date(nextRaid.scheduledAt).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) : "None scheduled" },
     { label: "Your Role", value: memberRole },
   ];
@@ -57,6 +77,12 @@ export default function OverviewClient({ guild, memberRole, rosterCount, signupC
         <h1 className="text-3xl wow-heading" style={{ color: "#f0c040" }}>{guild.name}</h1>
         <p className="mt-1" style={{ color: "#8a8070" }}>{guild.realm} · {guild.region.toUpperCase()}</p>
       </div>
+
+      {linkStatus && (
+        <div className="mb-4 px-4 py-2 rounded text-sm" style={{ background: "rgba(200,169,106,0.08)", border: "1px solid rgba(200,169,106,0.25)", color: "#c8a96a" }}>
+          ✓ {linkStatus}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map(({ label, value, onClick }) => (

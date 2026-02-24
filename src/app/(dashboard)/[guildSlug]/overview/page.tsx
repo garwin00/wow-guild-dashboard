@@ -40,7 +40,7 @@ export default async function OverviewPage({ params }: Props) {
 
   return (
     <OverviewClient
-      guild={membership.guild}
+      guild={{ ...membership.guild, slug: guildSlug }}
       memberRole={membership.role}
       rosterCount={rosterCount}
       signupCount={signupCount}
