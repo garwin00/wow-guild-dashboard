@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { signOut } from "@/lib/auth";
+import SidebarNav from "./SidebarNav";
 
 interface Props {
   children: React.ReactNode;
@@ -33,39 +33,28 @@ export default async function DashboardLayout({ children, params }: Props) {
     { href: `/${guildSlug}/settings`, label: "Settings", icon: "⚙️" },
   ];
 
+  const signOutForm = (
+    <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
+      <button className="w-full text-left px-3 py-2 text-xs text-gray-500 hover:text-gray-300 transition-colors">
+        Sign out
+      </button>
+    </form>
+  );
+
   return (
     <div className="min-h-screen bg-gray-950 flex">
-      {/* Sidebar */}
-      <aside className="w-56 bg-gray-900 border-r border-gray-800 flex flex-col">
-        <div className="p-4 border-b border-gray-800">
-          <p className="text-white font-bold truncate">{guild.name}</p>
-          <p className="text-gray-400 text-xs truncate">{guild.realm} · {guild.region.toUpperCase()}</p>
-        </div>
-        <nav className="flex-1 p-3 space-y-1">
-          {navLinks.map(({ href, label, icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white text-sm transition-colors"
-            >
-              <span>{icon}</span>
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-3 border-t border-gray-800">
-          <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
-            <button className="w-full text-left px-3 py-2 text-xs text-gray-500 hover:text-gray-300 transition-colors">
-              Sign out
-            </button>
-          </form>
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <main className="flex-1 overflow-auto p-8">
+      <SidebarNav
+        navLinks={navLinks}
+        guildName={guild.name}
+        realm={guild.realm}
+        region={guild.region}
+        signOutForm={signOutForm}
+      />
+      {/* Main content — offset on mobile for top bar */}
+      <main className="flex-1 overflow-auto p-4 pt-18 md:pt-4 md:p-8">
         {children}
       </main>
     </div>
   );
 }
+

@@ -105,9 +105,9 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
     : null;
 
   return (
-    <div className="p-8">
+    <div>
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-white">Roster</h1>
           <p className="text-gray-400 text-sm mt-1">
@@ -116,7 +116,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
           </p>
         </div>
         {isOfficer && (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {syncMsg && <span className="text-sm text-gray-400">{syncMsg}</span>}
             <button onClick={syncRoster} disabled={syncing}
               className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
@@ -165,17 +165,17 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-800 text-left text-xs text-gray-500 uppercase tracking-wide">
-                <th className="px-4 py-3 w-10 text-center">Rank</th>
+                <th className="px-4 py-3 w-10 text-center hidden sm:table-cell">Rank</th>
                 <th className="px-4 py-3">Character</th>
-                <th className="px-4 py-3">Class · Spec</th>
-                <th className="px-4 py-3 text-right pr-8">iLvl</th>
+                <th className="px-4 py-3 hidden md:table-cell">Class · Spec</th>
+                <th className="px-4 py-3 text-right pr-8 hidden sm:table-cell">iLvl</th>
                 <th className="px-4 py-3 pl-8">Role</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((char) => (
                 <tr key={char.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
-                  <td className="px-4 py-3 text-center text-xs text-gray-500 tabular-nums">
+                  <td className="px-4 py-3 text-center text-xs text-gray-500 tabular-nums hidden sm:table-cell">
                     {char.guildRank ?? "—"}
                   </td>
                   <td className="px-4 py-3">
@@ -193,19 +193,22 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                       )}
                       <div>
                         <p className="text-white font-medium text-sm">{char.name}</p>
-                        <p className="text-gray-500 text-xs">{char.realm.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</p>
+                        <p className="text-gray-500 text-xs md:hidden" style={{ color: classColor(char.class) }}>
+                          {char.spec ? `${char.spec} ` : ""}{char.class}
+                        </p>
+                        <p className="text-gray-500 text-xs hidden md:block">{char.realm.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 hidden md:table-cell">
                     <span className="text-sm font-medium" style={{ color: classColor(char.class) }}>
                       {char.spec ? `${char.spec} ` : ""}{char.class && char.class !== "Unknown" ? char.class : <span className="text-gray-600 italic">Unknown</span>}
                     </span>
                   </td>
-                  <td className={`px-4 py-3 text-sm font-semibold text-right pr-8 tabular-nums ${iLvlColor(char.itemLevel)}`}>
+                  <td className={`px-4 py-3 text-sm font-semibold text-right pr-8 tabular-nums hidden sm:table-cell ${iLvlColor(char.itemLevel)}`}>
                     {char.itemLevel ?? "—"}
                   </td>
-                  <td className="px-4 py-3 pl-8">
+                  <td className="px-4 py-3 pl-4 sm:pl-8">
                     {isOfficer ? (
                       <select value={char.role} onChange={(e) => setRole(char.id, e.target.value as CharRole)}
                         className="bg-gray-800 border border-gray-700 text-white text-xs rounded px-2 py-1 focus:outline-none focus:border-blue-500">
@@ -214,7 +217,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                         <option value="DPS">⚔️ DPS</option>
                       </select>
                     ) : (
-                      <span className="text-sm text-gray-300">{ROLE_ICON[char.role]} {char.role}</span>
+                      <span className="text-sm text-gray-300">{ROLE_ICON[char.role]}</span>
                     )}
                   </td>
                 </tr>
