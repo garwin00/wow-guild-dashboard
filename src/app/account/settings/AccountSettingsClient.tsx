@@ -114,7 +114,7 @@ export default function AccountSettingsClient({ user, hasBnet, hasPassword }: Pr
               <p className="text-sm" style={{ color: "#8a8070" }}>No Battle.net account linked.</p>
               <p className="text-xs mt-0.5" style={{ color: "#5a5040" }}>Link to import your characters and guild rank automatically.</p>
             </div>
-            <button onClick={() => signIn("battlenet")} className="wow-btn text-sm shrink-0">
+            <button onClick={() => { window.location.href = "/api/auth/link-battlenet?returnTo=/account/settings"; }} className="wow-btn text-sm shrink-0">
               🔗 Link Battle.net
             </button>
           </div>

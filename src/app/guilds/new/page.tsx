@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 
 interface BnetGuild { name: string; realm: string; realmSlug: string; region: string; }
 
@@ -28,7 +27,14 @@ export default function NewGuildPage() {
   const [manualRealm, setManualRealm] = useState("");
   const [showManual, setShowManual] = useState(false);
 
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const justLinked = searchParams?.get("bnet_linked") === "1";
+
   useEffect(() => {
+    if (justLinked) {
+      // Clear the query param cleanly
+      window.history.replaceState({}, "", "/guilds/new");
+    }
     fetch("/api/guilds/from-bnet")
       .then(r => r.json())
       .then(data => {
@@ -110,7 +116,7 @@ export default function NewGuildPage() {
               <p className="text-xs" style={{ color: "#8a8070" }}>
                 Link your Battle.net account to automatically import your guild and characters.
               </p>
-              <button onClick={() => signIn("battlenet", { callbackUrl: "/guilds/new" })}
+              <button onClick={() => { window.location.href = "/api/auth/link-battlenet?returnTo=/guilds/new"; }}
                 className="wow-btn w-full">
                 Connect Battle.net
               </button>
