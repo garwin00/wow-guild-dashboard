@@ -36,7 +36,7 @@ export default async function DashboardLayout({ children, params }: Props) {
   const signOutForm = (
     <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
       <button className="w-full text-left px-3 py-2 text-xs wow-signout-btn"
-        style={{ fontFamily: "var(--font-cinzel), serif", letterSpacing: "0.04em" }}>
+        style={{ fontFamily: "inherit", letterSpacing: "0.04em" }}>
         Sign Out
       </button>
     </form>

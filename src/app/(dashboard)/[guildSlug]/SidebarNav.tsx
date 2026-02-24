@@ -34,7 +34,7 @@ export default function SidebarNav({ navLinks, guildName, realm, region, signOut
           }`}
         >
           <span className="text-base">{icon}</span>
-          <span style={{ fontFamily: "var(--font-cinzel), serif", fontSize: "0.75rem", letterSpacing: "0.05em" }}>
+          <span style={{ fontFamily: "inherit", fontSize: "0.75rem", letterSpacing: "0.05em" }}>
             {label}
           </span>
         </Link>
@@ -59,7 +59,7 @@ export default function SidebarNav({ navLinks, guildName, realm, region, signOut
         <div className="p-4" style={headerStyle}>
           {/* Decorative top line */}
           <div className="wow-divider mb-3" />
-          <p className="text-sm font-semibold truncate" style={{ fontFamily: "var(--font-cinzel), serif", color: "#f0c040", letterSpacing: "0.04em" }}>
+          <p className="text-sm font-semibold truncate" style={{ fontFamily: "inherit", color: "#f0c040", letterSpacing: "0.04em" }}>
             {guildName}
           </p>
           <p className="text-xs truncate mt-0.5" style={{ color: "#5a5040" }}>
@@ -79,7 +79,7 @@ export default function SidebarNav({ navLinks, guildName, realm, region, signOut
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 h-14"
         style={{ background: "#0a0b12", borderBottom: "1px solid rgba(200,169,106,0.2)" }}>
         <div>
-          <p className="text-sm font-semibold truncate" style={{ fontFamily: "var(--font-cinzel), serif", color: "#f0c040" }}>
+          <p className="text-sm font-semibold truncate" style={{ fontFamily: "inherit", color: "#f0c040" }}>
             {guildName}
           </p>
           <p className="text-xs" style={{ color: "#5a5040" }}>{realm} · {region.toUpperCase()}</p>

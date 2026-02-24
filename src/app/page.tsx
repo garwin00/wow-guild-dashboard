@@ -43,7 +43,7 @@ export default async function HomePage() {
                     <p style={{ color: "#e8dfc8", fontWeight: 500 }}>{guild.name}</p>
                     <p style={{ color: "#8a8070", fontSize: "0.875rem" }}>{guild.realm} · {guild.region.toUpperCase()}</p>
                   </div>
-                  <span style={{ fontSize: "0.75rem", color: "#5a5040", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-cinzel), serif" }}>{role}</span>
+                  <span style={{ fontSize: "0.75rem", color: "#5a5040", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "inherit" }}>{role}</span>
                 </Link>
               </li>
             ))}

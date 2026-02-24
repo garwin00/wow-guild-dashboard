@@ -59,7 +59,7 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
     <div className="p-8 max-w-3xl">
       {/* Header */}
       <div className="mb-6">
-        <p style={{ color: "#8a8070", fontSize: "0.875rem", marginBottom: "0.25rem", fontFamily: "var(--font-cinzel), serif", textTransform: "uppercase", letterSpacing: "0.05em" }}>{event.raidZone}</p>
+        <p style={{ color: "#8a8070", fontSize: "0.875rem", marginBottom: "0.25rem", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.05em" }}>{event.raidZone}</p>
         <h1 className="wow-heading text-3xl font-bold" style={{ color: "#f0c040" }}>{event.title}</h1>
         <p style={{ color: "#8a8070", marginTop: "0.25rem" }}>
           {date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
@@ -125,7 +125,7 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
         ) : (
           <table className="w-full">
             <thead>
-              <tr style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", textAlign: "left", fontSize: "0.75rem", fontFamily: "var(--font-cinzel), serif", color: "#5a5040", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <tr style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", textAlign: "left", fontSize: "0.75rem", fontFamily: "inherit", color: "#5a5040", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <th className="px-4 py-3">Character</th>
                 <th className="px-4 py-3">Role</th>
                 <th className="px-4 py-3">Status</th>

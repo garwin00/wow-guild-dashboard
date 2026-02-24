@@ -167,7 +167,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
             <button key={s} onClick={() => setSortBy(s)}
               className="px-3 py-1.5 rounded text-xs transition-all"
               style={{
-                fontFamily: "var(--font-cinzel), serif",
+                fontFamily: "inherit",
                 letterSpacing: "0.04em",
                 background: sortBy === s ? "rgba(200,169,106,0.15)" : "transparent",
                 color: sortBy === s ? "#f0c040" : "#5a5040",
@@ -190,7 +190,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
         <div className="rounded-lg overflow-hidden" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
           <table className="w-full">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", fontFamily: "var(--font-cinzel), serif", color: "#5a5040" }}>
+              <tr className="text-left text-xs uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", fontFamily: "inherit", color: "#5a5040" }}>
                 <th className="px-4 py-3 w-10 text-center hidden sm:table-cell">Rank</th>
                 <th className="px-4 py-3">Character</th>
                 <th className="px-4 py-3 hidden md:table-cell">Class · Spec</th>

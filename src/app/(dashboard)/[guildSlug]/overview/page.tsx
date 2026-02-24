@@ -49,7 +49,7 @@ export default async function OverviewPage({ params }: Props) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map(({ label, value }) => (
           <div key={label} className="rounded-lg p-5" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
-            <p className="text-xs uppercase tracking-widest" style={{ fontFamily: "var(--font-cinzel), serif", color: "#5a5040" }}>{label}</p>
+            <p className="text-xs uppercase tracking-widest" style={{ fontFamily: "inherit", color: "#5a5040" }}>{label}</p>
             <p className="text-xl font-semibold mt-2" style={{ color: "#e8dfc8" }}>{value}</p>
           </div>
         ))}
@@ -58,7 +58,7 @@ export default async function OverviewPage({ params }: Props) {
       {nextRaid && (
         <div className="rounded-lg p-6" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)" }}>
           <div className="wow-divider mb-4" />
-          <h2 className="text-sm uppercase tracking-widest mb-3" style={{ fontFamily: "var(--font-cinzel), serif", color: "#c8a96a" }}>Next Raid</h2>
+          <h2 className="text-sm uppercase tracking-widest mb-3" style={{ fontFamily: "inherit", color: "#c8a96a" }}>Next Raid</h2>
           <p className="font-medium" style={{ color: "#e8dfc8" }}>{nextRaid.title}</p>
           <p className="text-sm mt-1" style={{ color: "#8a8070" }}>
             {new Date(nextRaid.scheduledAt).toLocaleString("en-GB")} · {nextRaid.raidZone}

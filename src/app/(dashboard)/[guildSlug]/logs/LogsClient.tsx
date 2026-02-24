@@ -64,7 +64,7 @@ export default function LogsClient({ reports, guild, guildSlug, isOfficer }: {
         <div style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)", borderRadius: "0.5rem", overflow: "hidden" }}>
           <table className="w-full">
             <thead>
-              <tr style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", textAlign: "left", fontSize: "0.75rem", fontFamily: "var(--font-cinzel), serif", color: "#5a5040", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <tr style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", textAlign: "left", fontSize: "0.75rem", fontFamily: "inherit", color: "#5a5040", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Zone</th>
                 <th className="px-4 py-3">Date</th>

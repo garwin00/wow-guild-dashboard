@@ -196,7 +196,7 @@ export default function MythicPlusClient({
       {/* Current Affixes */}
       {affixes && affixes.affix_details.length > 0 && (
         <div className="rounded-lg p-4" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
-          <p className="text-xs uppercase tracking-widest mb-3" style={{ fontFamily: "var(--font-cinzel), serif", color: "#5a5040" }}>
+          <p className="text-xs uppercase tracking-widest mb-3" style={{ fontFamily: "inherit", color: "#5a5040" }}>
             This Week&apos;s Affixes
           </p>
           <div className="flex flex-wrap gap-3">
@@ -221,7 +221,7 @@ export default function MythicPlusClient({
             <button key={tab.key} onClick={() => setRoleTab(tab.key)}
               className="px-4 py-1.5 text-sm transition-all"
               style={{
-                fontFamily: "var(--font-cinzel), serif",
+                fontFamily: "inherit",
                 letterSpacing: "0.04em",
                 background: roleTab === tab.key ? "rgba(200,169,106,0.15)" : "#0f1019",
                 color: roleTab === tab.key ? "#f0c040" : "#5a5040",
@@ -241,7 +241,7 @@ export default function MythicPlusClient({
       <div className="rounded-lg overflow-hidden" style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.15)" }}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", fontFamily: "var(--font-cinzel), serif", color: "#5a5040" }}>
+            <tr className="text-left text-xs uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(200,169,106,0.15)", fontFamily: "inherit", color: "#5a5040" }}>
               <th className="py-3 px-4 w-10">#</th>
               <th className="py-3 px-4">Character</th>
               <th className="py-3 px-4 hidden sm:table-cell">Role</th>
@@ -305,7 +305,7 @@ export default function MythicPlusClient({
                   {isExpanded && char.mythicRuns.length > 0 && (
                     <tr key={`${char.id}-runs`} style={{ background: "rgba(200,169,106,0.03)" }}>
                       <td colSpan={9} className="px-6 py-4">
-                        <p className="text-xs uppercase tracking-widest mb-3" style={{ fontFamily: "var(--font-cinzel), serif", color: "#5a5040" }}>
+                        <p className="text-xs uppercase tracking-widest mb-3" style={{ fontFamily: "inherit", color: "#5a5040" }}>
                           Best Runs
                         </p>
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">

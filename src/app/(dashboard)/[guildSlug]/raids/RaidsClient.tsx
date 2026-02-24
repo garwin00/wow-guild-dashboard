@@ -60,30 +60,30 @@ export default function RaidsClient({ events: initial, guildSlug, isOfficer, use
           <h2 style={{ color: "#e8dfc8", fontWeight: 600, marginBottom: "0.5rem" }}>New Raid Event</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs mb-1" style={{ fontFamily: "var(--font-cinzel), serif", color: "#5a5040", letterSpacing: "0.05em", textTransform: "uppercase" }}>Title</label>
+              <label className="block text-xs mb-1" style={{ fontFamily: "inherit", color: "#5a5040", letterSpacing: "0.05em", textTransform: "uppercase" }}>Title</label>
               <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="e.g. Nerub-ar Palace Heroic"
                 style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", width: "100%", outline: "none" }} />
             </div>
             <div>
-              <label className="block text-xs mb-1" style={{ fontFamily: "var(--font-cinzel), serif", color: "#5a5040", letterSpacing: "0.05em", textTransform: "uppercase" }}>Raid Zone</label>
+              <label className="block text-xs mb-1" style={{ fontFamily: "inherit", color: "#5a5040", letterSpacing: "0.05em", textTransform: "uppercase" }}>Raid Zone</label>
               <input required value={form.raidZone} onChange={(e) => setForm({ ...form, raidZone: e.target.value })}
                 placeholder="e.g. Nerub-ar Palace"
                 style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", width: "100%", outline: "none" }} />
             </div>
             <div>
-              <label className="block text-xs mb-1" style={{ fontFamily: "var(--font-cinzel), serif", color: "#5a5040", letterSpacing: "0.05em", textTransform: "uppercase" }}>Date &amp; Time</label>
+              <label className="block text-xs mb-1" style={{ fontFamily: "inherit", color: "#5a5040", letterSpacing: "0.05em", textTransform: "uppercase" }}>Date &amp; Time</label>
               <input required type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })}
                 style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", width: "100%", outline: "none" }} />
             </div>
             <div>
-              <label className="block text-xs mb-1" style={{ fontFamily: "var(--font-cinzel), serif", color: "#5a5040", letterSpacing: "0.05em", textTransform: "uppercase" }}>Max Attendees</label>
+              <label className="block text-xs mb-1" style={{ fontFamily: "inherit", color: "#5a5040", letterSpacing: "0.05em", textTransform: "uppercase" }}>Max Attendees</label>
               <input type="number" min="1" max="40" value={form.maxAttendees} onChange={(e) => setForm({ ...form, maxAttendees: e.target.value })}
                 style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", width: "100%", outline: "none" }} />
             </div>
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ fontFamily: "var(--font-cinzel), serif", color: "#5a5040", letterSpacing: "0.05em", textTransform: "uppercase" }}>Description (optional)</label>
+            <label className="block text-xs mb-1" style={{ fontFamily: "inherit", color: "#5a5040", letterSpacing: "0.05em", textTransform: "uppercase" }}>Description (optional)</label>
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2}
               style={{ background: "#0f1019", border: "1px solid rgba(200,169,106,0.2)", color: "#e8dfc8", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.875rem", width: "100%", outline: "none", resize: "none" }} />
           </div>
@@ -97,7 +97,7 @@ export default function RaidsClient({ events: initial, guildSlug, isOfficer, use
       )}
 
       {/* Upcoming */}
-      <h2 style={{ color: "#5a5040", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "var(--font-cinzel), serif", marginBottom: "0.75rem" }}>Upcoming</h2>
+      <h2 style={{ color: "#5a5040", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "inherit", marginBottom: "0.75rem" }}>Upcoming</h2>
       {upcoming.length === 0 ? (
         <p style={{ color: "#5a5040", fontSize: "0.875rem", marginBottom: "1.5rem" }}>{isOfficer ? "No raids scheduled. Create one above." : "No upcoming raids."}</p>
       ) : (
@@ -109,7 +109,7 @@ export default function RaidsClient({ events: initial, guildSlug, isOfficer, use
       {/* Past */}
       {past.length > 0 && (
         <>
-          <h2 style={{ color: "#5a5040", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "var(--font-cinzel), serif", marginBottom: "0.75rem" }}>Past</h2>
+          <h2 style={{ color: "#5a5040", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "inherit", marginBottom: "0.75rem" }}>Past</h2>
           <div className="space-y-3 opacity-60">
             {past.map((event) => <EventCard key={event.id} event={event} guildSlug={guildSlug} />)}
           </div>
