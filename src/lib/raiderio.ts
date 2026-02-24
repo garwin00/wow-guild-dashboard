@@ -135,14 +135,14 @@ export function scoreColor(score: number): string {
 }
 
 /**
- * Fetch just the thumbnail_url for a character from Raider.IO.
- * Returns the raw avatar URL (ends in -avatar.jpg) or null if not indexed.
+ * Fetch avatar URL, class name, and active spec from Raider.IO.
+ * Returns null fields if the character is not indexed.
  */
 export async function fetchCharacterAvatar(
   region: string,
   realm: string,
   name: string
-): Promise<string | null> {
+): Promise<{ avatarUrl: string | null; className: string | null; spec: string | null }> {
   try {
     const params = new URLSearchParams({
       region: region.toLowerCase(),
@@ -154,11 +154,15 @@ export async function fetchCharacterAvatar(
       headers: { Accept: "application/json" },
       next: { revalidate: 0 },
     });
-    if (!res.ok) return null;
+    if (!res.ok) return { avatarUrl: null, className: null, spec: null };
     const data = await res.json();
-    return (data.thumbnail_url as string) ?? null;
+    return {
+      avatarUrl: (data.thumbnail_url as string) ?? null,
+      className: (data.class as string) ?? null,
+      spec: (data.active_spec_name as string) ?? null,
+    };
   } catch {
-    return null;
+    return { avatarUrl: null, className: null, spec: null };
   }
 }
 
