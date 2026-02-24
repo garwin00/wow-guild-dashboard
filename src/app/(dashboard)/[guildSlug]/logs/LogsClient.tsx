@@ -7,11 +7,10 @@ import { useRouter } from "next/navigation";
 interface LogReport { id: string; wclCode: string; title: string; zone: string | null; startTime: string | Date; fightCount: number; _count: { parses: number }; }
 interface Guild { id: string; name: string; wclGuildId: string | null; }
 
-export default function LogsClient({ reports: initial, guild, guildSlug, isOfficer }: {
+export default function LogsClient({ reports, guild, guildSlug, isOfficer }: {
   reports: LogReport[]; guild: Guild; guildSlug: string; isOfficer: boolean;
 }) {
   const router = useRouter();
-  const [reports, setReports] = useState(initial);
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState("");
 
