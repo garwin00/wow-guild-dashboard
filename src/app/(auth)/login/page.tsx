@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/";
   const [email, setEmail] = useState("");
@@ -19,11 +18,13 @@ function LoginForm() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    // NextAuth v5 signIn throws NEXT_REDIRECT on success, throws CredentialsSignin on failure
     try {
-      const result = await signIn("credentials", { email, password, redirect: false });
-      if (result?.error) { setError("Invalid email or password"); return; }
-      router.push(callbackUrl);
-    } finally {
+      await signIn("credentials", { email, password, redirectTo: callbackUrl });
+    } catch (err) {
+      // NEXT_REDIRECT is thrown on success — let it propagate (Next.js handles it)
+      if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) throw err;
+      setError("Invalid email or password");
       setLoading(false);
     }
   }

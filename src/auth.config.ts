@@ -24,7 +24,10 @@ export const authConfig = {
         pathname.startsWith("/favicon") ||
         pathname.match(/\.(png|jpg|ico|svg)$/);
 
-      if (isPublicAsset) return true;
+      // Always allow NextAuth's own API routes
+      const isNextAuthRoute = pathname.startsWith("/api/auth");
+
+      if (isPublicAsset || isNextAuthRoute) return true;
 
       if (isAuthPage) {
         // Redirect logged-in users away from auth pages
