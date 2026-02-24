@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 interface BnetGuild { name: string; realm: string; realmSlug: string; region: string; }
 
@@ -20,6 +21,7 @@ export default function NewGuildPage() {
   const [guilds, setGuilds] = useState<BnetGuild[]>([]);
   const [realms, setRealms] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasBnet, setHasBnet] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState<string | null>(null);
   const [manualName, setManualName] = useState("");
@@ -31,16 +33,17 @@ export default function NewGuildPage() {
       .then(r => r.json())
       .then(data => {
         if (data.error) {
-          // Not an error for email-only users — just show manual entry
+          setHasBnet(false);
           setShowManual(true);
         } else {
+          setHasBnet(true);
           setGuilds(data.guilds ?? []);
           setRealms(data.realms ?? []);
           if (data.realms?.length) setManualRealm(data.realms[0]);
           if (!data.guilds?.length) setShowManual(true);
         }
       })
-      .catch(() => { setShowManual(true); })
+      .catch(() => { setHasBnet(false); setShowManual(true); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -81,15 +84,12 @@ export default function NewGuildPage() {
             <span className="text-4xl">🏰</span>
             <div className="wow-divider w-24 mx-auto" />
             <h1 className="text-xl font-bold" style={{ color: "#f0c040" }}>Set Up Your Guild</h1>
-            <p className="text-sm" style={{ color: "#8a8070" }}>
-              Select a guild from Battle.net or enter details manually.
-            </p>
           </div>
 
           {loading && (
             <div className="text-center py-6" style={{ color: "#8a8070" }}>
               <div className="animate-spin text-2xl mb-2">⚙️</div>
-              <p className="text-sm">Fetching guilds from Battle.net…</p>
+              <p className="text-sm">Checking Battle.net…</p>
             </div>
           )}
 
@@ -100,7 +100,25 @@ export default function NewGuildPage() {
             </div>
           )}
 
-          {!loading && guilds.length > 0 && (
+          {/* No BNet linked — prompt to connect */}
+          {!loading && !hasBnet && (
+            <div className="rounded-lg p-5 text-center space-y-4"
+              style={{ background: "rgba(200,169,106,0.05)", border: "1px solid rgba(200,169,106,0.2)" }}>
+              <p className="text-sm font-medium" style={{ color: "#e8dfc8" }}>
+                🎮 Connect Battle.net
+              </p>
+              <p className="text-xs" style={{ color: "#8a8070" }}>
+                Link your Battle.net account to automatically import your guild and characters.
+              </p>
+              <button onClick={() => signIn("battlenet", { callbackUrl: "/guilds/new" })}
+                className="wow-btn w-full">
+                Connect Battle.net
+              </button>
+            </div>
+          )}
+
+          {/* BNet guilds list */}
+          {!loading && hasBnet && guilds.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-widest" style={{ color: "#5a5040" }}>Your Guilds</p>
               {guilds.map(g => (
@@ -125,6 +143,7 @@ export default function NewGuildPage() {
             </div>
           )}
 
+          {/* Manual entry — always available as fallback */}
           {!loading && (
             <div style={{ borderTop: "1px solid rgba(200,169,106,0.1)", paddingTop: "1.25rem" }}>
               <button onClick={() => setShowManual(!showManual)}
@@ -137,7 +156,7 @@ export default function NewGuildPage() {
                   <div>
                     <label style={labelStyle}>Guild Name</label>
                     <input type="text" value={manualName} onChange={e => setManualName(e.target.value)}
-                      style={inputStyle} placeholder="e.g. Team Team" required />
+                      style={inputStyle} placeholder="e.g. Risen" required />
                   </div>
                   <div>
                     <label style={labelStyle}>Realm</label>
