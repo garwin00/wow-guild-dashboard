@@ -25,12 +25,21 @@ function classColor(cls: string): string {
   return CLASS_COLORS[cls?.toLowerCase()] ?? "#9d9d9d";
 }
 
+function classColorBg(cls: string): string {
+  const hex = CLASS_COLORS[cls?.toLowerCase()];
+  if (!hex) return "rgba(156,163,175,0.15)";
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},0.15)`;
+}
+
 function ScoreBadge({ score }: { score: number }) {
   const color = scoreColor(score);
-  if (score === 0) return <span className="text-zinc-500 text-sm">—</span>;
+  if (score === 0) return <span style={{ color: "var(--wow-text-faint)" }}>—</span>;
   return (
-    <span className="font-bold text-sm tabular-nums" style={{ color }}>
-      {score.toFixed(1)}
+    <span className="font-bold tabular-nums" style={{ color }}>
+      {score.toFixed(0)}
     </span>
   );
 }
@@ -56,6 +65,7 @@ interface CharacterWithScore {
   class: string;
   spec: string | null;
   role: string;
+  avatarUrl: string | null;
   mythicScore: { all: number; dps: number; healer: number; tank: number; updatedAt: Date | string } | null;
   mythicRuns: MythicRun[];
 }
@@ -182,7 +192,7 @@ export default function MythicPlusClient({
                 <span className="font-bold text-base" style={{ color: classColor(char.class) }}>{char.name}</span>
                 <span className="text-xs" style={{ color: "var(--wow-text-muted)" }}>{char.spec ? `${char.spec} ` : ""}{char.class}</span>
                 <span className="text-2xl font-bold tabular-nums mt-1" style={{ color: scoreColor(score) }}>
-                  {score > 0 ? score.toFixed(1) : "—"}
+                  {score > 0 ? score.toFixed(0) : "—"}
                 </span>
                 {char.mythicRuns[0] && (
                   <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Best: +{char.mythicRuns[0].level} {char.mythicRuns[0].shortName}</span>
@@ -272,23 +282,36 @@ export default function MythicPlusClient({
                 <>
                   <tr key={char.id} onClick={() => setExpanded(isExpanded ? null : char.id)}
                     className="cursor-pointer transition-colors"
-                    style={{ borderBottom: "1px solid rgba(200,169,106,0.07)", background: isExpanded ? "rgba(var(--wow-primary-rgb),0.05)" : "transparent" }}
+                    style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.07)", background: isExpanded ? "rgba(var(--wow-primary-rgb),0.05)" : "transparent" }}
                     onMouseOver={(e) => { if (!isExpanded) e.currentTarget.style.background = "rgba(var(--wow-primary-rgb),0.04)"; }}
                     onMouseOut={(e) => { if (!isExpanded) e.currentTarget.style.background = "transparent"; }}>
                     <td className="py-3 px-4">
                       {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : <span style={{ color: "var(--wow-text-faint)" }}>{i + 1}</span>}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: classColor(char.class) }} />
+                      <div className="flex items-center gap-3">
+                        {char.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={char.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover shrink-0"
+                            style={{ boxShadow: `0 0 0 1px ${classColor(char.class)}40` }} />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                            style={{ background: classColorBg(char.class), color: classColor(char.class) }}>
+                            {char.name[0].toUpperCase()}
+                          </div>
+                        )}
                         <div>
                           <span className="font-semibold" style={{ color: classColor(char.class) }}>{char.name}</span>
-                          <div className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{char.spec ? `${char.spec} ` : ""}{char.class}</div>
+                          <div className="text-xs" style={{ color: "var(--wow-text-muted)" }}>
+                            {char.spec ? `${char.spec} ` : ""}{char.class}
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 px-4 hidden sm:table-cell">
-                      <span className="text-xs" style={{ color: "var(--wow-text-muted)" }}>{char.role}</span>
+                      <span className="text-sm" style={{ color: "var(--wow-text-muted)" }}>
+                        {char.role === "TANK" ? "🛡️ Tank" : char.role === "HEALER" ? "💚 Healer" : "⚔️ DPS"}
+                      </span>
                     </td>
                     <td className="py-3 px-4 text-right"><ScoreBadge score={score?.all ?? 0} /></td>
                     <td className="py-3 px-4 text-right hidden md:table-cell"><ScoreBadge score={score?.tank ?? 0} /></td>
@@ -313,7 +336,7 @@ export default function MythicPlusClient({
                             <a key={run.id} href={run.url ?? "#"} target="_blank" rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
                               className="rounded p-3 block transition-all"
-                              style={{ background: "var(--wow-surface-2)", border: "1px solid rgba(200,169,106,0.12)" }}>
+                              style={{ background: "var(--wow-surface-2)", border: "1px solid rgba(var(--wow-primary-rgb),0.12)" }}>
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs font-bold" style={{ color: "var(--wow-text)" }}>{run.shortName}</span>
                                 <span className="text-xs font-bold" style={{ color: "var(--wow-gold)" }}>+{run.level}</span>
