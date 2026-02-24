@@ -5,7 +5,7 @@ import { useState } from "react";
 type CharRole = "TANK" | "HEALER" | "DPS";
 interface Character {
   id: string; name: string; realm: string; class: string; spec: string | null;
-  role: CharRole; itemLevel: number | null; isMain: boolean; avatarUrl: string | null;
+  role: CharRole; itemLevel: number | null; level: number | null; isMain: boolean; avatarUrl: string | null;
   guildRank: number | null;
 }
 
@@ -194,6 +194,7 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                 <th className="px-4 py-3 w-10 text-center hidden sm:table-cell">Rank</th>
                 <th className="px-4 py-3">Character</th>
                 <th className="px-4 py-3 hidden md:table-cell">Class · Spec</th>
+                <th className="px-4 py-3 text-right hidden sm:table-cell">Level</th>
                 <th className="px-4 py-3 text-right pr-8 hidden sm:table-cell">iLvl</th>
                 <th className="px-4 py-3 pl-8">Role</th>
               </tr>
@@ -231,6 +232,9 @@ export default function RosterClient({ characters, guildSlug, isOfficer, guildNa
                     <span className="text-sm font-medium" style={{ color: classColor(char.class) }}>
                       {char.spec ? `${char.spec} ` : ""}{char.class && char.class !== "Unknown" ? char.class : <span className="italic" style={{ color: "var(--wow-text-faint)" }}>Unknown</span>}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm font-medium text-right tabular-nums hidden sm:table-cell" style={{ color: "var(--wow-text-muted)" }}>
+                    {char.level ?? "—"}
                   </td>
                   <td className={`px-4 py-3 text-sm font-semibold text-right pr-8 tabular-nums hidden sm:table-cell ${iLvlColor(char.itemLevel)}`}>
                     {char.itemLevel ?? "—"}

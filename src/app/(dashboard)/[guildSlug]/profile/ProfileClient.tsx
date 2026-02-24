@@ -42,6 +42,7 @@ interface Character {
   spec: string | null;
   role: string;
   itemLevel: number | null;
+  level: number | null;
   isMain: boolean;
   avatarUrl: string | null;
   guildName: string | null;
@@ -107,6 +108,7 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
           <div className="flex items-center gap-1.5 mb-0.5">
             <p className="font-semibold text-sm truncate" style={{ color }}>{char.name}</p>
             {isMain && <span className="text-xs px-1 py-0.5 rounded shrink-0" style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}>Main</span>}
+            {char.level && <span className="text-xs ml-auto shrink-0 tabular-nums" style={{ color: "var(--wow-text-faint)" }}>Lv {char.level}</span>}
           </div>
           <p className="text-xs truncate mb-1.5" style={{ color: "var(--wow-text-muted)" }}>
             {char.spec ? `${char.spec} ` : ""}{char.class}
@@ -355,7 +357,10 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
 
                   {/* Col 2 — name, spec, stats */}
                   <div className="min-w-0 flex-1 flex flex-col justify-center gap-1">
-                    <p className="text-2xl font-bold truncate leading-tight" style={{ color: classColor(mainChar.class) }}>{mainChar.name}</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold truncate leading-tight" style={{ color: classColor(mainChar.class) }}>{mainChar.name}</p>
+                      {mainChar.level && <span className="text-sm ml-auto shrink-0 tabular-nums" style={{ color: "var(--wow-text-faint)" }}>Lv {mainChar.level}</span>}
+                    </div>
                     <p className="text-sm" style={{ color: "var(--wow-text-muted)" }}>
                       {mainChar.spec ? `${mainChar.spec} ` : ""}{mainChar.class}
                       <span className="ml-2 text-xs" style={{ color: "var(--wow-text-faint)" }}>{mainChar.realm}</span>

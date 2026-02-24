@@ -45,6 +45,7 @@ export default async function ProfilePage({ params }: Props) {
         spec: c.spec,
         role: c.role,
         itemLevel: c.itemLevel,
+        level: c.level,
         isMain: c.isMain,
         avatarUrl: c.avatarUrl,
         guildName: c.guild?.name ?? null,

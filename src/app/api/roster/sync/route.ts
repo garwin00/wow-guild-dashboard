@@ -67,6 +67,7 @@ export async function POST(req: Request) {
     if (!char?.name) return;
 
     const realmSlug = char.realm?.slug ?? guild.realm;
+    const charLevel: number | null = char.level ?? null;
     // Blizzard guild roster returns both playable_class.name AND .id — prefer name directly
     const rosterClassName: string | null = char.playable_class?.name ?? CLASS_ID_MAP[char.playable_class?.id ?? 0] ?? null;
     const guildRank: number | null = member?.rank ?? null;
@@ -113,6 +114,7 @@ export async function POST(req: Request) {
         spec,
         role,
         itemLevel,
+        level: charLevel,
         guildRank,
         guildId: guild.id,
         ...(avatarUrl ? { avatarUrl } : {}),
@@ -125,6 +127,7 @@ export async function POST(req: Request) {
         spec,
         role,
         itemLevel,
+        level: charLevel,
         guildRank,
         guildId: guild.id,
         avatarUrl,

@@ -120,6 +120,7 @@ model Character {
   spec        String?
   role        CharacterRole @default(DPS)
   itemLevel   Int?
+  level       Int?
   isMain      Boolean       @default(false)
   guildRank   Int?
   avatarUrl   String?
