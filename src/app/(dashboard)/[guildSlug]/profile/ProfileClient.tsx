@@ -111,22 +111,17 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
         </div>
       </div>
 
-      {/* Stats */}
-      {(char.itemLevel || char.mythicScore) && (
-        <div className="flex items-center gap-3 px-3 pb-3">
-          {char.itemLevel && (
-            <span className="text-sm font-bold" style={{ color: "var(--wow-text)" }}>{char.itemLevel}
-              <span className="text-xs font-normal ml-0.5" style={{ color: "var(--wow-text-muted)" }}>iLvl</span>
-            </span>
-          )}
-          {char.mythicScore && (
-            <span className="text-sm font-bold" style={{ color: scoreColor(char.mythicScore) }}>
-              {char.mythicScore.toFixed(0)}
-              <span className="text-xs font-normal ml-0.5" style={{ color: "var(--wow-text-muted)" }}>M+</span>
-            </span>
-          )}
-        </div>
-      )}
+      {/* Stats — always visible */}
+      <div className="flex items-center gap-4 px-3 pb-3">
+        <span className="text-sm font-bold" style={{ color: char.itemLevel ? "var(--wow-text)" : "var(--wow-text-faint)" }}>
+          {char.itemLevel ?? "—"}
+          <span className="text-xs font-normal ml-0.5" style={{ color: "var(--wow-text-muted)" }}>iLvl</span>
+        </span>
+        <span className="text-sm font-bold" style={{ color: (char.mythicScore && char.mythicScore > 0) ? scoreColor(char.mythicScore) : "var(--wow-text-faint)" }}>
+          {(char.mythicScore && char.mythicScore > 0) ? char.mythicScore.toFixed(0) : "—"}
+          <span className="text-xs font-normal ml-0.5" style={{ color: "var(--wow-text-muted)" }}>M+</span>
+        </span>
+      </div>
 
       {/* Edit inline form */}
       {editing && (
@@ -377,18 +372,18 @@ export default function ProfileClient({ user, memberRole, guildSlug, characters:
 
                 {/* Stats row */}
                 <div className="flex items-center gap-5 px-5 py-3" style={{ background: "var(--wow-surface)", borderTop: `1px solid ${classColor(mainChar.class)}20` }}>
-                  {mainChar.itemLevel && (
-                    <div>
-                      <p className="text-lg font-bold leading-tight" style={{ color: "var(--wow-text)" }}>{mainChar.itemLevel}</p>
-                      <p className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Item Level</p>
-                    </div>
-                  )}
-                  {mainChar.mythicScore && (
-                    <div>
-                      <p className="text-lg font-bold leading-tight" style={{ color: scoreColor(mainChar.mythicScore) }}>{mainChar.mythicScore.toFixed(1)}</p>
-                      <p className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Mythic+ Score</p>
-                    </div>
-                  )}
+                  <div>
+                    <p className="text-lg font-bold leading-tight" style={{ color: mainChar.itemLevel ? "var(--wow-text)" : "var(--wow-text-faint)" }}>
+                      {mainChar.itemLevel ?? "—"}
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Item Level</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold leading-tight" style={{ color: (mainChar.mythicScore && mainChar.mythicScore > 0) ? scoreColor(mainChar.mythicScore) : "var(--wow-text-faint)" }}>
+                      {(mainChar.mythicScore && mainChar.mythicScore > 0) ? mainChar.mythicScore.toFixed(1) : "—"}
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--wow-text-faint)" }}>Mythic+ Score</p>
+                  </div>
                   <div className="ml-auto text-right">
                     <p className="text-sm font-medium" style={{ color: "var(--wow-text-muted)" }}>{mainChar.realm}</p>
                   </div>
