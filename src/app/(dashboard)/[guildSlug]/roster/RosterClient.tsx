@@ -8,6 +8,7 @@ interface Character {
   id: string; name: string; realm: string; class: string; spec: string | null;
   role: CharRole; itemLevel: number | null; level: number | null; isMain: boolean; avatarUrl: string | null;
   guildRank: number | null; userId: string | null;
+  vaultSlot1: number | null; vaultSlot2: number | null; vaultSlot3: number | null; vaultUpdatedAt: string | null;
 }
 
 const CLASS_COLOR_HEX: Record<string, string> = {
@@ -259,6 +260,7 @@ export default function RosterClient({ guildSlug, isOfficer, guildName, currentU
                 <th className="px-4 py-3 hidden md:table-cell">Class · Spec</th>
                 <th className="px-4 py-3 text-right hidden sm:table-cell">Level</th>
                 <th className="px-4 py-3 text-right pr-8 hidden sm:table-cell">iLvl</th>
+                <th className="px-4 py-3 text-center hidden xl:table-cell" title="Great Vault weekly M+ progress">Vault</th>
                 <th className="px-4 py-3 text-right hidden lg:table-cell">Attend.</th>
                 <th className="px-4 py-3 pl-8">Role</th>
               </tr>
@@ -304,6 +306,17 @@ export default function RosterClient({ guildSlug, isOfficer, guildName, currentU
                   </td>
                   <td className={`px-4 py-3 text-sm font-semibold text-right pr-8 tabular-nums hidden sm:table-cell ${iLvlColor(char.itemLevel)}`}>
                     {char.itemLevel ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-center hidden xl:table-cell">
+                    {char.vaultSlot1 !== null ? (
+                      <div className="flex items-center justify-center gap-0.5" title={`Vault: ${char.vaultSlot2 ?? 0}/4 runs · Slot 1 ${char.vaultSlot1 >= 1 ? "✓" : "✗"} Slot 2 ${char.vaultSlot2 !== null && char.vaultSlot2 >= 4 ? "✓" : "✗"} Slot 3 ${char.vaultSlot3 !== null && char.vaultSlot3 >= 8 ? "✓" : "✗"}`}>
+                        <span className="text-base" style={{ opacity: char.vaultSlot1 >= 1 ? 1 : 0.25 }}>🗝️</span>
+                        <span className="text-base" style={{ opacity: char.vaultSlot2 !== null && char.vaultSlot2 >= 4 ? 1 : 0.25 }}>🗝️</span>
+                        <span className="text-base" style={{ opacity: char.vaultSlot3 !== null && char.vaultSlot3 >= 8 ? 1 : 0.25 }}>🗝️</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right hidden lg:table-cell">
                     {(() => {

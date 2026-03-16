@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import RaidDetailClient from "./RaidDetailClient";
+
+export const metadata: Metadata = { title: "Raid Detail" };
 
 interface Props { params: Promise<{ guildSlug: string; id: string }> }
 

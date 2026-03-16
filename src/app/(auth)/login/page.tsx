@@ -56,7 +56,7 @@ function LoginForm() {
           <div className="flex flex-col items-center gap-2 mb-1">
             <span className="text-4xl">⚔️</span>
             <div className="wow-divider w-24" />
-            <h1 className="text-xl wow-heading text-center" style={{ color: "var(--wow-gold-bright)" }}>Guild Dashboard</h1>
+            <h1 className="text-xl wow-heading text-center" style={{ color: "var(--wow-gold-bright)" }}>ZugZug</h1>
           </div>
 
           {/* Email/password form */}
@@ -117,7 +117,7 @@ function LoginSkeleton() {
         style={{ background: "linear-gradient(160deg, #131520 0%, #0d0f1a 100%)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
         <div className="flex flex-col items-center gap-2 mb-4">
           <span className="text-4xl">⚔️</span>
-          <h1 className="text-xl text-center" style={{ color: "var(--wow-gold-bright)" }}>Guild Dashboard</h1>
+          <h1 className="text-xl text-center" style={{ color: "var(--wow-gold-bright)" }}>ZugZug</h1>
         </div>
       </div>
     </div>

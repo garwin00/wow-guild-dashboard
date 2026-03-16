@@ -30,6 +30,8 @@ export default async function DashboardLayout({ children, params }: Props) {
     return best.summary; // e.g. "8/8 M"
   })();
 
+  const isOfficer = ["GM", "OFFICER"].includes(membership.role);
+
   const navLinks = [
     { href: `/${guildSlug}/overview`, label: "Overview", icon: "🏠" },
     { href: `/${guildSlug}/roster`, label: "Roster", icon: "👥" },
@@ -37,8 +39,9 @@ export default async function DashboardLayout({ children, params }: Props) {
     { href: `/${guildSlug}/logs`, label: "Logs", icon: "📊" },
     { href: `/${guildSlug}/logs/live`, label: "Live", icon: "🔴" },
     { href: `/${guildSlug}/mythic-plus`, label: "Mythic+", icon: "⚡" },
+    { href: `/${guildSlug}/loot`, label: "Loot", icon: "⚔️" },
     { href: `/${guildSlug}/profile`, label: "Profile", icon: "👤" },
-    { href: `/${guildSlug}/settings`, label: "Settings", icon: "⚙️" },
+    ...(isOfficer ? [{ href: `/${guildSlug}/settings`, label: "Settings", icon: "⚙️" }] : []),
   ];
 
   const signOutForm = (

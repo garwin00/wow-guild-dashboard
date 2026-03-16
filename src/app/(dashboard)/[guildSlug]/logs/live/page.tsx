@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import LiveLogsClient from "./LiveLogsClient";
+
+export const metadata: Metadata = { title: "Live Logs" };
 
 interface Props { params: Promise<{ guildSlug: string }> }
 

@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession, getGuildMembership } from "@/lib/queries";
 import MythicPlusClient from "./MythicPlusClient";
+
+export const metadata: Metadata = { title: "Mythic+" };
 
 interface Props { params: Promise<{ guildSlug: string }> }
 

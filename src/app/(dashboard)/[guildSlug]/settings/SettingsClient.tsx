@@ -7,6 +7,10 @@ type GuildRole = "GM" | "OFFICER" | "MEMBER" | "TRIALIST";
 interface Guild {
   id: string; name: string; realm: string; region: string;
   wclGuildId: string | null; imageUrl: string | null; bannerUrl: string | null; theme: string;
+  discordWebhook: string | null;
+  discordNotifyRaidCreated: boolean;
+  discordNotifySignupChanged: boolean;
+  discordNotifyRosterSynced: boolean;
 }
 interface Member { id: string; role: GuildRole; user: { id: string; battletag: string | null; name: string | null } }
 
@@ -60,6 +64,13 @@ export default function SettingsClient({ guildSlug, isGm }: {
   const [theme, setTheme] = useState("default");
   const [appearanceSaving, setAppearanceSaving] = useState(false);
   const [appearanceMsg, setAppearanceMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [discordWebhook, setDiscordWebhook] = useState("");
+  const [discordRaidCreated, setDiscordRaidCreated] = useState(true);
+  const [discordSignupChanged, setDiscordSignupChanged] = useState(true);
+  const [discordRosterSynced, setDiscordRosterSynced] = useState(true);
+  const [discordSaving, setDiscordSaving] = useState(false);
+  const [discordMsg, setDiscordMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [discordTesting, setDiscordTesting] = useState(false);
   const firstLoad = useRef(false);
 
   const { data, isLoading } = useQuery<{ guild: Guild; members: Member[] }>({
@@ -75,13 +86,17 @@ export default function SettingsClient({ guildSlug, isGm }: {
       setImageUrl(data.guild.imageUrl ?? "");
       setBannerUrl(data.guild.bannerUrl ?? "");
       setTheme(data.guild.theme ?? "default");
+      setDiscordWebhook(data.guild.discordWebhook ?? "");
+      setDiscordRaidCreated(data.guild.discordNotifyRaidCreated ?? true);
+      setDiscordSignupChanged(data.guild.discordNotifySignupChanged ?? true);
+      setDiscordRosterSynced(data.guild.discordNotifyRosterSynced ?? true);
     }
   }, [data]);
 
   async function saveAppearance() {
     setAppearanceSaving(true);
     setAppearanceMsg(null);
-    const res = await fetch(`/api/guilds/${guildSlug}/settings`, {
+    const res = await fetch(`/api/guild/${guildSlug}/settings`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ imageUrl: imageUrl || null, bannerUrl: bannerUrl || null, theme }),
@@ -99,7 +114,7 @@ export default function SettingsClient({ guildSlug, isGm }: {
     e.preventDefault();
     setWclSaving(true);
     setWclMsg("");
-    const res = await fetch(`/api/guilds/${guildSlug}/settings`, {
+    const res = await fetch(`/api/guild/${guildSlug}/settings`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ wclGuildId: wclId || null }),
@@ -115,6 +130,35 @@ export default function SettingsClient({ guildSlug, isGm }: {
       body: JSON.stringify({ membershipId: memberId, role, guildId: data.guild.id }),
     });
     if (res.ok) setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role } : m));
+  }
+
+  async function saveDiscord(e: React.FormEvent) {
+    e.preventDefault();
+    setDiscordSaving(true);
+    setDiscordMsg(null);
+    const res = await fetch(`/api/guild/${guildSlug}/settings`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        discordWebhook: discordWebhook || null,
+        discordNotifyRaidCreated: discordRaidCreated,
+        discordNotifySignupChanged: discordSignupChanged,
+        discordNotifyRosterSynced: discordRosterSynced,
+      }),
+    });
+    if (res.ok) setDiscordMsg({ text: "✓ Saved", ok: true });
+    else setDiscordMsg({ text: "Failed to save", ok: false });
+    setDiscordSaving(false);
+  }
+
+  async function testDiscord() {
+    if (!discordWebhook) return;
+    setDiscordTesting(true);
+    setDiscordMsg(null);
+    const res = await fetch(`/api/guild/${guildSlug}/discord/test`, { method: "POST" });
+    if (res.ok) setDiscordMsg({ text: "✓ Test message sent!", ok: true });
+    else setDiscordMsg({ text: "Failed — check webhook URL", ok: false });
+    setDiscordTesting(false);
   }
 
   if (isLoading || !data) {
@@ -235,6 +279,55 @@ export default function SettingsClient({ guildSlug, isGm }: {
           </p>
         )}
         {wclMsg && <p className="text-xs mt-1" style={{ color: "#40c864" }}>{wclMsg}</p>}
+      </Section>
+
+      {/* ── Discord Integrations ── */}
+      <Section title="Discord Integrations">
+        <p className="text-sm" style={{ color: "var(--wow-text-muted)" }}>
+          Post automatic notifications to a Discord channel via a webhook URL.
+          Create one in Discord → Server Settings → Integrations → Webhooks.
+        </p>
+        <form onSubmit={saveDiscord} className="space-y-4">
+          <div>
+            <label className="block text-xs uppercase tracking-widest mb-1.5" style={{ color: "var(--wow-text-faint)" }}>
+              Webhook URL
+            </label>
+            <div className="flex gap-3">
+              <input value={discordWebhook} onChange={e => setDiscordWebhook(e.target.value)}
+                placeholder="https://discord.com/api/webhooks/..."
+                className="flex-1 rounded px-3 py-2 text-sm outline-none font-mono"
+                style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+              <button type="button" onClick={testDiscord} disabled={!discordWebhook || discordTesting}
+                className="wow-btn text-sm opacity-80 hover:opacity-100 disabled:opacity-40">
+                {discordTesting ? "Sending…" : "Test"}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-widest" style={{ color: "var(--wow-text-faint)" }}>Notify on</p>
+            {[
+              { label: "Raid scheduled", value: discordRaidCreated, set: setDiscordRaidCreated },
+              { label: "Signup changed", value: discordSignupChanged, set: setDiscordSignupChanged },
+              { label: "Roster synced", value: discordRosterSynced, set: setDiscordRosterSynced },
+            ].map(({ label, value, set }) => (
+              <label key={label} className="flex items-center gap-3 cursor-pointer select-none">
+                <button type="button" onClick={() => set(v => !v)}
+                  className="w-9 h-5 rounded-full transition-colors shrink-0"
+                  style={{ background: value ? "var(--wow-gold)" : "rgba(var(--wow-primary-rgb),0.15)" }}>
+                  <span className="block w-4 h-4 rounded-full mx-0.5 transition-transform bg-white"
+                    style={{ transform: value ? "translateX(16px)" : "translateX(0)" }} />
+                </button>
+                <span className="text-sm" style={{ color: "var(--wow-text-muted)" }}>{label}</span>
+              </label>
+            ))}
+          </div>
+          {discordMsg && (
+            <p className="text-sm" style={{ color: discordMsg.ok ? "var(--wow-gold)" : "#e06060" }}>{discordMsg.text}</p>
+          )}
+          <button type="submit" disabled={discordSaving} className="wow-btn text-sm">
+            {discordSaving ? "Saving…" : "Save Integrations"}
+          </button>
+        </form>
       </Section>
 
       {/* ── Member roles ── */}

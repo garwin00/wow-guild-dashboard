@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession, getGuildMembership } from "@/lib/queries";
 import RaidsClient from "./RaidsClient";
+
+export const metadata: Metadata = { title: "Raids" };
 
 interface Props { params: Promise<{ guildSlug: string }> }
 

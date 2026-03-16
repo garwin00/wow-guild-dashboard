@@ -15,10 +15,10 @@ export async function sendWelcomeEmail(email: string, name: string) {
   await resend.emails.send({
     from: FROM,
     to: email,
-    subject: "Welcome to ZugZug Guild Dashboard",
+    subject: "Welcome to ZugZug",
     html: `
       <div style="background:#09090e;color:#e8dfc8;font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid rgba(var(--wow-primary-rgb),0.2);border-radius:8px;">
-        <h1 style="color:#f0c040;font-size:1.5rem;margin-bottom:8px;">⚔️ ZugZug Guild Dashboard</h1>
+        <h1 style="color:#f0c040;font-size:1.5rem;margin-bottom:8px;">⚔️ ZugZug</h1>
         <div style="height:1px;background:linear-gradient(to right,transparent,#c8a96a,transparent);margin-bottom:24px;"></div>
         <p style="margin-bottom:8px;">Welcome, <strong style="color:#c8a96a;">${name}</strong>!</p>
         <p style="margin-bottom:24px;color:#8a8070;">Your account has been created. Connect your Battle.net account to import your guild and characters, then start tracking raids, rosters, and logs.</p>
@@ -49,7 +49,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     subject: "Reset your ZugZug password",
     html: `
       <div style="background:#09090e;color:#e8dfc8;font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid rgba(var(--wow-primary-rgb),0.2);border-radius:8px;">
-        <h1 style="color:#f0c040;font-size:1.5rem;margin-bottom:8px;">⚔️ ZugZug Guild Dashboard</h1>
+        <h1 style="color:#f0c040;font-size:1.5rem;margin-bottom:8px;">⚔️ ZugZug</h1>
         <div style="height:1px;background:linear-gradient(to right,transparent,#c8a96a,transparent);margin-bottom:24px;"></div>
         <p style="margin-bottom:16px;">A password reset was requested for your account.</p>
         <p style="margin-bottom:24px;">This link expires in <strong>1 hour</strong>.</p>

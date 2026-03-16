@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession, getGuildMembership } from "@/lib/queries";
 import ProfileClient from "./ProfileClient";
+
+export const metadata: Metadata = { title: "Profile" };
 
 interface Props { params: Promise<{ guildSlug: string }> }
 

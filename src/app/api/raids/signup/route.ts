@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendDiscordWebhook, signupChangedEmbed, parseWebhookEvents } from "@/lib/discord";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -13,6 +14,19 @@ export async function POST(req: Request) {
     update: { status, note },
     create: { raidEventId, characterId, status, note },
   });
+
+  // Fire Discord webhook (non-blocking)
+  prisma.raidEvent.findUnique({
+    where: { id: raidEventId },
+    include: { guild: true },
+  }).then(async (event) => {
+    if (!event?.guild.discordWebhook) return;
+    const events = parseWebhookEvents(event.guild.discordWebhookEvents ?? null);
+    if (!events.signupChanged) return;
+    const embed = signupChangedEmbed(character.name, status, event.title, event.guild.slug);
+    await sendDiscordWebhook(event.guild.discordWebhook, embed).catch(() => {});
+  }).catch(() => {});
+
   return NextResponse.json(signup);
 }
 

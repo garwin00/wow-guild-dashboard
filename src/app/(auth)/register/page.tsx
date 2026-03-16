@@ -69,7 +69,7 @@ export default function RegisterPage() {
         <div className="absolute -bottom-px -right-px w-6 h-6 border-b border-r" style={{ borderColor: "var(--wow-gold)" }} />
 
         <div className="rounded-lg p-8" style={{ background: "#0d0f18", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
-          <p className="text-center text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-text-faint)" }}>Guild Dashboard</p>
+          <p className="text-center text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-text-faint)" }}>ZugZug</p>
           <h1 className="text-xl font-bold text-center mb-6" style={{ color: "var(--wow-gold-bright)" }}>Create Account</h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { classColor } from "@/lib/wow-constants";
+import CompositionPanel from "./CompositionPanel";
 
 type EventStatus = "OPEN" | "CLOSED" | "CANCELLED";
 type SignupStatus = "ACCEPTED" | "TENTATIVE" | "DECLINED";
@@ -10,24 +12,7 @@ interface Character { id: string; name: string; class: string; spec: string | nu
 interface UserCharacter { id: string; name: string; class: string; }
 interface Signup { id: string; status: SignupStatus; note: string | null; character: Character; }
 
-const CLASS_COLOR: Record<string, string> = {
-  "death knight": "#C41E3A", "demon hunter": "#A330C9", "druid": "#FF7C0A",
-  "evoker": "#33937F", "hunter": "#AAD372", "mage": "#3FC7EB", "monk": "#00FF98",
-  "paladin": "#F48CBA", "priest": "#FFFFFF", "rogue": "#FFF468",
-  "shaman": "#0070DD", "warlock": "#8788EE", "warrior": "#C69B3A",
-};
-function classColor(cls: string) { return CLASS_COLOR[cls.toLowerCase()] ?? "#9ca3af"; }
-
 const STATUS_ICON: Record<SignupStatus, string> = { ACCEPTED: "✓", TENTATIVE: "?", DECLINED: "✗" };
-
-const BLOODLUST_CLASSES = new Set(["shaman", "hunter", "mage"]);
-const BREZ_CLASSES = new Set(["druid", "death knight", "warlock"]);
-const RAID_BUFF_MAP: Record<string, string[]> = {
-  "Power Word: Fortitude": ["priest"], "Battle Shout": ["warrior"],
-  "Arcane Intellect": ["mage"], "Mark of the Wild": ["druid"],
-  "Blessing of Kings": ["paladin"], "Mystic Touch": ["monk"],
-  "Chaos Brand": ["demon hunter"], "Skyfury": ["shaman"],
-};
 
 function ReadinessBadge({ ilvl, min }: { ilvl: number | null; min: number }) {
   if (!ilvl) return <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>—</span>;
@@ -35,88 +20,6 @@ function ReadinessBadge({ ilvl, min }: { ilvl: number | null; min: number }) {
   if (diff >= 0) return <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--wow-success)" }}>✓ {ilvl}</span>;
   if (diff >= -5) return <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--wow-warning)" }}>⚠ {ilvl}</span>;
   return <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--wow-error)" }}>✗ {ilvl}</span>;
-}
-
-function CompositionPanel({ signups }: { signups: Signup[] }) {
-  const accepted = signups.filter(s => s.status === "ACCEPTED");
-  if (accepted.length === 0) return (
-    <p className="text-center py-12 text-sm" style={{ color: "var(--wow-text-faint)" }}>No confirmed sign-ups yet.</p>
-  );
-  const tanks = accepted.filter(s => s.character.role === "TANK").length;
-  const healers = accepted.filter(s => s.character.role === "HEALER").length;
-  const dps = accepted.filter(s => s.character.role === "DPS").length;
-  const classes = accepted.map(s => s.character.class.toLowerCase());
-  const hasBloodlust = classes.some(c => BLOODLUST_CLASSES.has(c));
-  const hasBrez = classes.some(c => BREZ_CLASSES.has(c));
-  const missingBuffs = Object.entries(RAID_BUFF_MAP)
-    .filter(([, providers]) => !providers.some(c => classes.includes(c)))
-    .map(([buff]) => buff);
-
-  const RoleBar = ({ count, total, label, color }: { count: number; total: number; label: string; color: string }) => (
-    <div className="flex items-center gap-3">
-      <span className="text-xs w-14 text-right" style={{ color: "var(--wow-text-faint)" }}>{label}</span>
-      <div className="flex-1 rounded-full overflow-hidden" style={{ height: "6px", background: "rgba(255,255,255,0.08)" }}>
-        <div className="h-full rounded-full transition-all" style={{ width: `${total ? (count / total) * 100 : 0}%`, background: color }} />
-      </div>
-      <span className="text-xs font-mono tabular-nums" style={{ color, width: "2.5rem" }}>{count} / {total}</span>
-    </div>
-  );
-
-  return (
-    <div className="space-y-6">
-      <div className="wow-panel" style={{ padding: "1.25rem" }}>
-        <h3 className="wow-section-label mb-4" style={{ color: "var(--wow-gold)" }}>Role Breakdown ({accepted.length} confirmed)</h3>
-        <div className="space-y-3">
-          <RoleBar count={tanks} total={accepted.length} label="Tanks" color="#3FC7EB" />
-          <RoleBar count={healers} total={accepted.length} label="Healers" color="#1eff00" />
-          <RoleBar count={dps} total={accepted.length} label="DPS" color="#FF8C00" />
-        </div>
-      </div>
-      <div className="wow-panel" style={{ padding: "1.25rem" }}>
-        <h3 className="wow-section-label mb-4" style={{ color: "var(--wow-gold)" }}>Utility Coverage</h3>
-        <div className="flex flex-wrap gap-2">
-          <span className="text-xs px-2.5 py-1 rounded-full font-medium"
-            style={hasBloodlust ? { background: "rgba(255,80,80,0.12)", border: "1px solid rgba(255,80,80,0.3)", color: "#ff6060" }
-              : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "var(--wow-text-faint)" }}>
-            {hasBloodlust ? "✓" : "✗"} Bloodlust
-          </span>
-          <span className="text-xs px-2.5 py-1 rounded-full font-medium"
-            style={hasBrez ? { background: "rgba(100,180,100,0.12)", border: "1px solid rgba(100,180,100,0.3)", color: "#60c060" }
-              : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "var(--wow-text-faint)" }}>
-            {hasBrez ? "✓" : "✗"} Battle Rez
-          </span>
-          {missingBuffs.map(b => (
-            <span key={b} className="text-xs px-2.5 py-1 rounded-full font-medium"
-              style={{ background: "rgba(200,64,64,0.08)", border: "1px solid rgba(200,64,64,0.25)", color: "#c07070" }}>
-              ✗ {b}
-            </span>
-          ))}
-        </div>
-      </div>
-      <div className="wow-panel" style={{ overflow: "hidden" }}>
-        <table className="wow-table w-full">
-          <thead>
-            <tr style={{ textAlign: "left", color: "var(--wow-text-faint)" }}>
-              <th className="px-4 py-3">Character</th>
-              <th className="px-4 py-3">Class</th>
-              <th className="px-4 py-3">Role</th>
-              <th className="px-4 py-3 text-right">iLvl</th>
-            </tr>
-          </thead>
-          <tbody>
-            {accepted.map(s => (
-              <tr key={s.id} style={{ borderBottom: "1px solid rgba(200,169,106,0.07)" }}>
-                <td className="px-4 py-2.5 font-medium" style={{ color: classColor(s.character.class) }}>{s.character.name}</td>
-                <td className="px-4 py-2.5" style={{ color: "var(--wow-text-muted)" }}>{s.character.class}</td>
-                <td className="px-4 py-2.5" style={{ color: "var(--wow-text-muted)" }}>{s.character.role}</td>
-                <td className="px-4 py-2.5 text-right" style={{ color: "var(--wow-text-muted)" }}>{s.character.itemLevel ?? "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
 }
 
 export default function RaidsClient({ guildSlug, isOfficer }: {

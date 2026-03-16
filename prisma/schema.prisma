@@ -101,6 +101,12 @@ model Guild {
   officerNotes   OfficerNote[]
   absenceNotices AbsenceNotice[]
   announcements  Announcement[]
+  lootRecords    LootRecord[]
+  webhookLogs    DiscordWebhookLog[]
+
+  // Discord integration
+  discordWebhook       String?
+  discordWebhookEvents String? // JSON: { raidCreated, signupChanged, rosterSynced }
 }
 
 model GuildMembership {
@@ -141,6 +147,14 @@ model Character {
   parses      CharacterParse[]
   mythicScore MythicPlusScore?
   mythicRuns  MythicPlusRun[]
+  lootRecords LootRecord[]
+  cooldowns   CooldownAssignment[]
+
+  // Great Vault weekly progress (Blizzard mythic-keystone-profile sync)
+  vaultSlot1     Int?      // runs toward slot 1 (need 1)
+  vaultSlot2     Int?      // runs toward slot 2 (need 4)
+  vaultSlot3     Int?      // runs toward slot 3 (need 8)
+  vaultUpdatedAt DateTime?
 
   @@unique([name, realm, region])
 }
@@ -161,6 +175,8 @@ model RaidEvent {
   guild        Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
   signups      Signup[]
   roster       RosterSlot[]
+  lootRecords  LootRecord[]
+  cooldowns    CooldownAssignment[]
 }
 
 model Signup {
@@ -324,4 +340,45 @@ model Announcement {
 
   guild       Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
   author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model DiscordWebhookLog {
+  id        String   @id @default(cuid())
+  guildId   String
+  event     String   // "RAID_CREATED" | "SIGNUP_CHANGED" | "ROSTER_SYNCED"
+  payload   String   @db.Text // JSON of sent embed
+  sentAt    DateTime @default(now())
+  success   Boolean
+
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
+
+model LootRecord {
+  id          String     @id @default(cuid())
+  guildId     String
+  raidEventId String?
+  characterId String
+  itemName    String
+  itemLevel   Int
+  bossName    String?
+  source      String     @default("MANUAL") // "MANUAL" | "WCL"
+  awardedAt   DateTime   @default(now())
+
+  guild       Guild      @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  raidEvent   RaidEvent? @relation(fields: [raidEventId], references: [id], onDelete: SetNull)
+  character   Character  @relation(fields: [characterId], references: [id], onDelete: Cascade)
+}
+
+model CooldownAssignment {
+  id           String    @id @default(cuid())
+  raidEventId  String
+  bossName     String
+  pullNumber   Int       @default(1)
+  characterId  String
+  cooldownName String
+  targetNote   String?
+  createdAt    DateTime  @default(now())
+
+  raidEvent    RaidEvent @relation(fields: [raidEventId], references: [id], onDelete: Cascade)
+  character    Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 }

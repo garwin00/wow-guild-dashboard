@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession, getGuildMembership } from "@/lib/queries";
 import OverviewClient from "./OverviewClient";
+
+export const metadata: Metadata = { title: "Overview" };
 
 interface Props {
   params: Promise<{ guildSlug: string }>;

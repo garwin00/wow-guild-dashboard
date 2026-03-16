@@ -1,19 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { classColor } from "@/lib/wow-constants";
+import CompositionPanel from "../CompositionPanel";
 
 type SignupStatus = "ACCEPTED" | "TENTATIVE" | "DECLINED";
 interface Character { id: string; name: string; class: string; spec: string | null; role: string; itemLevel: number | null; }
 interface Signup { id: string; status: SignupStatus; note: string | null; character: Character; }
 interface RaidEvent { id: string; title: string; raidZone: string; scheduledAt: string | Date; maxAttendees: number; minItemLevel: number | null; status: string; description: string | null; _count: { signups: number }; }
-
-const CLASS_COLOR_HEX: Record<string, string> = {
-  "death knight": "#C41E3A", "demon hunter": "#A330C9", "druid": "#FF7C0A",
-  "evoker": "#33937F", "hunter": "#AAD372", "mage": "#3FC7EB", "monk": "#00FF98",
-  "paladin": "#F48CBA", "priest": "#FFFFFF", "rogue": "#FFF468",
-  "shaman": "#0070DD", "warlock": "#8788EE", "warrior": "#C69B3A",
-};
-function classColor(cls: string) { return CLASS_COLOR_HEX[cls.toLowerCase()] ?? "#9ca3af"; }
 
 function ReadinessBadge({ ilvl, min }: { ilvl: number | null; min: number }) {
   if (!ilvl) return <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>—</span>;
@@ -25,76 +20,6 @@ function ReadinessBadge({ ilvl, min }: { ilvl: number | null; min: number }) {
 
 const STATUS_ICON: Record<SignupStatus, string> = { ACCEPTED: "✓", TENTATIVE: "?", DECLINED: "✗" };
 
-const BLOODLUST_SPECS = new Set(["enhancement", "elemental", "restoration", "beast mastery", "marksmanship", "survival", "arcane", "fire", "frost mage", "unholy", "frost dk"]);
-const BLOODLUST_CLASSES = new Set(["shaman", "hunter", "mage"]);
-const BREZ_SPECS = new Set(["balance", "feral", "guardian", "restoration druid", "unholy", "blood", "frost dk"]);
-const BREZ_CLASSES = new Set(["druid", "death knight", "warlock"]);
-const RAID_BUFF_MAP: Record<string, string[]> = {
-  "Power Word: Fortitude": ["priest"],
-  "Battle Shout": ["warrior"],
-  "Arcane Intellect": ["mage"],
-  "Mark of the Wild": ["druid"],
-  "Blessing of Kings": ["paladin"],
-  "Mystic Touch": ["monk"],
-  "Chaos Brand": ["demon hunter"],
-  "Skyfury": ["shaman"],
-};
-
-function CompositionPanel({ signups }: { signups: Signup[] }) {
-  const accepted = signups.filter(s => s.status === "ACCEPTED");
-  if (accepted.length === 0) return null;
-  const tanks = accepted.filter(s => s.character.role === "TANK").length;
-  const healers = accepted.filter(s => s.character.role === "HEALER").length;
-  const dps = accepted.filter(s => s.character.role === "DPS").length;
-  const classes = accepted.map(s => s.character.class.toLowerCase());
-  const specs = accepted.map(s => (s.character.spec ?? "").toLowerCase());
-  const hasBloodlust = classes.some(c => BLOODLUST_CLASSES.has(c));
-  const hasBrez = classes.some(c => BREZ_CLASSES.has(c));
-  const missingBuffs = Object.entries(RAID_BUFF_MAP)
-    .filter(([, providerClasses]) => !providerClasses.some(c => classes.includes(c)))
-    .map(([buff]) => buff);
-  void specs;
-
-  const RoleBar = ({ count, total, label, color }: { count: number; total: number; label: string; color: string }) => (
-    <div className="flex items-center gap-3">
-      <span className="text-xs w-14 text-right" style={{ color: "var(--wow-text-faint)" }}>{label}</span>
-      <div className="flex-1 rounded-full overflow-hidden" style={{ height: "6px", background: "rgba(255,255,255,0.08)" }}>
-        <div className="h-full rounded-full transition-all" style={{ width: `${total ? (count / total) * 100 : 0}%`, background: color }} />
-      </div>
-      <span className="text-xs font-mono tabular-nums" style={{ color, width: "2rem" }}>{count}</span>
-    </div>
-  );
-
-  return (
-    <div className="wow-panel p-4 mb-6">
-      <h2 className="wow-section-label mb-3" style={{ color: "var(--wow-gold)" }}>Composition ({accepted.length})</h2>
-      <div className="space-y-2 mb-3">
-        <RoleBar count={tanks} total={accepted.length} label="Tanks" color="#3FC7EB" />
-        <RoleBar count={healers} total={accepted.length} label="Healers" color="var(--wow-success)" />
-        <RoleBar count={dps} total={accepted.length} label="DPS" color="#FF8C00" />
-      </div>
-      <div className="flex flex-wrap gap-2 pt-2" style={{ borderTop: "1px solid rgba(200,169,106,0.1)" }}>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium`}
-          style={hasBloodlust ? { background: "rgba(255,80,80,0.12)", border: "1px solid rgba(255,80,80,0.3)", color: "#ff6060" }
-            : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "var(--wow-text-faint)" }}>
-          {hasBloodlust ? "✓" : "✗"} Bloodlust
-        </span>
-        <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-          style={hasBrez ? { background: "rgba(100,180,100,0.12)", border: "1px solid rgba(100,180,100,0.3)", color: "#60c060" }
-            : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "var(--wow-text-faint)" }}>
-          {hasBrez ? "✓" : "✗"} Battle Rez
-        </span>
-        {missingBuffs.length > 0 && missingBuffs.map(b => (
-          <span key={b} className="text-xs px-2 py-0.5 rounded-full font-medium"
-            style={{ background: "rgba(200,64,64,0.08)", border: "1px solid rgba(200,64,64,0.25)", color: "#c07070" }}>
-            ✗ {b}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function RaidDetailClient({ event, signups: initial, guildSlug, isOfficer, userCharacters, userId }: {
   event: RaidEvent; signups: Signup[]; guildSlug: string; isOfficer: boolean; userCharacters: Character[]; userId: string;
 }) {
@@ -103,7 +28,7 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<SignupStatus | "ALL">("ALL");
-  const [mainTab, setMainTab] = useState<"signups" | "composition">("signups");
+  const [mainTab, setMainTab] = useState<"signups" | "composition" | "cooldowns">("signups");
 
   async function submitSignup(status: SignupStatus) {
     if (!selectedChar) return;
@@ -172,6 +97,9 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
         </button>
         <button onClick={() => setMainTab("composition")} className={`wow-tab${mainTab === "composition" ? " wow-tab-active" : ""}`}>
           Composition <span className="text-xs" style={{ opacity: 0.7 }}>({counts.ACCEPTED} confirmed)</span>
+        </button>
+        <button onClick={() => setMainTab("cooldowns")} className={`wow-tab${mainTab === "cooldowns" ? " wow-tab-active" : ""}`}>
+          Cooldowns
         </button>
       </div>
 
@@ -279,6 +207,187 @@ export default function RaidDetailClient({ event, signups: initial, guildSlug, i
 
       {/* Composition tab */}
       {mainTab === "composition" && <CompositionPanel signups={signups} />}
+
+      {/* Cooldowns tab */}
+      {mainTab === "cooldowns" && (
+        <CooldownsPanel raidId={event.id} isOfficer={isOfficer} signups={signups} />
+      )}
+    </div>
+  );
+}
+
+// ── Cooldowns Panel ─────────────────────────────────────────────────────────
+
+interface CooldownAssignment {
+  id: string;
+  bossName: string;
+  pullNumber: number;
+  cooldownName: string;
+  targetNote: string | null;
+  character: { name: string; class: string };
+}
+
+function CooldownsPanel({
+  raidId, isOfficer, signups,
+}: {
+  raidId: string;
+  isOfficer: boolean;
+  signups: Signup[];
+}) {
+  const qc = useQueryClient();
+  const [newBoss, setNewBoss] = useState("");
+  const [newPull, setNewPull] = useState(1);
+  const [newCharId, setNewCharId] = useState(signups[0]?.character.id ?? "");
+  const [newCd, setNewCd] = useState("");
+  const [newNote, setNewNote] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const { data, isLoading } = useQuery<{ assignments: CooldownAssignment[] }>({
+    queryKey: ["cooldowns", raidId],
+    queryFn: () => fetch(`/api/raids/${raidId}/cooldowns`).then(r => r.json()),
+  });
+
+  const addMutation = useMutation({
+    mutationFn: (body: object) =>
+      fetch(`/api/raids/${raidId}/cooldowns`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      }).then(r => r.json()),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["cooldowns", raidId] }); setAdding(false); },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      fetch(`/api/raids/${raidId}/cooldowns/${id}`, { method: "DELETE" }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cooldowns", raidId] }),
+  });
+
+  const exportText = useCallback(async () => {
+    const res = await fetch(`/api/raids/${raidId}/cooldowns?export=text`);
+    const text = await res.text();
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [raidId]);
+
+  const assignments = data?.assignments ?? [];
+
+  // Group by boss / pull
+  const groups = new Map<string, CooldownAssignment[]>();
+  for (const a of assignments) {
+    const key = `${a.bossName} (Pull ${a.pullNumber})`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(a);
+  }
+
+  const accepted = signups.filter(s => s.status === "ACCEPTED");
+
+  return (
+    <div className="space-y-5">
+      <div className="flex justify-between items-center flex-wrap gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--wow-gold)" }}>
+          Cooldown Assignments
+        </h2>
+        <div className="flex gap-2">
+          {isOfficer && (
+            <button onClick={() => setAdding(v => !v)} className="wow-btn text-xs">
+              {adding ? "Cancel" : "+ Add Assignment"}
+            </button>
+          )}
+          <button onClick={exportText} className="wow-btn text-xs opacity-80">
+            {copied ? "✓ Copied!" : "Export for Discord"}
+          </button>
+        </div>
+      </div>
+
+      {/* Add form */}
+      {adding && isOfficer && (
+        <div className="rounded-lg p-4 space-y-3"
+          style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div>
+              <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-text-faint)" }}>Boss</label>
+              <input value={newBoss} onChange={e => setNewBoss(e.target.value)} placeholder="Fyrakk"
+                className="w-full rounded px-2 py-1.5 text-sm outline-none"
+                style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-text-faint)" }}>Pull #</label>
+              <input type="number" value={newPull} onChange={e => setNewPull(Number(e.target.value))} min={1}
+                className="w-full rounded px-2 py-1.5 text-sm outline-none"
+                style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-text-faint)" }}>Character</label>
+              <select value={newCharId} onChange={e => setNewCharId(e.target.value)}
+                className="w-full rounded px-2 py-1.5 text-sm outline-none"
+                style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }}>
+                {accepted.map(s => (
+                  <option key={s.character.id} value={s.character.id}>{s.character.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-text-faint)" }}>Cooldown</label>
+              <input value={newCd} onChange={e => setNewCd(e.target.value)} placeholder="Rallying Cry"
+                className="w-full rounded px-2 py-1.5 text-sm outline-none"
+                style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-text-faint)" }}>Note (optional)</label>
+            <input value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Use on P2 transition"
+              className="w-full rounded px-2 py-1.5 text-sm outline-none"
+              style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+          </div>
+          <button
+            onClick={() => addMutation.mutate({ bossName: newBoss, pullNumber: newPull, characterId: newCharId, cooldownName: newCd, targetNote: newNote || null })}
+            disabled={addMutation.isPending || !newBoss || !newCharId || !newCd}
+            className="wow-btn text-sm">
+            {addMutation.isPending ? "Adding…" : "Add Assignment"}
+          </button>
+        </div>
+      )}
+
+      {isLoading ? (
+        <p className="text-sm py-4" style={{ color: "var(--wow-text-faint)" }}>Loading…</p>
+      ) : assignments.length === 0 ? (
+        <p className="text-sm py-4" style={{ color: "var(--wow-text-faint)" }}>No cooldown assignments yet.</p>
+      ) : (
+        <div className="space-y-4">
+          {[...groups.entries()].map(([groupKey, rows]) => (
+            <div key={groupKey}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--wow-gold)" }}>
+                {groupKey}
+              </p>
+              <div className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(var(--wow-primary-rgb),0.12)" }}>
+                <table className="w-full text-sm">
+                  <tbody>
+                    {rows.map((a, i) => (
+                      <tr key={a.id} style={{ borderTop: i > 0 ? "1px solid rgba(var(--wow-primary-rgb),0.08)" : undefined }}>
+                        <td className="px-4 py-2.5 font-medium" style={{ color: classColor(a.character.class), width: 140 }}>
+                          {a.character.name}
+                        </td>
+                        <td className="px-4 py-2.5" style={{ color: "var(--wow-text)" }}>{a.cooldownName}</td>
+                        <td className="px-4 py-2.5 text-xs" style={{ color: "var(--wow-text-faint)" }}>
+                          {a.targetNote ?? "—"}
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          {isOfficer && (
+                            <button onClick={() => deleteMutation.mutate(a.id)}
+                              className="text-xs opacity-40 hover:opacity-100 transition-opacity"
+                              style={{ color: "#e06060" }}>✕</button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

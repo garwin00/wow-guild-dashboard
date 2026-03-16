@@ -40,7 +40,14 @@ export default function SidebarNav({ navLinks, guildName, realm, region, guildIm
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const t = THEME_SIDEBAR[theme] ?? THEME_SIDEBAR.default;
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) => {
+    if (pathname === href) return true;
+    // Only use prefix match for routes that don't have a sibling child link
+    // e.g. /logs has /logs/live as a sibling, so don't treat /logs/live as "logs active"
+    const hasExplicitChild = navLinks.some(l => l.href !== href && l.href.startsWith(href + "/"));
+    if (hasExplicitChild) return false;
+    return pathname.startsWith(href + "/");
+  };
 
   const activeColor = theme === "horde" ? "#ff4422" : theme === "alliance" ? "#7ab8f5" : "var(--wow-gold-bright)";
   const activeBg = theme === "horde" ? "rgba(139,26,26,0.15)" : theme === "alliance" ? "rgba(26,82,150,0.15)" : "rgba(var(--wow-primary-rgb),0.12)";

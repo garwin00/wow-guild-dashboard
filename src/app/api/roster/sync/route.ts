@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getGuildRoster, getCharacterProfile } from "@/lib/blizzard";
+import { getGuildRoster, getCharacterProfile, getCharacterVaultProgress } from "@/lib/blizzard";
 import { fetchCharacterAvatar } from "@/lib/raiderio";
+import { sendDiscordWebhook, rosterSyncedEmbed, parseWebhookEvents } from "@/lib/discord";
 
 // Map active spec name → CharacterRole
 const TANK_SPECS = new Set(["Blood", "Vengeance", "Guardian", "Brewmaster", "Protection"]);
@@ -135,6 +136,23 @@ export async function POST(req: Request) {
       },
     });
 
+    // Sync Great Vault weekly progress in background (non-blocking)
+    getCharacterVaultProgress(guild.region, realmSlug, char.name)
+      .then((vault) => {
+        if (vault) {
+          return prisma.character.update({
+            where: { id: upserted.id },
+            data: {
+              vaultSlot1: vault.slot1,
+              vaultSlot2: vault.slot2,
+              vaultSlot3: vault.slot3,
+              vaultUpdatedAt: new Date(),
+            },
+          });
+        }
+      })
+      .catch((err) => console.warn(`[vault sync] failed for ${char.name}:`, err));
+
     // Update GuildMembership role for users who own this character
     if (upserted.userId && upserted.userId !== placeholder.id) {
       await prisma.guildMembership.updateMany({
@@ -145,5 +163,22 @@ export async function POST(req: Request) {
     synced++;
   });
 
+  // Fire webhook (non-blocking)
+  fireRosterSyncWebhook(guild, synced);
+
   return NextResponse.json({ synced });
+}
+
+async function fireRosterSyncWebhook(guild: { id: string; discordWebhook: string | null; discordWebhookEvents: string | null; name: string; slug: string }, synced: number) {
+  if (!guild.discordWebhook) return;
+  const events = parseWebhookEvents(guild.discordWebhookEvents);
+  if (events.rosterSynced === false) return;
+  const embed = rosterSyncedEmbed(synced, guild.name, guild.slug);
+  sendDiscordWebhook(guild.discordWebhook, embed)
+    .then((result) =>
+      prisma.discordWebhookLog.create({
+        data: { guildId: guild.id, event: "ROSTER_SYNCED", payload: JSON.stringify(embed), success: result.ok },
+      })
+    )
+    .catch(console.warn);
 }

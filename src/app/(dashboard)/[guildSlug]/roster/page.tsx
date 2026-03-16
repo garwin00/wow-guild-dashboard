@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession, getGuildMembership } from "@/lib/queries";
 import RosterClient from "./RosterClient";
+
+export const metadata: Metadata = { title: "Roster" };
 
 interface Props { params: Promise<{ guildSlug: string }> }
 

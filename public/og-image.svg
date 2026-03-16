@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#1a1208"/>
+      <stop offset="100%" stop-color="#09090e"/>
+    </radialGradient>
+    <linearGradient id="divider" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c8a96a" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#c8a96a" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#c8a96a" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Corner decorations -->
+  <path d="M40,40 L40,80 M40,40 L80,40" stroke="#c8a96a" stroke-width="2" fill="none"/>
+  <path d="M1160,40 L1160,80 M1160,40 L1120,40" stroke="#c8a96a" stroke-width="2" fill="none"/>
+  <path d="M40,590 L40,550 M40,590 L80,590" stroke="#c8a96a" stroke-width="2" fill="none"/>
+  <path d="M1160,590 L1160,550 M1160,590 L1120,590" stroke="#c8a96a" stroke-width="2" fill="none"/>
+
+  <!-- Axe icon (crossed swords simplified) -->
+  <text x="600" y="240" font-size="96" text-anchor="middle" dominant-baseline="middle">⚔️</text>
+
+  <!-- Divider line -->
+  <rect x="300" y="275" width="600" height="1" fill="url(#divider)"/>
+
+  <!-- ZugZug title -->
+  <text x="600" y="360" font-family="Georgia, serif" font-size="96" font-weight="bold"
+    text-anchor="middle" dominant-baseline="middle"
+    letter-spacing="8" fill="#f0c040">ZugZug</text>
+
+  <!-- Tagline -->
+  <text x="600" y="440" font-family="Arial, sans-serif" font-size="28"
+    text-anchor="middle" dominant-baseline="middle"
+    letter-spacing="4" fill="#8a8070">WORLD OF WARCRAFT GUILD DASHBOARD</text>
+
+  <!-- Bottom divider -->
+  <rect x="300" y="490" width="600" height="1" fill="url(#divider)"/>
+</svg>
