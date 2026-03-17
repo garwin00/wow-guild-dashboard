@@ -10,6 +10,10 @@ interface Character {
   guildRank: number | null; userId: string | null;
   vaultSlot1: number | null; vaultSlot2: number | null; vaultSlot3: number | null; vaultUpdatedAt: string | null;
 }
+interface MembershipInfo {
+  id: string; role: string;
+  trialStartDate: string | null; trialReviewDate: string | null;
+}
 
 const CLASS_COLOR_HEX: Record<string, string> = {
   "death knight": "#C41E3A",
@@ -79,10 +83,35 @@ export default function RosterClient({ guildSlug, isOfficer, guildName, currentU
   const [noteInput, setNoteInput] = useState("");
   const [noteLoading, setNoteLoading] = useState(false);
 
+  // Trial tracking state
+  const [trialStartDate, setTrialStartDate] = useState("");
+  const [trialReviewDate, setTrialReviewDate] = useState("");
+  const [trialSaving, setTrialSaving] = useState(false);
+  const [trialMsg, setTrialMsg] = useState<string | null>(null);
+
+  function exportCsv() {
+    const headers = ["Name", "Class", "Spec", "Role", "Level", "iLvl", "Attendance%", "Vault1", "Vault2", "Vault3", "GuildRank"];
+    const rows = filtered.map((c) => {
+      const att = attendanceMap[c.id];
+      const attPct = att?.total ? Math.round((att.attended / att.total) * 100) : "";
+      return [
+        c.name, c.class ?? "", c.spec ?? "", c.role ?? "", c.level ?? "", c.itemLevel ?? "",
+        attPct, c.vaultSlot1 ?? "", c.vaultSlot2 ?? "", c.vaultSlot3 ?? "", c.guildRank ?? "",
+      ].map(String);
+    });
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `${guildName}-roster.csv`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const { data, isLoading } = useQuery<{
+    guildId: string;
     characters: Character[];
     attendanceMap: Record<string, { attended: number; total: number }>;
     absencesByUser: Record<string, { startDate: string; endDate: string; reason: string | null }[]>;
+    membershipMap: Record<string, MembershipInfo>;
   }>({
     queryKey: ["roster", guildSlug],
     queryFn: () => fetch(`/api/guild/${guildSlug}/roster`).then((r) => r.json()),
@@ -97,11 +126,15 @@ export default function RosterClient({ guildSlug, isOfficer, guildName, currentU
     setNotePanel({ char });
     setNotes([]);
     setNoteInput("");
+    setTrialMsg(null);
+    const mem = data?.membershipMap?.[char.userId];
+    setTrialStartDate(mem?.trialStartDate ? mem.trialStartDate.slice(0, 10) : "");
+    setTrialReviewDate(mem?.trialReviewDate ? mem.trialReviewDate.slice(0, 10) : "");
     setNoteLoading(true);
     const res = await fetch(`/api/officer-notes?guildSlug=${encodeURIComponent(guildSlug)}&targetUserId=${char.userId}`);
     if (res.ok) setNotes(await res.json());
     setNoteLoading(false);
-  }, [guildSlug]);
+  }, [guildSlug, data?.membershipMap]);
 
   async function addNote() {
     if (!notePanel?.char.userId || !noteInput.trim()) return;
@@ -154,6 +187,8 @@ export default function RosterClient({ guildSlug, isOfficer, guildName, currentU
 
   const attendanceMap = data?.attendanceMap ?? {};
   const absencesByUser = data?.absencesByUser ?? {};
+  const membershipMap = data?.membershipMap ?? {};
+  const guildId = data?.guildId ?? "";
 
   if (isLoading || !data) {
     return (
@@ -200,6 +235,9 @@ export default function RosterClient({ guildSlug, isOfficer, guildName, currentU
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           {syncMsg && <span className="text-sm" style={{ color: "var(--wow-text-muted)" }}>{syncMsg}</span>}
+          <button onClick={exportCsv} className="wow-btn text-sm opacity-80 hover:opacity-100" title="Export roster as CSV">
+            ↓ CSV
+          </button>
           <button onClick={syncRoster} disabled={syncing || onCooldown}
             className="wow-btn"
             title={onCooldown ? `Available in ${cooldownMins}m` : "Sync roster from Blizzard"}>
@@ -285,6 +323,12 @@ export default function RosterClient({ guildSlug, isOfficer, guildName, currentU
                       <div>
                         <div className="flex items-center gap-1.5">
                           <p className="font-medium text-sm" style={{ color: classColor(char.class) }}>{char.name}</p>
+                          {char.userId && membershipMap[char.userId]?.role === "TRIALIST" && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                              style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.4)", color: "#fbbf24", letterSpacing: "0.05em" }}>
+                              TRIAL
+                            </span>
+                          )}
                           {char.userId && absencesByUser[char.userId]?.length > 0 && (
                             <span title={`${absencesByUser[char.userId].length} absence notice(s)`} className="text-xs" style={{ color: "#ff8000" }}>🏖</span>
                           )}
@@ -389,6 +433,68 @@ export default function RosterClient({ guildSlug, isOfficer, guildName, currentU
               ))}
             </div>
             <div className="p-4" style={{ borderTop: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+              {/* Trial tracking section — shown for TRIALIST members */}
+              {notePanel.char.userId && membershipMap[notePanel.char.userId]?.role === "TRIALIST" && (() => {
+                const mem = membershipMap[notePanel.char.userId!]!;
+                async function saveTrialDates() {
+                  setTrialSaving(true); setTrialMsg(null);
+                  const res = await fetch("/api/roster/trial", {
+                    method: "PATCH", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ membershipId: mem.id, guildSlug, trialStartDate: trialStartDate || undefined, trialReviewDate: trialReviewDate || undefined }),
+                  });
+                  setTrialMsg(res.ok ? "✓ Saved" : "Failed");
+                  setTrialSaving(false);
+                  if (res.ok) queryClient.invalidateQueries({ queryKey: ["roster", guildSlug] });
+                }
+                async function promoteMember() {
+                  setTrialSaving(true); setTrialMsg(null);
+                  const res = await fetch("/api/settings/role", {
+                    method: "PATCH", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ membershipId: mem.id, role: "MEMBER", guildId }),
+                  });
+                  setTrialMsg(res.ok ? "✓ Promoted to Member" : "Failed");
+                  setTrialSaving(false);
+                  if (res.ok) queryClient.invalidateQueries({ queryKey: ["roster", guildSlug] });
+                }
+                async function clearTrial() {
+                  setTrialSaving(true); setTrialMsg(null);
+                  const res = await fetch("/api/roster/trial", {
+                    method: "PATCH", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ membershipId: mem.id, guildSlug, clearTrial: true }),
+                  });
+                  setTrialMsg(res.ok ? "✓ Cleared" : "Failed");
+                  if (res.ok) { setTrialStartDate(""); setTrialReviewDate(""); }
+                  setTrialSaving(false);
+                  if (res.ok) queryClient.invalidateQueries({ queryKey: ["roster", guildSlug] });
+                }
+                return (
+                  <div className="mb-4 space-y-3 pb-4" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+                    <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: "#fbbf24" }}>⚗ Trial Tracking</p>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Trial Started</label>
+                        <input type="date" value={trialStartDate} onChange={e => setTrialStartDate(e.target.value)} className="wow-input w-full text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Review Date</label>
+                        <input type="date" value={trialReviewDate} onChange={e => setTrialReviewDate(e.target.value)} className="wow-input w-full text-sm" />
+                      </div>
+                    </div>
+                    {trialMsg && <p className="text-xs" style={{ color: trialMsg.startsWith("✓") ? "var(--wow-success)" : "var(--wow-error)" }}>{trialMsg}</p>}
+                    <div className="flex flex-col gap-1.5">
+                      <button onClick={saveTrialDates} disabled={trialSaving} className="wow-btn text-xs w-full" style={{ opacity: trialSaving ? 0.5 : 1 }}>Save Trial Dates</button>
+                      <button onClick={promoteMember} disabled={trialSaving} className="text-xs px-3 py-1.5 rounded-lg w-full transition-colors"
+                        style={{ background: "rgba(64,200,100,0.12)", border: "1px solid rgba(64,200,100,0.35)", color: "#40c864", opacity: trialSaving ? 0.5 : 1 }}>
+                        ✓ Promote to Member
+                      </button>
+                      <button onClick={clearTrial} disabled={trialSaving} className="text-xs px-3 py-1.5 rounded-lg w-full transition-colors"
+                        style={{ background: "rgba(200,64,64,0.08)", border: "1px solid rgba(200,64,64,0.25)", color: "#c84040", opacity: trialSaving ? 0.5 : 1 }}>
+                        ✕ Clear Trial
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
               <textarea value={noteInput} onChange={(e) => setNoteInput(e.target.value)} rows={3}
                 placeholder="Add a note… (officer-only, not visible to member)"
                 className="wow-input resize-none" />

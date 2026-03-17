@@ -203,3 +203,31 @@ export async function getLiveFights(reportCode: string) {
   const data = await wclQuery<R>(query, { code: reportCode });
   return data?.reportData?.report ?? null;
 }
+
+export interface WclLootItem {
+  id: number;
+  name: string;
+  quality: number;   // 3=rare/blue, 4=epic/purple, 5=legendary/orange
+  itemLevel: number;
+  type: string;
+  obtainedAt: number; // unix timestamp ms
+  sourceID: number;
+  characterID: number;
+}
+
+export async function getLootFromReport(reportCode: string): Promise<WclLootItem[]> {
+  const query = `
+    query GetReportLoot($code: String!) {
+      reportData {
+        report(code: $code) {
+          loot {
+            data
+          }
+        }
+      }
+    }
+  `;
+  type LootResponse = { reportData: { report: { loot: { data: WclLootItem[] } } } };
+  const result = await wclQuery<LootResponse>(query, { code: reportCode });
+  return result?.reportData?.report?.loot?.data ?? [];
+}

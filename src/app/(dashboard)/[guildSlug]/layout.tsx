@@ -40,6 +40,7 @@ export default async function DashboardLayout({ children, params }: Props) {
     { href: `/${guildSlug}/logs/live`, label: "Live", icon: "🔴" },
     { href: `/${guildSlug}/mythic-plus`, label: "Mythic+", icon: "⚡" },
     { href: `/${guildSlug}/loot`, label: "Loot", icon: "⚔️" },
+    ...(isOfficer ? [{ href: `/${guildSlug}/attendance`, label: "Attendance", icon: "📋" }] : []),
     { href: `/${guildSlug}/profile`, label: "Profile", icon: "👤" },
     ...(isOfficer ? [{ href: `/${guildSlug}/settings`, label: "Settings", icon: "⚙️" }] : []),
   ];

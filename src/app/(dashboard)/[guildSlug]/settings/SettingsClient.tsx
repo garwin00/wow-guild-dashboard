@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type GuildRole = "GM" | "OFFICER" | "MEMBER" | "TRIALIST";
 interface Guild {
@@ -11,8 +11,16 @@ interface Guild {
   discordNotifyRaidCreated: boolean;
   discordNotifySignupChanged: boolean;
   discordNotifyRosterSynced: boolean;
+  isPublic: boolean;
+  recruitMessage: string | null;
 }
 interface Member { id: string; role: GuildRole; user: { id: string; battletag: string | null; name: string | null } }
+interface Application {
+  id: string; characterName: string; realm: string; class: string; role: string;
+  message: string | null; discordTag: string | null; status: string;
+  reviewNote: string | null; createdAt: string;
+  reviewedBy: { name: string | null; battletag: string | null } | null;
+}
 
 const ROLES: GuildRole[] = ["GM", "OFFICER", "MEMBER", "TRIALIST"];
 
@@ -55,6 +63,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function SettingsClient({ guildSlug, isGm }: {
   guildSlug: string; isGm: boolean;
 }) {
+  const qc = useQueryClient();
   const [members, setMembers] = useState<Member[]>([]);
   const [wclId, setWclId] = useState("");
   const [wclSaving, setWclSaving] = useState(false);
@@ -73,9 +82,24 @@ export default function SettingsClient({ guildSlug, isGm }: {
   const [discordTesting, setDiscordTesting] = useState(false);
   const firstLoad = useRef(false);
 
+  // Recruiting state
+  const [isPublic, setIsPublic] = useState(false);
+  const [recruitMessage, setRecruitMessage] = useState("");
+  const [recruitSaving, setRecruitSaving] = useState(false);
+  const [recruitMsg, setRecruitMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+  // Applications state
+  const [expandedApp, setExpandedApp] = useState<string | null>(null);
+  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
+
   const { data, isLoading } = useQuery<{ guild: Guild; members: Member[] }>({
     queryKey: ["settings", guildSlug],
     queryFn: () => fetch(`/api/guild/${guildSlug}/settings`).then((r) => r.json()),
+  });
+
+  const { data: appsData } = useQuery<{ applications: Application[]; total: number }>({
+    queryKey: ["applications", guildSlug],
+    queryFn: () => fetch(`/api/guild/${guildSlug}/applications`).then(r => r.json()),
   });
 
   useEffect(() => {
@@ -90,6 +114,8 @@ export default function SettingsClient({ guildSlug, isGm }: {
       setDiscordRaidCreated(data.guild.discordNotifyRaidCreated ?? true);
       setDiscordSignupChanged(data.guild.discordNotifySignupChanged ?? true);
       setDiscordRosterSynced(data.guild.discordNotifyRosterSynced ?? true);
+      setIsPublic(data.guild.isPublic ?? false);
+      setRecruitMessage(data.guild.recruitMessage ?? "");
     }
   }, [data]);
 
@@ -159,6 +185,26 @@ export default function SettingsClient({ guildSlug, isGm }: {
     if (res.ok) setDiscordMsg({ text: "✓ Test message sent!", ok: true });
     else setDiscordMsg({ text: "Failed — check webhook URL", ok: false });
     setDiscordTesting(false);
+  }
+
+  async function saveRecruiting(e: React.FormEvent) {
+    e.preventDefault();
+    setRecruitSaving(true);
+    setRecruitMsg(null);
+    const res = await fetch(`/api/guild/${guildSlug}/settings`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPublic, recruitMessage: recruitMessage || null }),
+    });
+    setRecruitMsg(res.ok ? { text: "✓ Saved", ok: true } : { text: "Failed to save", ok: false });
+    setRecruitSaving(false);
+  }
+
+  async function updateApp(id: string, status: string) {
+    const res = await fetch(`/api/guild/${guildSlug}/applications/${id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, reviewNote: reviewNotes[id] }),
+    });
+    if (res.ok) qc.invalidateQueries({ queryKey: ["applications", guildSlug] });
   }
 
   if (isLoading || !data) {
@@ -355,6 +401,116 @@ export default function SettingsClient({ guildSlug, isGm }: {
             </div>
           ))}
         </div>
+      </Section>
+
+      {/* ── Recruiting ── */}
+      <Section title="Recruiting">
+        <form onSubmit={saveRecruiting} className="space-y-4">
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <button type="button" onClick={() => setIsPublic(v => !v)}
+              className="w-9 h-5 rounded-full transition-colors shrink-0"
+              style={{ background: isPublic ? "var(--wow-gold)" : "rgba(var(--wow-primary-rgb),0.15)" }}>
+              <span className="block w-4 h-4 rounded-full mx-0.5 transition-transform bg-white"
+                style={{ transform: isPublic ? "translateX(16px)" : "translateX(0)" }} />
+            </button>
+            <div>
+              <span className="text-sm" style={{ color: "var(--wow-text)" }}>Enable public guild page</span>
+              {isPublic && (
+                <a href={`/${guildSlug}`} target="_blank" rel="noopener noreferrer"
+                  className="ml-2 text-xs" style={{ color: "var(--wow-gold)", textDecoration: "underline" }}>
+                  View public page ↗
+                </a>
+              )}
+            </div>
+          </label>
+          <div>
+            <label className="block text-xs uppercase tracking-widest mb-1.5" style={{ color: "var(--wow-text-faint)" }}>
+              Recruitment Message
+            </label>
+            <textarea value={recruitMessage} onChange={e => setRecruitMessage(e.target.value)} rows={4}
+              placeholder="Tell potential applicants about your guild, progression, raid schedule and expectations…"
+              className="w-full rounded px-3 py-2 text-sm outline-none resize-none"
+              style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+          </div>
+          {recruitMsg && <p className="text-sm" style={{ color: recruitMsg.ok ? "var(--wow-gold)" : "#e06060" }}>{recruitMsg.text}</p>}
+          <button type="submit" disabled={recruitSaving} className="wow-btn text-sm">
+            {recruitSaving ? "Saving…" : "Save Recruiting"}
+          </button>
+        </form>
+      </Section>
+
+      {/* ── Applications ── */}
+      <Section title={`Applications${appsData && appsData.applications.filter(a => a.status === "PENDING").length > 0 ? ` (${appsData.applications.filter(a => a.status === "PENDING").length} pending)` : ""}`}>
+        {!appsData || appsData.applications.length === 0 ? (
+          <p className="text-sm" style={{ color: "var(--wow-text-faint)" }}>No applications yet.</p>
+        ) : (
+          <div className="space-y-1">
+            {appsData.applications.map(app => {
+              const statusColor = app.status === "PENDING" ? "#fbbf24" : app.status === "REVIEWING" ? "#60a5fa" : app.status === "ACCEPTED" ? "#40c864" : "#e06060";
+              const isExpanded = expandedApp === app.id;
+              return (
+                <div key={app.id} className="rounded-lg overflow-hidden"
+                  style={{ border: "1px solid rgba(var(--wow-primary-rgb),0.12)" }}>
+                  <button onClick={() => setExpandedApp(isExpanded ? null : app.id)}
+                    className="w-full flex items-center justify-between px-4 py-3 text-left"
+                    style={{ background: "rgba(var(--wow-primary-rgb),0.04)" }}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="font-medium text-sm" style={{ color: "var(--wow-text)" }}>{app.characterName}</span>
+                      <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{app.class} · {app.role}</span>
+                      {app.discordTag && <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>#{app.discordTag}</span>}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>
+                        {new Date(app.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                      </span>
+                      <span className="text-xs rounded-full px-2 py-0.5 font-semibold"
+                        style={{ background: `${statusColor}18`, border: `1px solid ${statusColor}50`, color: statusColor }}>
+                        {app.status}
+                      </span>
+                      <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{isExpanded ? "▲" : "▼"}</span>
+                    </div>
+                  </button>
+                  {isExpanded && (
+                    <div className="px-4 py-3 space-y-3" style={{ borderTop: "1px solid rgba(var(--wow-primary-rgb),0.1)" }}>
+                      {app.message && (
+                        <div>
+                          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-text-faint)" }}>Message</p>
+                          <p className="text-sm whitespace-pre-wrap" style={{ color: "var(--wow-text-muted)" }}>{app.message}</p>
+                        </div>
+                      )}
+                      <div>
+                        <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-text-faint)" }}>Review Note</label>
+                        <textarea
+                          value={reviewNotes[app.id] ?? app.reviewNote ?? ""}
+                          onChange={e => setReviewNotes(p => ({ ...p, [app.id]: e.target.value }))}
+                          rows={2} placeholder="Internal notes…"
+                          className="w-full rounded px-3 py-2 text-sm outline-none resize-none"
+                          style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        <button onClick={() => updateApp(app.id, "ACCEPTED")}
+                          className="text-xs px-3 py-1.5 rounded-lg"
+                          style={{ background: "rgba(64,200,100,0.12)", border: "1px solid rgba(64,200,100,0.35)", color: "#40c864" }}>
+                          ✓ Accept
+                        </button>
+                        <button onClick={() => updateApp(app.id, "DECLINED")}
+                          className="text-xs px-3 py-1.5 rounded-lg"
+                          style={{ background: "rgba(200,64,64,0.1)", border: "1px solid rgba(200,64,64,0.3)", color: "#e06060" }}>
+                          ✕ Decline
+                        </button>
+                        <button onClick={() => updateApp(app.id, "REVIEWING")}
+                          className="text-xs px-3 py-1.5 rounded-lg"
+                          style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.3)", color: "#60a5fa" }}>
+                          ⟳ Reviewing
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Section>
     </div>
   );

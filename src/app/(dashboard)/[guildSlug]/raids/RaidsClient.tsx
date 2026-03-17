@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { classColor } from "@/lib/wow-constants";
 import CompositionPanel from "./CompositionPanel";
 
 type EventStatus = "OPEN" | "CLOSED" | "CANCELLED";
 type SignupStatus = "ACCEPTED" | "TENTATIVE" | "DECLINED";
-interface RaidEvent { id: string; title: string; raidZone: string; scheduledAt: string | Date; maxAttendees: number; minItemLevel: number | null; status: EventStatus; description: string | null; _count: { signups: number }; }
+interface RaidEvent { id: string; title: string; raidZone: string; scheduledAt: string | Date; maxAttendees: number; minItemLevel: number | null; status: EventStatus; description: string | null; recurringTemplateId: string | null; _count: { signups: number }; }
 interface Character { id: string; name: string; class: string; spec: string | null; role: string; itemLevel: number | null; }
 interface UserCharacter { id: string; name: string; class: string; }
 interface Signup { id: string; status: SignupStatus; note: string | null; character: Character; }
+interface RaidTemplate { id: string; title: string; raidZone: string; dayOfWeek: number; startTime: string; maxAttendees: number; minItemLevel: number | null; description: string | null; isActive: boolean; }
 
 const STATUS_ICON: Record<SignupStatus, string> = { ACCEPTED: "✓", TENTATIVE: "?", DECLINED: "✗" };
 
@@ -22,9 +23,12 @@ function ReadinessBadge({ ilvl, min }: { ilvl: number | null; min: number }) {
   return <span className="text-xs font-semibold tabular-nums" style={{ color: "var(--wow-error)" }}>✗ {ilvl}</span>;
 }
 
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 export default function RaidsClient({ guildSlug, isOfficer }: {
   guildSlug: string; isOfficer: boolean;
 }) {
+  const qc = useQueryClient();
   const [events, setEvents] = useState<RaidEvent[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [signups, setSignups] = useState<Signup[] | null>(null);
@@ -39,10 +43,23 @@ export default function RaidsClient({ guildSlug, isOfficer }: {
   const [submitting, setSubmitting] = useState(false);
   const firstLoad = useRef(false);
 
+  // Templates state
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({ title: "", raidZone: "", dayOfWeek: 2, startTime: "20:00", maxAttendees: 25, minItemLevel: "", description: "" });
+  const [templateSaving, setTemplateSaving] = useState(false);
+  const [generateMsg, setGenerateMsg] = useState<string | null>(null);
+
   const { data, isLoading } = useQuery<{ events: RaidEvent[]; userCharacters: UserCharacter[] }>({
     queryKey: ["raids", guildSlug],
     queryFn: () => fetch(`/api/guild/${guildSlug}/raids`).then(r => r.json()),
   });
+
+  const { data: templatesData } = useQuery<{ templates: RaidTemplate[] }>({
+    queryKey: ["raid-templates", guildSlug],
+    queryFn: () => fetch(`/api/guild/${guildSlug}/raid-templates`).then(r => r.json()),
+    enabled: isOfficer,
+  });
+  const templates = templatesData?.templates ?? [];
 
   useEffect(() => {
     if (data && !firstLoad.current) {
@@ -116,6 +133,48 @@ export default function RaidsClient({ guildSlug, isOfficer }: {
     setSignups(prev => prev ? prev.map(s => s.id === signupId ? { ...s, status } : s) : prev);
   }
 
+  async function createTemplate(e: React.FormEvent) {
+    e.preventDefault();
+    setTemplateSaving(true);
+    const res = await fetch(`/api/guild/${guildSlug}/raid-templates`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...newTemplate, maxAttendees: Number(newTemplate.maxAttendees), minItemLevel: newTemplate.minItemLevel ? Number(newTemplate.minItemLevel) : null }),
+    });
+    if (res.ok) {
+      qc.invalidateQueries({ queryKey: ["raid-templates", guildSlug] });
+      setNewTemplate({ title: "", raidZone: "", dayOfWeek: 2, startTime: "20:00", maxAttendees: 25, minItemLevel: "", description: "" });
+    }
+    setTemplateSaving(false);
+  }
+
+  async function generateFromTemplate(templateId: string) {
+    setGenerateMsg(null);
+    const res = await fetch(`/api/guild/${guildSlug}/raid-templates/generate`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ templateId, weeks: 4 }),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      setGenerateMsg(`✓ Created ${d.created} raid${d.created !== 1 ? "s" : ""}`);
+      qc.invalidateQueries({ queryKey: ["raids", guildSlug] });
+    } else {
+      setGenerateMsg("Failed to generate");
+    }
+  }
+
+  async function toggleTemplate(template: RaidTemplate) {
+    await fetch(`/api/guild/${guildSlug}/raid-templates/${template.id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: !template.isActive }),
+    });
+    qc.invalidateQueries({ queryKey: ["raid-templates", guildSlug] });
+  }
+
+  async function deleteTemplate(id: string) {
+    await fetch(`/api/guild/${guildSlug}/raid-templates/${id}`, { method: "DELETE" });
+    qc.invalidateQueries({ queryKey: ["raid-templates", guildSlug] });
+  }
+
   if (isLoading && events.length === 0) {
     return (
       <div className="p-8 flex items-center justify-center py-24">
@@ -149,7 +208,12 @@ export default function RaidsClient({ guildSlug, isOfficer }: {
         style={!isSelected ? { border: "1px solid transparent" } : undefined}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="truncate font-medium text-sm" style={{ color: isSelected ? "var(--wow-gold-bright)" : "var(--wow-text)" }}>{event.title}</p>
+            <p className="truncate font-medium text-sm" style={{ color: isSelected ? "var(--wow-gold-bright)" : "var(--wow-text)" }}>
+              {event.title}
+              {event.recurringTemplateId && (
+                <span className="ml-1 text-xs opacity-50" title="From recurring template">↻</span>
+              )}
+            </p>
             <p className="text-xs mt-0.5 truncate" style={{ color: "var(--wow-text-muted)" }}>
               {date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} · {date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
             </p>
@@ -230,6 +294,92 @@ export default function RaidsClient({ guildSlug, isOfficer }: {
               <button type="submit" disabled={saving} className="wow-btn" style={{ opacity: saving ? 0.5 : 1 }}>{saving ? "Creating…" : "Create"}</button>
             </div>
           </form>
+        )}
+
+        {/* Raid Templates section (officers only) */}
+        {isOfficer && (
+          <div className="wow-panel mb-4" style={{ padding: "1rem 1.25rem" }}>
+            <button onClick={() => setTemplatesOpen(o => !o)}
+              className="flex items-center justify-between w-full"
+              style={{ color: "var(--wow-gold)" }}>
+              <span className="font-semibold text-sm">↻ Raid Templates</span>
+              <span className="text-xs opacity-60">{templatesOpen ? "▲" : "▼"}</span>
+            </button>
+            {templatesOpen && (
+              <div className="mt-4 space-y-4">
+                {generateMsg && <p className="text-sm" style={{ color: generateMsg.startsWith("✓") ? "var(--wow-success)" : "var(--wow-error)" }}>{generateMsg}</p>}
+
+                {/* Template list */}
+                {templates.length > 0 && (
+                  <div className="space-y-2">
+                    {templates.map(t => (
+                      <div key={t.id} className="flex items-center justify-between gap-2 py-2 px-3 rounded-lg"
+                        style={{ background: "rgba(var(--wow-primary-rgb),0.05)", border: "1px solid rgba(var(--wow-primary-rgb),0.12)" }}>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium" style={{ color: t.isActive ? "var(--wow-text)" : "var(--wow-text-faint)" }}>
+                            {DAY_NAMES[t.dayOfWeek]} {t.startTime} — {t.title}
+                          </p>
+                          <p className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{t.raidZone}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button onClick={() => generateFromTemplate(t.id)}
+                            className="text-xs px-2 py-1 rounded"
+                            style={{ background: "rgba(var(--wow-primary-rgb),0.1)", border: "1px solid rgba(var(--wow-primary-rgb),0.25)", color: "var(--wow-gold)" }}
+                            title="Generate 4 weeks of raids">
+                            ↻ 4w
+                          </button>
+                          <button onClick={() => toggleTemplate(t)}
+                            className="text-xs px-2 py-1 rounded"
+                            style={{ background: t.isActive ? "rgba(64,200,100,0.1)" : "rgba(var(--wow-primary-rgb),0.08)", border: `1px solid ${t.isActive ? "rgba(64,200,100,0.3)" : "rgba(var(--wow-primary-rgb),0.2)"}`, color: t.isActive ? "#40c864" : "var(--wow-text-faint)" }}>
+                            {t.isActive ? "Active" : "Inactive"}
+                          </button>
+                          <button onClick={() => deleteTemplate(t.id)}
+                            className="text-xs opacity-40 hover:opacity-100"
+                            style={{ color: "var(--wow-error)" }}>✕</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* New template form */}
+                <form onSubmit={createTemplate} className="space-y-3">
+                  <p className="text-xs uppercase tracking-widest" style={{ color: "var(--wow-text-faint)" }}>New Template</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Title</label>
+                      <input required value={newTemplate.title} onChange={e => setNewTemplate(p => ({ ...p, title: e.target.value }))} className="wow-input w-full text-sm" placeholder="e.g. NaP Heroic" />
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Zone</label>
+                      <input required value={newTemplate.raidZone} onChange={e => setNewTemplate(p => ({ ...p, raidZone: e.target.value }))} className="wow-input w-full text-sm" placeholder="e.g. Nerub-ar Palace" />
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Day of Week</label>
+                      <select value={newTemplate.dayOfWeek} onChange={e => setNewTemplate(p => ({ ...p, dayOfWeek: Number(e.target.value) }))} className="wow-select w-full text-sm">
+                        {DAY_NAMES.map((d, i) => <option key={i} value={i}>{d}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Start Time</label>
+                      <input type="time" required value={newTemplate.startTime} onChange={e => setNewTemplate(p => ({ ...p, startTime: e.target.value }))} className="wow-input w-full text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Max Attendees</label>
+                      <input type="number" value={newTemplate.maxAttendees} onChange={e => setNewTemplate(p => ({ ...p, maxAttendees: Number(e.target.value) }))} className="wow-input w-full text-sm" min={1} />
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-1" style={{ color: "var(--wow-text-faint)" }}>Min iLvl (optional)</label>
+                      <input type="number" value={newTemplate.minItemLevel} onChange={e => setNewTemplate(p => ({ ...p, minItemLevel: e.target.value }))} className="wow-input w-full text-sm" placeholder="e.g. 619" />
+                    </div>
+                  </div>
+                  <button type="submit" disabled={templateSaving} className="wow-btn text-sm">
+                    {templateSaving ? "Saving…" : "Save Template"}
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
         )}
 
         {!selectedEvent ? (

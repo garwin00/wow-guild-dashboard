@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession, getGuildMembership } from "@/lib/queries";
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
   const session = await getSession();
@@ -12,6 +12,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
   if (!membership) return NextResponse.json({ error: "Not a member" }, { status: 403 });
 
   const isOfficer = ["GM", "OFFICER"].includes(membership.role);
+  const historyMode = req.nextUrl.searchParams.get("history") === "true";
+  const raidLimit = historyMode ? 20 : 10;
 
   const [characters, pastRaids, absences] = await Promise.all([
     prisma.character.findMany({
@@ -21,8 +23,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
     prisma.raidEvent.findMany({
       where: { guildId: membership.guild.id, scheduledAt: { lt: new Date() } },
       orderBy: { scheduledAt: "desc" },
-      take: 10,
-      select: { id: true },
+      take: raidLimit,
+      select: { id: true, title: true, scheduledAt: true },
     }),
     isOfficer
       ? prisma.absenceNotice.findMany({
@@ -34,15 +36,28 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
   ]);
 
   const attendanceMap: Record<string, { attended: number; total: number }> = {};
+  let attendanceHistory: Record<string, { raidId: string; title: string; date: string; attended: boolean }[]> = {};
+
   if (pastRaids.length > 0) {
     const signups = await prisma.signup.findMany({
       where: { raidEventId: { in: pastRaids.map((r) => r.id) }, status: "ACCEPTED" },
-      select: { characterId: true },
+      select: { characterId: true, raidEventId: true },
     });
+
+    const signupSet = new Set(signups.map((s) => `${s.characterId}:${s.raidEventId}`));
     const attended = new Map<string, number>();
     for (const s of signups) attended.set(s.characterId, (attended.get(s.characterId) ?? 0) + 1);
+
     for (const c of characters) {
       attendanceMap[c.id] = { attended: attended.get(c.id) ?? 0, total: pastRaids.length };
+      if (historyMode) {
+        attendanceHistory[c.id] = pastRaids.map((r) => ({
+          raidId: r.id,
+          title: r.title,
+          date: r.scheduledAt.toISOString(),
+          attended: signupSet.has(`${c.id}:${r.id}`),
+        }));
+      }
     }
   }
 
@@ -56,5 +71,27 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
     });
   }
 
-  return NextResponse.json({ characters, attendanceMap, absencesByUser });
+  // Build membershipMap keyed by userId for trial tracking in the UI
+  const allMemberships = await prisma.guildMembership.findMany({
+    where: { guildId: membership.guild.id },
+    select: { id: true, userId: true, role: true, trialStartDate: true, trialReviewDate: true },
+  });
+  const membershipMap: Record<string, { id: string; role: string; trialStartDate: string | null; trialReviewDate: string | null }> = {};
+  for (const m of allMemberships) {
+    membershipMap[m.userId] = {
+      id: m.id,
+      role: m.role,
+      trialStartDate: m.trialStartDate?.toISOString() ?? null,
+      trialReviewDate: m.trialReviewDate?.toISOString() ?? null,
+    };
+  }
+
+  return NextResponse.json({
+    guildId: membership.guild.id,
+    characters,
+    attendanceMap,
+    absencesByUser,
+    membershipMap,
+    ...(historyMode ? { attendanceHistory, raids: pastRaids } : {}),
+  });
 }

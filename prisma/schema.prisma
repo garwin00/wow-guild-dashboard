@@ -30,6 +30,7 @@ model User {
   officerNotesWritten OfficerNote[]       @relation("OfficerNoteAuthor")
   absenceNotices      AbsenceNotice[]
   announcements       Announcement[]
+  reviewedApplications GuildApplication[] @relation("ApplicationReviewer")
 }
 
 model PasswordResetToken {
@@ -107,6 +108,12 @@ model Guild {
   // Discord integration
   discordWebhook       String?
   discordWebhookEvents String? // JSON: { raidCreated, signupChanged, rosterSynced }
+
+  // Recruiting
+  isPublic        Boolean @default(false)
+  recruitMessage  String? @db.Text
+  applications    GuildApplication[]
+  raidTemplates   RecurringRaidTemplate[]
 }
 
 model GuildMembership {
@@ -115,6 +122,10 @@ model GuildMembership {
   guildId   String
   role      GuildRole   @default(MEMBER)
   joinedAt  DateTime    @default(now())
+
+  // Trial tracking
+  trialStartDate  DateTime?
+  trialReviewDate DateTime?
 
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   guild     Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
@@ -171,6 +182,9 @@ model RaidEvent {
   status       EventStatus @default(OPEN)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
+
+  recurringTemplateId String?
+  recurringTemplate   RecurringRaidTemplate? @relation(fields: [recurringTemplateId], references: [id], onDelete: SetNull)
 
   guild        Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
   signups      Signup[]
@@ -381,4 +395,40 @@ model CooldownAssignment {
 
   raidEvent    RaidEvent @relation(fields: [raidEventId], references: [id], onDelete: Cascade)
   character    Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+}
+
+model RecurringRaidTemplate {
+  id            String    @id @default(cuid())
+  guildId       String
+  title         String
+  raidZone      String
+  dayOfWeek     Int       // 0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat
+  startTime     String    // "20:00"
+  maxAttendees  Int       @default(25)
+  minItemLevel  Int?
+  description   String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  guild         Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  events        RaidEvent[]
+}
+
+model GuildApplication {
+  id            String   @id @default(cuid())
+  guildId       String
+  characterName String
+  realm         String
+  class         String
+  role          String   // TANK / HEALER / DPS
+  message       String?  @db.Text
+  discordTag    String?
+  status        String   @default("PENDING") // PENDING / REVIEWING / ACCEPTED / DECLINED
+  reviewedById  String?
+  reviewNote    String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  guild         Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  reviewedBy    User?    @relation("ApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 }

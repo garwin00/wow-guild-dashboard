@@ -7,9 +7,10 @@ export async function PATCH(req: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { membershipId, role, guildId } = await req.json();
   const caller = await prisma.guildMembership.findFirst({
-    where: { userId: session.user.id, guildId, role: "GM" },
+    where: { userId: session.user.id, guildId },
   });
-  if (!caller) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!caller || !["GM", "OFFICER"].includes(caller.role))
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const updated = await prisma.guildMembership.update({ where: { id: membershipId }, data: { role } });
   return NextResponse.json(updated);
 }

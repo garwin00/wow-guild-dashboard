@@ -77,6 +77,13 @@ interface Props {
   guildRegion: string;
 }
 
+interface Analytics {
+  topKeysThisWeek: { dungeon: string; level: number; character: string; characterClass: string; score: number; upgrades: number; completedAt: string }[];
+  groupRuns: { dungeon: string; level: number; members: { name: string; class: string }[]; completedAt: string }[];
+  scoreDistribution: { label: string; count: number }[];
+  mostActive: { name: string; runs: number; class: string; score: number }[];
+}
+
 function timeSince(date: Date | string): string {
   const ms = Date.now() - new Date(date).getTime();
   const mins = Math.floor(ms / 60000);
@@ -99,12 +106,13 @@ export default function MythicPlusClient({ guildSlug, isOfficer, guildName, guil
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [roleTab, setRoleTab] = useState<RoleTab>("all");
+  const [mainTab, setMainTab] = useState<"leaderboard" | "analytics">("leaderboard");
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery<{ characters: CharacterWithScore[]; affixes: RioAffixesResponse | null }>({
-    queryKey: ["mythic-plus", guildSlug],
-    queryFn: () => fetch(`/api/guild/${guildSlug}/mythic-plus`).then((r) => r.json()),
+  const { data, isLoading } = useQuery<{ characters: CharacterWithScore[]; affixes: RioAffixesResponse | null; analytics?: Analytics }>({
+    queryKey: ["mythic-plus", guildSlug, mainTab],
+    queryFn: () => fetch(`/api/guild/${guildSlug}/mythic-plus${mainTab === "analytics" ? "?analytics=true" : ""}`).then((r) => r.json()),
   });
 
   async function handleSync() {
@@ -179,8 +187,97 @@ export default function MythicPlusClient({ guildSlug, isOfficer, guildName, guil
         </div>
       )}
 
+      {syncResult && (
+        <div className="rounded px-4 py-2 text-sm" style={{ background: "rgba(var(--wow-primary-rgb),0.08)", border: "1px solid rgba(var(--wow-primary-rgb),0.25)", color: "var(--wow-text)" }}>
+          {syncResult}
+        </div>
+      )}
+
+      {/* Main tabs */}
+      <div className="flex gap-1">
+        <button onClick={() => setMainTab("leaderboard")} className={`wow-tab${mainTab === "leaderboard" ? " wow-tab-active" : ""}`}>Leaderboard</button>
+        <button onClick={() => setMainTab("analytics")} className={`wow-tab${mainTab === "analytics" ? " wow-tab-active" : ""}`}>Analytics</button>
+      </div>
+
+      {/* Analytics tab */}
+      {mainTab === "analytics" && data?.analytics && (() => {
+        const { topKeysThisWeek, groupRuns, scoreDistribution, mostActive } = data.analytics;
+        const maxBucket = Math.max(...scoreDistribution.map(b => b.count), 1);
+        return (
+          <div className="space-y-6">
+            {/* Top keys */}
+            <div className="rounded-lg p-5 space-y-3" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+              <h2 className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--wow-gold)" }}>Top Keys This Week</h2>
+              {topKeysThisWeek.length === 0 ? (
+                <p className="text-sm" style={{ color: "var(--wow-text-faint)" }}>No runs recorded this week.</p>
+              ) : topKeysThisWeek.map((r, i) => (
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <span className="font-medium" style={{ color: "var(--wow-text)" }}>{r.dungeon}</span>
+                  <span className="font-bold tabular-nums" style={{ color: "var(--wow-gold)" }}>+{r.level}</span>
+                  <span style={{ color: classColor(r.characterClass) }}>{r.character}</span>
+                  <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{upgradeArrows(r.upgrades)}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Guild group runs */}
+            {groupRuns.length > 0 && (
+              <div className="rounded-lg p-5 space-y-3" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+                <h2 className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--wow-gold)" }}>Guild Group Runs</h2>
+                {groupRuns.map((g, i) => (
+                  <div key={i} className="text-sm">
+                    <span className="font-medium" style={{ color: "var(--wow-text)" }}>{g.dungeon} +{g.level} — </span>
+                    {g.members.map((m, j) => (
+                      <span key={j} style={{ color: classColor(m.class) }}>{m.name}{j < g.members.length - 1 ? ", " : ""}</span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Score distribution */}
+            <div className="rounded-lg p-5 space-y-3" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+              <h2 className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--wow-gold)" }}>Score Distribution</h2>
+              <div className="space-y-2">
+                {scoreDistribution.map(b => (
+                  <div key={b.label} className="flex items-center gap-3">
+                    <span className="text-xs w-20 shrink-0 text-right" style={{ color: "var(--wow-text-faint)" }}>{b.label}</span>
+                    <div className="flex-1 h-5 rounded overflow-hidden" style={{ background: "rgba(var(--wow-primary-rgb),0.08)" }}>
+                      {b.count > 0 && (
+                        <div className="h-full rounded flex items-center pl-2 text-xs font-bold transition-all"
+                          style={{ width: `${Math.max(4, (b.count / maxBucket) * 100)}%`, background: "rgba(var(--wow-primary-rgb),0.25)", color: "var(--wow-gold)" }}>
+                          {b.count}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Most active */}
+            {mostActive.length > 0 && (
+              <div className="rounded-lg p-5 space-y-3" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+                <h2 className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--wow-gold)" }}>Most Active This Week</h2>
+                {mostActive.map((m, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm">
+                    <span style={{ color: classColor(m.class) }}>{m.name}</span>
+                    <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{m.runs} run{m.runs !== 1 ? "s" : ""}</span>
+                    <span className="tabular-nums text-xs" style={{ color: "var(--wow-gold)" }}>{m.score > 0 ? m.score.toFixed(1) : "—"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {mainTab === "analytics" && !data?.analytics && (
+        <p className="text-sm py-4" style={{ color: "var(--wow-text-faint)" }}>No analytics data yet — sync scores first.</p>
+      )}
+
       {/* Top 3 Podium */}
-      {filtered.length >= 1 && filtered[0].mythicScore && (
+      {mainTab === "leaderboard" && filtered.length >= 1 && filtered[0].mythicScore && (
         <div className="grid grid-cols-3 gap-4">
           {[
             { pos: 1, medal: "🥇", borderColor: "rgba(var(--wow-primary-rgb),0.5)", bgColor: "rgba(240,192,64,0.06)" },
@@ -209,7 +306,7 @@ export default function MythicPlusClient({ guildSlug, isOfficer, guildName, guil
       )}
 
       {/* Current Affixes */}
-      {affixes && affixes.affix_details.length > 0 && (
+      {mainTab === "leaderboard" && affixes && affixes.affix_details.length > 0 && (
         <div className="rounded-lg p-4" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
           <p className="text-xs uppercase tracking-widest mb-3" style={{ fontFamily: "inherit", color: "var(--wow-text-faint)" }}>
             This Week&apos;s Affixes
@@ -230,30 +327,33 @@ export default function MythicPlusClient({ guildSlug, isOfficer, guildName, guil
       )}
 
       {/* Filters */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex rounded overflow-hidden" style={{ border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
-          {ROLE_TABS.map((tab) => (
-            <button key={tab.key} onClick={() => setRoleTab(tab.key)}
-              className="px-4 py-1.5 text-sm transition-all"
-              style={{
-                fontFamily: "inherit",
-                letterSpacing: "0.04em",
-                background: roleTab === tab.key ? "rgba(var(--wow-primary-rgb),0.15)" : "var(--wow-surface)",
-                color: roleTab === tab.key ? "var(--wow-gold-bright)" : "var(--wow-text-faint)",
-                borderRight: "1px solid rgba(var(--wow-primary-rgb),0.15)",
-              }}>
-              {tab.label}
-            </button>
-          ))}
+      {mainTab === "leaderboard" && (
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex rounded overflow-hidden" style={{ border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+            {ROLE_TABS.map((tab) => (
+              <button key={tab.key} onClick={() => setRoleTab(tab.key)}
+                className="px-4 py-1.5 text-sm transition-all"
+                style={{
+                  fontFamily: "inherit",
+                  letterSpacing: "0.04em",
+                  background: roleTab === tab.key ? "rgba(var(--wow-primary-rgb),0.15)" : "var(--wow-surface)",
+                  color: roleTab === tab.key ? "var(--wow-gold-bright)" : "var(--wow-text-faint)",
+                  borderRight: "1px solid rgba(var(--wow-primary-rgb),0.15)",
+                }}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search character…"
+            className="flex-1 min-w-[180px] max-w-xs rounded px-3 py-1.5 text-sm focus:outline-none"
+            style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+          <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{filtered.length} characters</span>
         </div>
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search character…"
-          className="flex-1 min-w-[180px] max-w-xs rounded px-3 py-1.5 text-sm focus:outline-none"
-          style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
-        <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{filtered.length} characters</span>
-      </div>
+      )}
 
       {/* Leaderboard Table */}
-      <div className="rounded-lg overflow-hidden" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+      {mainTab === "leaderboard" && (
+        <div className="rounded-lg overflow-hidden" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(var(--wow-primary-rgb),0.15)", fontFamily: "inherit", color: "var(--wow-text-faint)" }}>
@@ -371,6 +471,7 @@ export default function MythicPlusClient({ guildSlug, isOfficer, guildName, guil
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Attribution */}
       <p className="text-xs text-right" style={{ color: "var(--wow-text-faint)" }}>

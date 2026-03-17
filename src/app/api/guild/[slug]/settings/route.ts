@@ -55,6 +55,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
   if ("bannerUrl" in body) updates.bannerUrl = body.bannerUrl ?? null;
   if ("theme" in body) updates.theme = body.theme;
   if ("wclGuildId" in body) updates.wclGuildId = body.wclGuildId ?? null;
+  if ("isPublic" in body) updates.isPublic = Boolean(body.isPublic);
+  if ("recruitMessage" in body) updates.recruitMessage = body.recruitMessage ?? null;
 
   // Merge boolean notification toggles into the single JSON field
   if ("discordNotifyRaidCreated" in body || "discordNotifySignupChanged" in body || "discordNotifyRosterSynced" in body) {

@@ -5,6 +5,13 @@ import { signIn } from "next-auth/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { scoreColor, avatarToInset } from "@/lib/raiderio";
 
+const iLvlColour = (ilvl: number) => {
+  if (ilvl >= 639) return "#e268a8";
+  if (ilvl >= 626) return "#a335ee";
+  if (ilvl >= 606) return "#0070dd";
+  return "var(--wow-text-muted)";
+};
+
 const ROLES = ["TANK", "HEALER", "DPS"] as const;
 const SPECS: Record<string, string[]> = {
   "death knight": ["Blood", "Frost", "Unholy"],
@@ -117,6 +124,30 @@ function CharCard({ char, isMain, onSetMain, onUnlink, onEdit, pending }: {
   );
 }
 
+function CharacterLootHistory({ characterId, guildSlug }: { characterId: string; guildSlug: string }) {
+  const { data, isLoading } = useQuery<{ records: { id: string; itemName: string; itemLevel: number; bossName: string | null; awardedAt: string }[] }>({
+    queryKey: ["loot", guildSlug, characterId],
+    queryFn: () => fetch(`/api/guild/${guildSlug}/loot?characterId=${characterId}&pageSize=10`).then(r => r.json()),
+  });
+
+  if (isLoading) return <p className="text-xs py-2" style={{ color: "var(--wow-text-faint)" }}>Loading loot…</p>;
+  const records = data?.records ?? [];
+  if (records.length === 0) return <p className="text-xs py-2" style={{ color: "var(--wow-text-faint)" }}>No loot records yet.</p>;
+
+  return (
+    <div className="space-y-1.5 mt-2">
+      {records.map((r) => (
+        <div key={r.id} className="flex items-center justify-between gap-3 text-xs">
+          <span style={{ color: "var(--wow-text)" }}>{r.itemName}</span>
+          <span className="shrink-0 font-mono font-bold" style={{ color: iLvlColour(r.itemLevel) }}>{r.itemLevel}</span>
+          <span className="shrink-0" style={{ color: "var(--wow-text-faint)" }}>{r.bossName ?? "—"}</span>
+          <span className="shrink-0" style={{ color: "var(--wow-text-faint)" }}>{new Date(r.awardedAt).toLocaleDateString()}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ProfileClient({ guildSlug, memberRole }: Props) {
   const queryClient = useQueryClient();
   const [chars, setChars] = useState<Character[]>([]);
@@ -129,6 +160,7 @@ export default function ProfileClient({ guildSlug, memberRole }: Props) {
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
   const [pwMsg, setPwMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [pwSaving, setPwSaving] = useState(false);
+  const [showLoot, setShowLoot] = useState(false);
   const firstLoad = useRef(false);
 
   const { data, isLoading } = useQuery<{
@@ -394,6 +426,26 @@ export default function ProfileClient({ guildSlug, memberRole }: Props) {
             </div>
           )}
         </>
+      )}
+
+      {/* Loot History */}
+      {chars.length > 0 && (
+        <div className="rounded-lg p-6" style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
+          <button onClick={() => setShowLoot(v => !v)} className="flex items-center justify-between w-full">
+            <h2 className="text-sm uppercase tracking-widest font-semibold" style={{ color: "var(--wow-text-faint)" }}>Loot History</h2>
+            <span className="text-xs" style={{ color: "var(--wow-text-faint)" }}>{showLoot ? "▲ Hide" : "▼ Show"}</span>
+          </button>
+          {showLoot && (
+            <div className="mt-4 space-y-5">
+              {chars.map(c => (
+                <div key={c.id}>
+                  <p className="text-xs font-semibold mb-1" style={{ color: "var(--wow-gold)" }}>{c.name}</p>
+                  <CharacterLootHistory characterId={c.id} guildSlug={guildSlug} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Account Settings */}

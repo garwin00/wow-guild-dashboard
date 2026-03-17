@@ -102,11 +102,75 @@ function LogLootModal({
   );
 }
 
+function ImportWCLModal({ guildSlug, onClose }: { guildSlug: string; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [reportCode, setReportCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ imported: number; skipped: number; unmatched: string[] } | null>(null);
+  const [error, setError] = useState("");
+
+  async function doImport() {
+    if (!reportCode.trim()) return;
+    setLoading(true); setResult(null); setError("");
+    const res = await fetch(`/api/guild/${guildSlug}/loot/import`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reportCode: reportCode.trim() }),
+    });
+    const d = await res.json();
+    if (!res.ok) { setError(d.error ?? "Import failed"); }
+    else {
+      setResult(d);
+      qc.invalidateQueries({ queryKey: ["loot", guildSlug] });
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="rounded-lg p-6 w-full max-w-md space-y-4"
+        style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.3)" }}>
+        <h2 className="text-lg font-semibold" style={{ color: "var(--wow-gold-bright)" }}>Import from WCL</h2>
+        <div>
+          <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: "var(--wow-text-faint)" }}>WCL Report Code</label>
+          <input value={reportCode} onChange={e => setReportCode(e.target.value)}
+            placeholder="e.g. abc123XY" disabled={loading}
+            className="w-full rounded px-3 py-2 text-sm outline-none font-mono"
+            style={{ background: "var(--wow-bg)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)" }} />
+        </div>
+        {error && <p className="text-sm" style={{ color: "#e06060" }}>{error}</p>}
+        {result && (
+          <div className="space-y-1">
+            <p className="text-sm font-medium" style={{ color: "var(--wow-success)" }}>
+              ✓ Imported {result.imported} item{result.imported !== 1 ? "s" : ""}, {result.skipped} skipped
+            </p>
+            {result.unmatched.length > 0 && (
+              <div>
+                <p className="text-xs" style={{ color: "var(--wow-warning)" }}>Unmatched characters:</p>
+                <p className="text-xs font-mono" style={{ color: "var(--wow-text-faint)" }}>{result.unmatched.join(", ")}</p>
+              </div>
+            )}
+          </div>
+        )}
+        <div className="flex gap-3 pt-1">
+          <button onClick={onClose} className="flex-1 py-2 rounded text-sm"
+            style={{ background: "rgba(var(--wow-primary-rgb),0.1)", color: "var(--wow-text-muted)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)" }}>
+            Close
+          </button>
+          <button onClick={doImport} disabled={loading || !reportCode.trim()} className="flex-1 wow-btn text-sm">
+            {loading ? "Importing…" : "Import"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LootClient({ guildSlug, isOfficer }: { guildSlug: string; isOfficer: boolean }) {
   const qc = useQueryClient();
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const PAGE_SIZE = 20;
 
   const { data, isLoading } = useQuery<LootResponse>({
@@ -141,12 +205,16 @@ export default function LootClient({ guildSlug, isOfficer }: { guildSlug: string
             className="rounded px-3 py-1.5 text-sm outline-none"
             style={{ background: "var(--wow-surface)", border: "1px solid rgba(var(--wow-primary-rgb),0.2)", color: "var(--wow-text)", width: 220 }} />
           {isOfficer && (
-            <button onClick={() => setShowModal(true)} className="wow-btn text-sm">⚔️ Log Loot</button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowImportModal(true)} className="wow-btn text-sm opacity-80 hover:opacity-100">📥 Import WCL</button>
+              <button onClick={() => setShowModal(true)} className="wow-btn text-sm">⚔️ Log Loot</button>
+            </div>
           )}
         </div>
       </div>
 
       {showModal && <LogLootModal guildSlug={guildSlug} onClose={() => setShowModal(false)} />}
+      {showImportModal && <ImportWCLModal guildSlug={guildSlug} onClose={() => setShowImportModal(false)} />}
 
       <div className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(var(--wow-primary-rgb),0.15)" }}>
         <table className="w-full text-sm">
